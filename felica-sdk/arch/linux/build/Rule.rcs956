@@ -1,0 +1,56 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+#
+# Configuration
+#
+
+ifeq ($(CONFIG_DISABLE_RCS956_CHECK_RF_PARAM),y)
+CFLAGS+= -DCONFIG_DISABLE_RCS956_CHECK_RF_PARAM
+endif
+
+# ----------------
+# Library
+# ----------------
+
+#
+# rcs956
+#
+
+RCS956_LIB= \
+	rcs956
+RCS956_SRC_DIRS= \
+	$(COMMON_DIR)/device/rcs956
+RCS956_SRCS= \
+	rcs956.c
+
+RCS956_LIB_A= \
+	lib$(RCS956_LIB).a
+RCS956_LIB_SO= \
+	lib$(RCS956_LIB).so
+RCS956_LIBS= \
+	$(RCS956_LIB_A) \
+	$(RCS956_LIB_SO)
+RCS956_OBJS= \
+	$(RCS956_SRCS:.c=.o)
+RCS956_SOBJS= \
+	$(RCS956_SRCS:.c=.So)
+
+SRC_DIRS+=	$(RCS956_SRC_DIRS)
+LIB_TARGETS+=	$(RCS956_LIBS)
+EXE_LDADD+=	-l$(RCS956_LIB)
+
+# ----------------
+# Rule
+# ----------------
+
+$(RCS956_LIB_A)::	$(RCS956_OBJS)
+	$(AR) r $@ \
+		$(RCS956_OBJS)
+
+$(RCS956_LIB_SO)::	$(RCS956_SOBJS)
+	$(CC) -shared -Wl,-x -o $@ \
+		$(LDFLAGS) \
+		$(RCS956_SOBJS) \
+		$(RCS956_LDADD)

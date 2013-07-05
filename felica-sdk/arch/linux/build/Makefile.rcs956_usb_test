@@ -1,0 +1,36 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+-include Config.make
+
+include Rule.begin
+include Rule.rcs956_usb
+include Rule.rcs956
+include Rule.utl
+
+#
+# te_rcs956_usb
+#
+
+SRC_DIRS+=	$(TEST_DIR)/rcs956
+TARGETS+=	$(TE_RCS956_USB)
+CFLAGS+=	-I$(TEST_DIR)/common
+CFLAGS+=	-I$(TEST_DIR)/rcs956
+
+TE_RCS956_USB= \
+	te_rcs956_usb
+TE_RCS956_USB_SRCS= \
+	te_rcs956_common.c \
+	te_rcs956_usb.c
+TE_RCS956_USB_OBJS= \
+	$(TE_RCS956_USB_SRCS:.c=.o)
+
+$(TE_RCS956_USB):: \
+		$(TE_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(TE_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+include Rule.end

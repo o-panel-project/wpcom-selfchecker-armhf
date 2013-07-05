@@ -1,0 +1,35 @@
+
+-include Config.make
+
+include ../Rule.begin
+
+#
+# rcs956_linux_uart
+#
+
+PROJECT = tss_linux_reliability_uart
+
+OBJ_DIR = $(OBJS_UART)
+
+CFLAGS += \
+		-I$(RI_INC_COMMON_DIR)/ \
+		-I$(RI_INC_COMMON_STUB_DIR)/ \
+		-I$(RI_INC_ARCH_LINUX_DIR)/
+
+CFLAGS += -DARCH_LINUX
+CFLAGS += -DDRV_UART
+
+TE_SRCS = $(TE_MAIN_SRCS)
+
+TE_OBJS = $(TE_SRCS:.c=.o)
+
+RI_LIB =$(RI_LIB_LINUX_DIR)/*.a
+
+$(PROJECT) :: \
+		$(TE_OBJS) \
+		$(RI_LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(TE_OBJS) \
+		$(RI_LIB)
+
+include ../Rule.end

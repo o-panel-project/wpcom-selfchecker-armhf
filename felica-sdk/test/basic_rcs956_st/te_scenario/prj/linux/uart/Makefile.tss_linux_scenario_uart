@@ -1,0 +1,39 @@
+-include ../Config.make
+include ../Rule.begin
+
+#
+# tss_linux_scenario_uart
+#
+
+PROJECT = tss_linux_scenario_uart
+
+OBJ_DIR = .
+
+CFLAGS += -I$(RI_INC_COMMON_DIR)/ \
+	  -I$(RI_INC_COMMON_STUB_DIR)/ \
+	  -I$(RI_INC_ARCH_LINUX_DIR)/
+
+CFLAGS += -DARCH_LINUX
+CFLAGS += -DDRV_UART
+TE_SRCS = te_pmm.c \
+	te_polling.c \
+	te_read_write.c \
+	te_retry_fcc.c \
+	te_chg_rwmode.c \
+	te_chg_transmission_speed.c \
+	te_powerdown_and_wakeup.c \
+	te_retry_rcs956.c \
+	$(TE_MAIN_SRCS)
+
+TE_OBJS = $(TE_SRCS:.c=.o)
+
+RI_LIB =$(RI_LIB_LINUX_DIR)/*.a
+
+$(PROJECT) :: \
+		$(TE_OBJS) \
+		$(RI_LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(TE_OBJS) \
+		$(RI_LIB) -lpthread
+
+include ../Rule.end

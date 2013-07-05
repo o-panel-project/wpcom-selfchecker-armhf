@@ -1,0 +1,48 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+# ----------------
+# Library
+# ----------------
+
+#
+# utl_rand
+#
+
+UTL_RAND_LIB= \
+	utl_rand
+UTL_RAND_SRC_DIRS= \
+	$(ARCH_DIR)/utl
+UTL_RAND_SRCS= \
+	utl_rand.c
+
+UTL_RAND_LIB_A= \
+	lib$(UTL_RAND_LIB).a
+UTL_RAND_LIB_SO= \
+	lib$(UTL_RAND_LIB).so
+UTL_RAND_LIBS= \
+	$(UTL_RAND_LIB_A) \
+	$(UTL_RAND_LIB_SO)
+UTL_RAND_OBJS= \
+	$(UTL_RAND_SRCS:.c=.o)
+UTL_RAND_SOBJS= \
+	$(UTL_RAND_SRCS:.c=.So)
+
+SRC_DIRS+=	$(UTL_RAND_SRC_DIRS)
+LIB_TARGETS+=	$(UTL_RAND_LIBS)
+EXE_LDADD+=	-l$(UTL_RAND_LIB)
+
+# ----------------
+# Rule
+# ----------------
+
+$(UTL_RAND_LIB_A)::	$(UTL_RAND_OBJS)
+	$(AR) r $@ \
+		$(UTL_RAND_OBJS)
+
+$(UTL_RAND_LIB_SO)::	$(UTL_RAND_SOBJS)
+	$(CC) -shared -Wl,-x -o $@ \
+		$(LDFLAGS) \
+		$(UTL_RAND_SOBJS) \
+		$(UTL_RAND_LDADD)

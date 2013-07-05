@@ -1,0 +1,50 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+# ----------------
+# Library
+# ----------------
+
+#
+# rcs956_usb
+#
+
+RCS956_USB_LIB= \
+	rcs956_usb
+RCS956_USB_SRC_DIRS= \
+	$(COMMON_DIR)/device/rcs956 \
+	$(ARCH_DIR)/driver/rcs956_usb
+RCS956_USB_SRCS= \
+	rcs956_usb.c \
+	rcs956_usb_um.c
+
+RCS956_USB_LIB_A= \
+	lib$(RCS956_USB_LIB).a
+RCS956_USB_LIB_SO= \
+	lib$(RCS956_USB_LIB).so
+RCS956_USB_LIBS= \
+	$(RCS956_USB_LIB_A) \
+	$(RCS956_USB_LIB_SO)
+RCS956_USB_OBJS= \
+	$(RCS956_USB_SRCS:.c=.o)
+RCS956_USB_SOBJS= \
+	$(RCS956_USB_SRCS:.c=.So)
+
+SRC_DIRS+=	$(RCS956_USB_SRC_DIRS)
+LIB_TARGETS+=	$(RCS956_USB_LIBS)
+EXE_LDADD+=	-l$(RCS956_USB_LIB)
+
+# ----------------
+# Rule
+# ----------------
+
+$(RCS956_USB_LIB_A)::	$(RCS956_USB_OBJS)
+	$(AR) r $@ \
+		$(RCS956_USB_OBJS)
+
+$(RCS956_USB_LIB_SO)::	$(RCS956_USB_SOBJS)
+	$(CC) -shared -Wl,-x -o $@ \
+		$(LDFLAGS) \
+		$(RCS956_USB_SOBJS) \
+		$(RCS956_USB_LDADD)

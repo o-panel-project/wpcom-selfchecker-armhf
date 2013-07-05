@@ -1,0 +1,48 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+# ----------------
+# Library
+# ----------------
+
+#
+# icsdrv_uart
+#
+
+ICSDRV_UART_LIB= \
+	icsdrv_uart
+ICSDRV_UART_SRC_DIRS= \
+	$(ARCH_DIR)/driver/uart
+ICSDRV_UART_SRCS= \
+	icsdrv_uart.c
+
+ICSDRV_UART_LIB_A= \
+	lib$(ICSDRV_UART_LIB).a
+ICSDRV_UART_LIB_SO= \
+	lib$(ICSDRV_UART_LIB).so
+ICSDRV_UART_LIBS= \
+	$(ICSDRV_UART_LIB_A) \
+	$(ICSDRV_UART_LIB_SO)
+ICSDRV_UART_OBJS= \
+	$(ICSDRV_UART_SRCS:.c=.o)
+ICSDRV_UART_SOBJS= \
+	$(ICSDRV_UART_SRCS:.c=.So)
+
+SRC_DIRS+=	$(ICSDRV_UART_SRC_DIRS)
+LIB_TARGETS+=	$(ICSDRV_UART_LIBS)
+EXE_LDADD+=	-l$(ICSDRV_UART_LIB)
+
+# ----------------
+# Rule
+# ----------------
+
+$(ICSDRV_UART_LIB_A)::	$(ICSDRV_UART_OBJS)
+	$(AR) r $@ \
+		$(ICSDRV_UART_OBJS)
+
+$(ICSDRV_UART_LIB_SO)::	$(ICSDRV_UART_SOBJS)
+	$(CC) -shared -Wl,-x -o $@ \
+		$(LDFLAGS) \
+		$(ICSDRV_UART_SOBJS) \
+		$(ICSDRV_UART_LDADD)

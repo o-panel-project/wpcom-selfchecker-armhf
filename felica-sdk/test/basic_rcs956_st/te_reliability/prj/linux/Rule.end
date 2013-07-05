@@ -1,0 +1,20 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+# ----------------
+# Rule
+# ----------------
+
+vpath %.c $(SRC_DIRS)
+vpath %.o $(OBJ_DIR)
+vpath %.a $(RI_LIB_DIR)
+vpath %.So $(BUILD_DIR)
+
+TARGETS?=$(PROJECT)
+
+target:	$(TARGETS)
+
+clean: 
+	rm -f $(PROJECT) $(OBJ_DIR)/*.o $(OBJ_DIR)/*.So $(OBJ_DIR)/$(PROJECT) $(OBJ_DIR)/*.log *~
+

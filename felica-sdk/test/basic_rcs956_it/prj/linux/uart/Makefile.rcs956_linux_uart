@@ -1,0 +1,67 @@
+
+-include ../Config.make
+-include Config.make
+
+include ../Rule.begin
+
+#
+# rcs956_linux_uart
+#
+
+PROJECT = rcs956_linux_uart
+
+OBJ_DIR =	$(OBJS_UART)
+
+CFLAGS +=	-I$(RI_INC_COMMON_DIR)/				\
+		-I$(RI_INC_COMMON_STUB_DIR)/			\
+		-I$(RI_INC_ARCH_LINUX_DIR)/
+
+CFLAGS +=	-DARCH_LINUX
+CFLAGS +=	-DDRV_UART
+
+TE_SRCS =	te_felica_cc_polling.c				\
+		te_felica_cc_polling_multiple.c			\
+		te_felica_cc_request_service.c			\
+		te_felica_cc_request_response.c			\
+		te_felica_cc_read_without_encryption.c		\
+		te_felica_cc_write_without_encryption.c		\
+		te_felica_cc_request_system_code.c		\
+		te_felica_cc_stub_rcs956_initialize.c		\
+		te_felica_cc_communication_test.c		\
+		te_rcs956_initialize.c				\
+		te_rcs956_open.c				\
+		te_rcs956_close.c				\
+		te_rcs956_initialize_device.c			\
+		te_rcs956_execute_command.c			\
+		te_rcs956_felica_command.c			\
+		te_rcs956_send_ack.c				\
+		te_rcs956_cancel_command.c			\
+		te_rcs956_get_firmware_version.c		\
+		te_rcs956_power_down.c				\
+		te_rcs956_wake_up.c				\
+		te_rcs956_wait_for_wake_up.c			\
+		te_rcs956_ping.c				\
+		te_rcs956_reset.c				\
+		te_rcs956_rf_off.c				\
+		te_rcs956_rf_on.c				\
+		te_rcs956_set_dev_speed.c			\
+		te_rcs956_set_speed.c				\
+		te_rcs956_set_rf_speed.c			\
+		te_rcs956_clear_rx_queue.c			\
+		te_rcs956_get_ack_time.c			\
+		te_rcs956_uart_open.c				\
+		te_rcs956_uart_initialize_device.c		\
+		$(TE_MAIN_SRCS)
+
+TE_OBJS =	$(TE_SRCS:.c=.o)
+
+RI_LIB =$(RI_LIB_LINUX_DIR)/*.a
+
+$(PROJECT) ::							\
+		$(TE_OBJS)					\
+		$(RI_LIB)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@			\
+		$(TE_OBJS)					\
+		$(RI_LIB)
+
+include ../Rule.end

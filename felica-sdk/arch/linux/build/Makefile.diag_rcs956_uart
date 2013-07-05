@@ -1,0 +1,34 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+-include Config.make
+
+include Rule.begin
+include Rule.rcs956
+include Rule.rcs956_uart
+include Rule.icsdrv_uart
+include Rule.utl
+
+#
+# diag_rcs956_uart
+#
+
+SRC_DIRS+=	$(SAMPLE_DIR)/diag_rcs956
+TARGETS+=	$(DIAG_RCS956_UART)
+
+DIAG_RCS956_UART= \
+	diag_rcs956_uart
+DIAG_RCS956_UART_SRCS= \
+	diag_rcs956_uart.c diag_rcs956.c diag_rcs956_main.c
+DIAG_RCS956_UART_OBJS= \
+	$(DIAG_RCS956_UART_SRCS:.c=.o)
+
+$(DIAG_RCS956_UART):: \
+		$(DIAG_RCS956_UART_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(DIAG_RCS956_UART_OBJS) \
+		$(EXE_LDADD)
+
+include Rule.end

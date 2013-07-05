@@ -1,0 +1,37 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+-include Config.make
+
+include Rule.begin
+include Rule.rcs956_typea
+include Rule.rcs956
+include Rule.rcs956_usb
+include Rule.utl
+
+SRC_DIRS+=	$(SAMPLE_DIR)/nfc
+CFLAGS+=	-DDEFAULT_PORT_NAME=\"/dev/ttyS0\"
+TARGETS+= \
+	$(SAMPLE_MIFAREUL_RCS956_USB) \
+
+#
+# sample_mifareul_rcs956_usb
+#
+
+SAMPLE_MIFAREUL_RCS956_USB= \
+	sample_mifareul_rcs956_usb
+SAMPLE_MIFAREUL_RCS956_USB_SRCS= \
+	sample_mifareul.c \
+	sample_nfc_rcs956_usb.c
+SAMPLE_MIFAREUL_RCS956_USB_OBJS= \
+	$(SAMPLE_MIFAREUL_RCS956_USB_SRCS:.c=.o)
+
+$(SAMPLE_MIFAREUL_RCS956_USB):: \
+		$(SAMPLE_MIFAREUL_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(SAMPLE_MIFAREUL_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+include Rule.end

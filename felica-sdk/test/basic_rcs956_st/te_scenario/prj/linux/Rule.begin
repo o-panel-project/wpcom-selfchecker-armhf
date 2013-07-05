@@ -1,0 +1,72 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+BASE_DIR  = ../../../..
+BUILD_DIR = .
+
+OBJS_UART = $(BUILD_DIR)/uart
+OBJS_USB = $(BUILD_DIR)/usb
+
+RI_ROOT_DIR =			$(BASE_DIR)/../../
+RI_LIB_LINUX_DIR =		$(RI_ROOT_DIR)/arch/linux/build
+RI_SRC_DIR =			$(RI_ROOT_DIR)
+RI_INC_COMMON_DIR =		$(RI_SRC_DIR)/common/include
+RI_INC_COMMON_STUB_DIR =	$(RI_INC_COMMON_DIR)/stub
+RI_INC_ARCH_LINUX_DIR =		$(RI_SRC_DIR)/arch/linux/include
+
+TE_PROG_ROOT_DIR = $(BASE_DIR)/te_scenario
+TE_FCC_DIR = $(TE_PROG_ROOT_DIR)/te_scenario_fcc
+TE_RCS956_DIR = $(TE_PROG_ROOT_DIR)/te_scenario_rcs956
+
+TE_MAIN_SRCS = testmain.c \
+               testutil.c
+
+SRC_DIRS += $(TE_PROG_ROOT_DIR)/ \
+			$(TE_FCC_DIR)/ \
+			$(TE_RCS956_DIR)/
+
+ifdef CONFIG_CFLAGS_WARNING
+CFLAGS += $(CONFIG_CFLAGS_WARNING)
+else
+CFLAGS += \
+		-std=c89 -Wall -ansi -pedantic -Wshadow	\
+		-Wwrite-strings -Wstrict-prototypes -Wmissing-declarations
+endif
+CFLAGS += -I$(TE_PROG_ROOT_DIR)/
+
+LDFLAGS += -L.
+
+#
+# Configuration
+#
+
+ifneq ($(CONFIG_NO_ANSI),y)
+CFLAGS += -ansi
+endif
+
+ifdef CONFIG_LOG_LEVEL
+CFLAGS += -DICSLOG_LEVEL="$(CONFIG_LOG_LEVEL)"
+endif
+
+ifeq ($(CONFIG_STATIC),y)
+LDFLAGS += -static
+else
+ifneq ($(CONFIG_NO_RPATH),y)
+EXE_LDADD += -Wl,-rpath,.
+endif
+endif
+
+# ----------------
+# Rule
+# ----------------
+
+.PHONY: target
+.SUFFIXES: .o .So
+
+all:	target
+
+.c.So:
+	$(CC) -fpic $(CFLAGS) -c -o $(BUILD_DIR)/$@ $<
+	@$(LD) -o $@.tmp -x -r $@
+	@mv $@.tmp $@

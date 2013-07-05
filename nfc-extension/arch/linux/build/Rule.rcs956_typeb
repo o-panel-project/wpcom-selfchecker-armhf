@@ -1,0 +1,56 @@
+#
+# Copyright 2005,2006,2007,2008,2009 Sony Corporation
+#
+
+#
+# Configuration
+#
+
+ifeq ($(CONFIG_RCS956_TYPEB_STRONG_RF_PARAM),y)
+CFLAGS+= -DCONFIG_RCS956_TYPEB_STRONG_RF_PARAM
+endif
+
+# ----------------
+# Library
+# ----------------
+
+#
+# rcs956_typeb
+#
+
+RCS956_TYPEB_LIB= \
+	rcs956_typeb
+RCS956_TYPEB_SRC_DIRS= \
+	$(COMMON_DIR)/device/rcs956
+RCS956_TYPEB_SRCS= \
+	rcs956_typeb.c
+
+RCS956_TYPEB_LIB_A= \
+	lib$(RCS956_TYPEB_LIB).a
+RCS956_TYPEB_LIB_SO= \
+	lib$(RCS956_TYPEB_LIB).so
+RCS956_TYPEB_LIBS= \
+	$(RCS956_TYPEB_LIB_A) \
+	$(RCS956_TYPEB_LIB_SO)
+RCS956_TYPEB_OBJS= \
+	$(RCS956_TYPEB_SRCS:.c=.o)
+RCS956_TYPEB_SOBJS= \
+	$(RCS956_TYPEB_SRCS:.c=.So)
+
+SRC_DIRS+=	$(RCS956_TYPEB_SRC_DIRS)
+LIB_TARGETS+=	$(RCS956_TYPEB_LIBS)
+EXE_LDADD+=	-l$(RCS956_TYPEB_LIB)
+
+# ----------------
+# Rule
+# ----------------
+
+$(RCS956_TYPEB_LIB_A)::	$(RCS956_TYPEB_OBJS)
+	$(AR) r $@ \
+		$(RCS956_TYPEB_OBJS)
+
+$(RCS956_TYPEB_LIB_SO)::	$(RCS956_TYPEB_SOBJS)
+	$(CC) -shared -Wl,-x -o $@ \
+		$(LDFLAGS) \
+		$(RCS956_TYPEB_SOBJS) \
+		$(RCS956_TYPEB_LDADD)

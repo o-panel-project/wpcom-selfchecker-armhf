@@ -1,0 +1,15 @@
+#
+# Copyright 2008 Sony Corporation
+#
+
+-include Config.make
+
+include Rule.begin
+include Rule.felica_cc
+include Rule.felica_cc_stub_rcs956
+include Rule.rcs956
+include Rule.rcs956_uart
+include Rule.icsdrv_uart
+include Rule.utl
+include Rule.utl_rand
+include Rule.end

@@ -1,0 +1,52 @@
+#
+# Copyright 2005,2006,2007,2008,2009 Sony Corporation
+#
+
+#
+# Configuration
+#
+
+# ----------------
+# Library
+# ----------------
+
+#
+# rcs956_typea
+#
+
+RCS956_TYPEA_LIB= \
+	rcs956_typea
+RCS956_TYPEA_SRC_DIRS= \
+	$(COMMON_DIR)/device/rcs956
+RCS956_TYPEA_SRCS= \
+	rcs956_typea.c
+
+RCS956_TYPEA_LIB_A= \
+	lib$(RCS956_TYPEA_LIB).a
+RCS956_TYPEA_LIB_SO= \
+	lib$(RCS956_TYPEA_LIB).so
+RCS956_TYPEA_LIBS= \
+	$(RCS956_TYPEA_LIB_A) \
+	$(RCS956_TYPEA_LIB_SO)
+RCS956_TYPEA_OBJS= \
+	$(RCS956_TYPEA_SRCS:.c=.o)
+RCS956_TYPEA_SOBJS= \
+	$(RCS956_TYPEA_SRCS:.c=.So)
+
+SRC_DIRS+=	$(RCS956_TYPEA_SRC_DIRS)
+LIB_TARGETS+=	$(RCS956_TYPEA_LIBS)
+EXE_LDADD+=	-l$(RCS956_TYPEA_LIB)
+
+# ----------------
+# Rule
+# ----------------
+
+$(RCS956_TYPEA_LIB_A)::	$(RCS956_TYPEA_OBJS)
+	$(AR) r $@ \
+		$(RCS956_TYPEA_OBJS)
+
+$(RCS956_TYPEA_LIB_SO)::	$(RCS956_TYPEA_SOBJS)
+	$(CC) -shared -Wl,-x -o $@ \
+		$(LDFLAGS) \
+		$(RCS956_TYPEA_SOBJS) \
+		$(RCS956_TYPEA_LDADD)

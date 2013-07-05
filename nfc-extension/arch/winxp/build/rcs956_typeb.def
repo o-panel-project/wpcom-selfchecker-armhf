@@ -1,0 +1,7 @@
+LIBRARY rcs956_typeb
+EXPORTS
+ rcs956_typeb_polling
+ rcs956_typeb_command
+ rcs956_typeb_raw_command
+ rcs956_typeb_deselect
+ rcs956_typeb_select
