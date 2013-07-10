@@ -1,0 +1,14 @@
+*.o
+depend.inc
+Build/cpprogress
+Build/demoapp-arm
+Build/log-battery
+Build/mainpanel
+Build/tp-grid
+Build/xlib_lcdcheck
+cpprogress/cpprogress
+demoapp/demoapp-arm
+lcd/xlib_lcdcheck
+log-battery/log-battery
+mainpanel/mainpanel
+tp-grid/tp-grid

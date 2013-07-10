@@ -15,44 +15,120 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <gtk/gtk.h>
 #include "common.h"
+#include "wpcio.h"
 
 static time_t t_fin=0;
 static int brightness=70, loop_run=0;
 static GtkWidget *b_start, *b_stop, *b_quit, *slider, *aj;
 
-#define DEV_BRIGHTNESS "/sys/devices/platform/omapdss/generic-bl/backlight/omap3evm-bklight/brightness"
-#define DEV_BL "/sys/devices/platform/omapdss/generic-bl/backlight/omap3evm-bklight/bl_power"
+#define SYSFS_BACKLIGHT_IF_DIR	\
+	"/sys/devices/platform/omapdss/generic-bl/backlight/omap3evm-bklight"
+#define SYSFS_BACKLIGHT_POWER	SYSFS_BACKLIGHT_IF_DIR"/bl_power"
+#define SYSFS_BACKLIGHT_BRIGHT	SYSFS_BACKLIGHT_IF_DIR"/brightness"
+#define SYSFS_DISPLAY_IF_DIR	\
+	"/sys/devices/omapdss/display0"
+#define SYSFS_DISPLAY_ENABLE    SYSFS_DISPLAY_IF_DIR"/enabled"
+
+#define DEV_BL			SYSFS_BACKLIGHT_POWER
+#define DEV_BRIGHTNESS	SYSFS_BACKLIGHT_BRIGHT
+
+static int wpcio_lvds_shutdown(int onoff)
+{
+	int fd, req;
+
+	fd = wpcio_open(WPCIO_OPEN_RETRY, "lvds_shutdown(89)");
+	if (fd < 0) return -1;
+
+	if (onoff == 0)
+		req = WPC_SET_GPIO_OUTPUT_LOW;
+	else
+		req = WPC_SET_GPIO_OUTPUT_HIGH;
+	if (ioctl(fd, req, 89) < 0) {
+		debug_printf(3, "lvds_shutdown(89) ioctl failure.");
+		onoff = -1;
+	}
+	close(fd);
+
+	return onoff;
+}
+
+static int wpcio_backlight_en(int onoff)
+{
+	int fd, req;
+
+	fd = wpcio_open(WPCIO_OPEN_RETRY, "backlight_en(88)");
+	if (fd < 0) return -1;
+
+	if (onoff == 0)
+		req = WPC_SET_GPIO_OUTPUT_LOW;
+	else
+		req = WPC_SET_GPIO_OUTPUT_HIGH;
+	if (ioctl(fd, req, 88) < 0) {
+		debug_printf(3, "backlight_en(88) ioctl failure.");
+		onoff = -1;
+	}
+	close(fd);
+
+	return onoff;
+}
+
+static inline int sysfs_backlight_read(const char *f)
+{
+	FILE *fp;
+	int val;
+
+	if ((fp = fopen(f, "r")) == NULL) {
+		perror("fopen");
+		return -1;
+	}
+
+	if (fscanf(fp, "%d\n", &val) == EOF) {
+		perror("fscanf");
+		val = -1;
+	}
+
+	fclose(fp);
+	return val;
+}
+
+static inline void sysfs_backlight_write(const char *f, char *d, size_t s)
+{
+	int fd, written;
+
+	if ((fd = open(f, O_WRONLY)) < 0) {
+		perror("open");
+		return;
+	}
+
+	written = write(fd, d, s);
+	if (s != written) {
+		perror("write");
+	}
+
+	close(fd);
+}
 
 static void brightness_set(int n)
 {
 	char tmps[SMALL_STR];
-	
-	sprintf(tmps, "echo %d >" DEV_BRIGHTNESS, n);
+	sprintf(tmps, "%d\n", n);
+	sysfs_backlight_write(DEV_BRIGHTNESS, (char*)tmps, strlen(tmps));
 	brightness=n;
-	system(tmps);
 }
 
 static void bl_set(int n)
 {
 	char tmps[SMALL_STR];
-	
-	sprintf(tmps, "echo %d >" DEV_BL, n);
-	system(tmps);
+	sprintf(tmps, "%d\n", n);
+	sysfs_backlight_write(DEV_BL, (char*)tmps, strlen(tmps));
 }
 
 static int int_get(char *path)
 {
-	int fd, x=-1;
-	char buf[SMALL_STR];
-	
-	fd=open(path, O_RDONLY);
-	if(fd<0) return x;
-	if(read(fd,buf,SMALL_STR)<=0) return x;
-	close(fd);
-	sscanf(buf, "%d", &x);
-	return x;
+	return sysfs_backlight_read(path);
 }
 
 #define brightness_get() int_get(DEV_BRIGHTNESS)
@@ -110,11 +186,11 @@ static void bl_toggle(GtkWidget *widget, gpointer data)
 static	void
 bl_toggle2(GtkWidget *widget, gpointer data)
 {
-	bl_set(bl_toggle_charge);
+	bl_toggle_charge ? wpcio_lvds_shutdown(0) : wpcio_lvds_shutdown(1);
 	if(bl_toggle_charge)		bl_toggle_charge=0;
 	else if(!bl_toggle_charge)	bl_toggle_charge=1;
 
-	gtk_button_set_label(GTK_BUTTON(widget),bl_toggle_charge ? "\n\n\n\n                              Back Light Power Off                              \n\n\n\n" : "\n\n\n\n                              Back Light Power On                               \n\n\n\n");
+	gtk_button_set_label(GTK_BUTTON(widget),bl_toggle_charge ? "\n\n\n\n                              LVDS_SHUTDOWN# Off                              \n\n\n\n" : "\n\n\n\n                              LVDS_SHUTDOWN# On                               \n\n\n\n");
 }
 
 //	20121002VACS
@@ -169,7 +245,7 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	
 #if	1	/*	20110831VACS	*/
 	a3=gtk_alignment_new(0.5, 0.5, 0.5, 0.5);
-	cb=gtk_button_new_with_label(bl_toggle_charge ? "\n\n\n\n                              Back Light Power Off                              \n\n\n\n" : "\n\n\n\n                              Back Light Power On                               \n\n\n\n");
+	cb=gtk_button_new_with_label(bl_toggle_charge ? "\n\n\n\n                              LVDS_SHUTDOWN# Off                              \n\n\n\n" : "\n\n\n\n                              LVDS_SHUTDOWN# On                               \n\n\n\n");
 	g_signal_connect(cb, "clicked", G_CALLBACK(bl_toggle2), (gpointer)0);
 #else
 	a3=gtk_alignment_new(0.5, 0.5, 0.2, 0.5);
