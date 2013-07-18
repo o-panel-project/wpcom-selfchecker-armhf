@@ -18,7 +18,6 @@
 #include <sys/ioctl.h>
 #include <gtk/gtk.h>
 #include "common.h"
-#include "wpcio.h"
 
 static time_t t_fin=0;
 static int brightness=70, loop_run=0;
@@ -34,46 +33,6 @@ static GtkWidget *b_start, *b_stop, *b_quit, *slider, *aj;
 
 #define DEV_BL			SYSFS_BACKLIGHT_POWER
 #define DEV_BRIGHTNESS	SYSFS_BACKLIGHT_BRIGHT
-
-static int wpcio_lvds_shutdown(int onoff)
-{
-	int fd, req;
-
-	fd = wpcio_open(WPCIO_OPEN_RETRY, "lvds_shutdown(89)");
-	if (fd < 0) return -1;
-
-	if (onoff == 0)
-		req = WPC_SET_GPIO_OUTPUT_LOW;
-	else
-		req = WPC_SET_GPIO_OUTPUT_HIGH;
-	if (ioctl(fd, req, 89) < 0) {
-		debug_printf(3, "lvds_shutdown(89) ioctl failure.");
-		onoff = -1;
-	}
-	close(fd);
-
-	return onoff;
-}
-
-static int wpcio_backlight_en(int onoff)
-{
-	int fd, req;
-
-	fd = wpcio_open(WPCIO_OPEN_RETRY, "backlight_en(88)");
-	if (fd < 0) return -1;
-
-	if (onoff == 0)
-		req = WPC_SET_GPIO_OUTPUT_LOW;
-	else
-		req = WPC_SET_GPIO_OUTPUT_HIGH;
-	if (ioctl(fd, req, 88) < 0) {
-		debug_printf(3, "backlight_en(88) ioctl failure.");
-		onoff = -1;
-	}
-	close(fd);
-
-	return onoff;
-}
 
 static inline int sysfs_backlight_read(const char *f)
 {
@@ -109,6 +68,13 @@ static inline void sysfs_backlight_write(const char *f, char *d, size_t s)
 	}
 
 	close(fd);
+}
+
+static void lcd_enable(int ena)
+{
+	char tmps[SMALL_STR];
+	sprintf(tmps, "%d\n", ena);
+	sysfs_backlight_write(SYSFS_DISPLAY_ENABLE, (char*)tmps, strlen(tmps));
 }
 
 static void brightness_set(int n)
@@ -186,11 +152,13 @@ static void bl_toggle(GtkWidget *widget, gpointer data)
 static	void
 bl_toggle2(GtkWidget *widget, gpointer data)
 {
-	bl_toggle_charge ? wpcio_lvds_shutdown(0) : wpcio_lvds_shutdown(1);
+	bl_toggle_charge ? lcd_enable(0) : lcd_enable(1);
 	if(bl_toggle_charge)		bl_toggle_charge=0;
 	else if(!bl_toggle_charge)	bl_toggle_charge=1;
 
-	gtk_button_set_label(GTK_BUTTON(widget),bl_toggle_charge ? "\n\n\n\n                              LVDS_SHUTDOWN# Off                              \n\n\n\n" : "\n\n\n\n                              LVDS_SHUTDOWN# On                               \n\n\n\n");
+	gtk_button_set_label(GTK_BUTTON(widget), bl_toggle_charge ?
+			"\n\n\n\nBack Light Power Off\n\n\n\n" :
+			"\n\n\n\nBack Light Power On\n\n\n\n");
 }
 
 //	20121002VACS
@@ -244,8 +212,10 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(a2), t0);
 	
 #if	1	/*	20110831VACS	*/
-	a3=gtk_alignment_new(0.5, 0.5, 0.5, 0.5);
-	cb=gtk_button_new_with_label(bl_toggle_charge ? "\n\n\n\n                              LVDS_SHUTDOWN# Off                              \n\n\n\n" : "\n\n\n\n                              LVDS_SHUTDOWN# On                               \n\n\n\n");
+	a3=gtk_alignment_new(0.5, 0.5, 0.9, 0.9);
+	cb=gtk_button_new_with_label(bl_toggle_charge ?
+			"\n\n\n\nBack Light Power Off\n\n\n\n" :
+			"\n\n\n\nBack Light Power On\n\n\n\n");
 	g_signal_connect(cb, "clicked", G_CALLBACK(bl_toggle2), (gpointer)0);
 #else
 	a3=gtk_alignment_new(0.5, 0.5, 0.2, 0.5);

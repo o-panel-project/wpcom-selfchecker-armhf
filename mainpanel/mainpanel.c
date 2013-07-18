@@ -24,7 +24,7 @@
 #include "wpcio.h"
 #include <sys/ioctl.h>
 
-#define SC_VERSION "v2.0.0 2013/07/03"
+#define SC_VERSION "v2.0.0 2013/07/10"
 
 static int ignore_count=0;
 extern char usbmem_first_device;	/* RH */
