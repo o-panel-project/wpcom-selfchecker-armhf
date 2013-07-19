@@ -47,8 +47,8 @@ xlib_lcdcheck:
 	@cp -p ../lcd/xlib_lcdcheck .
 
 demoapp:
-	make -C ../demoapp
-	@cp -p ../demoapp/demoapp-arm .
+	make -C ../prismapp/demoapp
+	@cp -p ../prismapp/demoapp/demoapp-arm .
 
 clean:
 	make -C ../lcd clean
