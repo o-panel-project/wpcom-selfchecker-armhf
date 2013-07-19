@@ -7,7 +7,7 @@ Build/mainpanel
 Build/tp-grid
 Build/xlib_lcdcheck
 cpprogress/cpprogress
-demoapp/demoapp-arm
+prismapp/demoapp/demoapp-arm
 lcd/xlib_lcdcheck
 log-battery/log-battery
 mainpanel/mainpanel

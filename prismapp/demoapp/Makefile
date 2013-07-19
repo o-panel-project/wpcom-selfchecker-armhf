@@ -47,14 +47,14 @@ LDFLAGS += -L${CROSSDEVDIR}/usr/lib
 #BUILD_LIB = static
 #include ../../buildroot/makerules/rules.prism
 
-CFLAGS += -I./include
+CFLAGS += -I../include
 CFLAGS += -I$(CROSSDEVDIR)/usr/include/freetype2
-LDFLAGS += -L./lib
+LDFLAGS += -L../lib
 LIBS += -lprism
 LIBS += -lpthread -lfreetype -lz
 LIBS += -lX11 -lXext -lXi -lxcb -lXdmcp -lXau
 LIBS += -lEGL -lOpenVG -lIMGegl -lpvr2d -lsrv_um
-DEPLIBS += ./lib/libprism.a
+DEPLIBS += ../lib/libprism.a
 LDFLAGS += ${LIBS} -lstdc++
 
 CFLAGS += ${OPTCADD}
