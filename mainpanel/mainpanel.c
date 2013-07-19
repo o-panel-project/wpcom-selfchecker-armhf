@@ -24,10 +24,11 @@
 #include "wpcio.h"
 #include <sys/ioctl.h>
 
-#define SC_VERSION "v2.0.0 2013/07/10"
+#define SC_VERSION "v2.0.0 2013/07/19"
 
 static int ignore_count=0;
 extern char usbmem_first_device;	/* RH */
+int g_board_type = WPC_BOARD_TYPE_J;
 
 int demo_main(GtkWidget *table, GtkWidget *bsub);
 int version_main(GtkWidget *table, GtkWidget *bsub);
@@ -130,6 +131,19 @@ void sc_sidetree_add_data(GtkTreeView *treeview)
 
 	// RH
 	for (i = 0; side_menu_list[i].menu_label != NULL; i++) {
+
+		/* j3 unsupported */
+		if (g_board_type != WPC_BOARD_TYPE_J) {
+			if (side_menu_list[i].func == usbmem_cradle_main) {
+				side_menu_list[i].enable = 0;
+				side_menu_list[i].func = NULL;
+			}
+			if (side_menu_list[i].func == usbmem_exwifi_main) {
+				side_menu_list[i].enable = 0;
+				side_menu_list[i].func = NULL;
+			}
+		}
+
 		if (side_menu_list[i].enable) {
 			if (side_menu_list[i].level == 1) {
 				gtk_tree_store_append(store, &iter, NULL);
@@ -623,6 +637,11 @@ bat_charge_on()
 	}
 	usleep(100000);
 
+	if (g_board_type != WPC_BOARD_TYPE_J) {
+		close(fd);
+		return;
+	}
+
 	/*	BAT2 charge on	*/
 	err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 54);
 	if(err<0){
@@ -710,6 +729,7 @@ int main(int argc, char *argv[])
 		ignore_count=0;
 	}
 
+	g_board_type = sc_get_board_type();
 	bat_charge_on();
 
 	if (Base_path_device(base_path) == 179) {	/* RH */
