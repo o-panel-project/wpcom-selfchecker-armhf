@@ -463,7 +463,7 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	tv0=gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv0), FALSE);
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(tv0), FALSE);
-	gtk_widget_set_usize(tv0, 400, 150);
+	gtk_widget_set_usize(tv0, 410, 150);
 	
 	a01=gtk_alignment_new(0.5, 0.5, 1, 0.8);
 	v01=gtk_vbox_new(FALSE, 10);
@@ -493,7 +493,7 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	// bottom-right part = ping info
 	sc1=gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sc1), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-	gtk_widget_set_usize(sc1, 400, 120);
+	gtk_widget_set_usize(sc1, 410, 120);
 	tv1=gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv1), FALSE);
 	gtk_container_add(GTK_CONTAINER(sc1), tv1);

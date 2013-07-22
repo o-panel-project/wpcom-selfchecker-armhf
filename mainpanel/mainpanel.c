@@ -318,7 +318,7 @@ char	tmps[SMALL_STR];
 	tmps[0]='\0'; kver[0]='\0';
 
 	printf("%s()\n", __func__);
-	fd=open("/version/rootfs-version", O_RDONLY);
+	fd=open("/rootfs-version", O_RDONLY);
 	if(fd<0){
 		strcpy(tmps, "Unknown (proc unmounted?)");
 		return;
