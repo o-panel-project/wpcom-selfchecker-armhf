@@ -1,0 +1,197 @@
+diff -urN busybox-1.19.0.orig/networking/udhcp/common.c busybox-1.19.0/networking/udhcp/common.c
+--- busybox-1.19.0.orig/networking/udhcp/common.c	2011-08-11 09:23:58.000000000 +0900
++++ busybox-1.19.0/networking/udhcp/common.c	2013-07-23 13:45:07.031624214 +0900
+@@ -61,6 +61,7 @@
+ #endif
+ 	{ OPTION_STATIC_ROUTES                    , 0xf9 }, /* DHCP_MS_STATIC_ROUTES */
+ 	{ OPTION_STRING                           , 0xfc }, /* DHCP_WPAD          */
++	{ OPTION_U8                               , 0xB0 }, /* DHCP_MIS_CLIENT    */
+ 
+ 	/* Options below have no match in dhcp_option_strings[],
+ 	 * are not passed to dhcpc scripts, and cannot be specified
+@@ -128,6 +129,7 @@
+ #endif
+ 	"msstaticroutes""\0"/* DHCP_MS_STATIC_ROUTES */
+ 	"wpad" "\0"        /* DHCP_WPAD           */
++	"wpcomid" "\0"     /* DHCP_MIS_CLIENT     */
+ 	;
+ 
+ /* Lengths of the option types in binary form.
+diff -urN busybox-1.19.0.orig/networking/udhcp/common.h busybox-1.19.0/networking/udhcp/common.h
+--- busybox-1.19.0.orig/networking/udhcp/common.h	2011-08-11 09:23:58.000000000 +0900
++++ busybox-1.19.0/networking/udhcp/common.h	2013-07-23 13:39:07.628124314 +0900
+@@ -147,6 +147,7 @@
+ //#define DHCP_STATIC_ROUTES    0x79 /* RFC 3442. (mask,ip,router) tuples */
+ #define DHCP_VLAN_ID            0x84 /* 802.1P VLAN ID */
+ #define DHCP_VLAN_PRIORITY      0x85 /* 802.1Q VLAN priority */
++#define DHCP_MIS_CLIENT         0xB0 /* Wpcom security option */
+ //#define DHCP_MS_STATIC_ROUTES 0xf9 /* Microsoft's pre-RFC 3442 code for 0x79? */
+ //#define DHCP_WPAD             0xfc /* MSIE's Web Proxy Autodiscovery Protocol */
+ #define DHCP_END                0xff
+diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking/udhcp/dhcpc.c
+--- busybox-1.19.0.orig/networking/udhcp/dhcpc.c	2011-08-11 09:23:58.000000000 +0900
++++ busybox-1.19.0/networking/udhcp/dhcpc.c	2013-07-23 13:43:42.919624487 +0900
+@@ -55,6 +55,7 @@
+ 	"foreground\0"     No_argument       "f"
+ 	"background\0"     No_argument       "b"
+ 	"broadcast\0"      No_argument       "B"
++	"mis\0"            No_argument       "m"
+ 	IF_FEATURE_UDHCPC_ARPING("arping\0"	No_argument       "a")
+ 	IF_FEATURE_UDHCP_PORT("client-port\0"	Required_argument "P")
+ 	;
+@@ -82,8 +83,9 @@
+ 	OPT_x = 1 << 18,
+ 	OPT_f = 1 << 19,
+ 	OPT_B = 1 << 20,
++	OPT_m = 1 << 21,
+ /* The rest has variable bit positions, need to be clever */
+-	OPTBIT_B = 20,
++	OPTBIT_m = 21,
+ 	USE_FOR_MMU(             OPTBIT_b,)
+ 	IF_FEATURE_UDHCPC_ARPING(OPTBIT_a,)
+ 	IF_FEATURE_UDHCP_PORT(   OPTBIT_P,)
+@@ -557,6 +559,9 @@
+ 	 */
+ 	add_client_options(&packet);
+ 
++	if (client_config.MisClient)
++		udhcp_add_simple_option(&packet, DHCP_MIS_CLIENT, 1);
++
+ 	bb_info_msg("Sending discover...");
+ 	return raw_bcast_from_client_config_ifindex(&packet);
+ }
+@@ -600,6 +605,9 @@
+ 	 */
+ 	add_client_options(&packet);
+ 
++	if (client_config.MisClient)
++		udhcp_add_simple_option(&packet, DHCP_MIS_CLIENT, 1);
++
+ 	addr.s_addr = requested;
+ 	bb_info_msg("Sending select for %s...", inet_ntoa(addr));
+ 	return raw_bcast_from_client_config_ifindex(&packet);
+@@ -640,6 +648,9 @@
+ 	 */
+ 	add_client_options(&packet);
+ 
++	if (client_config.MisClient)
++		udhcp_add_simple_option(&packet, DHCP_MIS_CLIENT, 1);
++
+ 	bb_info_msg("Sending renew...");
+ 	if (server)
+ 		return udhcp_send_kernel_packet(&packet,
+@@ -671,6 +682,9 @@
+ 
+ 	udhcp_add_simple_option(&packet, DHCP_SERVER_ID, server);
+ 
++	if (client_config.MisClient)
++		udhcp_add_simple_option(&packet, DHCP_MIS_CLIENT, 1);
++
+ 	bb_info_msg("Sending decline...");
+ 	return raw_bcast_from_client_config_ifindex(&packet);
+ }
+@@ -691,6 +705,9 @@
+ 
+ 	udhcp_add_simple_option(&packet, DHCP_SERVER_ID, server);
+ 
++	if (client_config.MisClient)
++		udhcp_add_simple_option(&packet, DHCP_MIS_CLIENT, 1);
++
+ 	bb_info_msg("Sending release...");
+ 	return udhcp_send_kernel_packet(&packet, ciaddr, CLIENT_PORT, server, SERVER_PORT);
+ }
+@@ -1041,6 +1058,19 @@
+ //usage:     "\n	USR1	Renew current lease"
+ //usage:     "\n	USR2	Release current lease"
+ 
++static void check_mis_client(void)
++{
++	char check_file[128];
++	sprintf(check_file, "/config/network/%s.no_wpc_client",
++			client_config.interface);
++	if (access(check_file, F_OK)) {
++		/* wpc client */
++		client_config.MisClient = 1;
++	} else {
++		/* no wpc client */
++		client_config.MisClient = 0;
++	}
++}
+ 
+ int udhcpc_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
+ int udhcpc_main(int argc UNUSED_PARAM, char **argv)
+@@ -1083,7 +1113,7 @@
+ #endif
+ 		;
+ 	IF_LONG_OPTS(applet_long_options = udhcpc_longopts;)
+-	opt = getopt32(argv, "CV:H:h:F:i:np:qRr:s:T:t:SA:O:ox:fB"
++	opt = getopt32(argv, "CV:H:h:F:i:np:qRr:s:T:t:SA:O:ox:fBm"
+ 		USE_FOR_MMU("b")
+ 		IF_FEATURE_UDHCPC_ARPING("a")
+ 		IF_FEATURE_UDHCP_PORT("P:")
+@@ -1174,6 +1204,10 @@
+ 		openlog(applet_name, LOG_PID, LOG_DAEMON);
+ 		logmode |= LOGMODE_SYSLOG;
+ 	}
++	check_mis_client();
++	if (opt & OPT_m) {
++		client_config.MisClient = 1;
++	}
+ 
+ 	/* Make sure fd 0,1,2 are open */
+ 	bb_sanitize_stdio();
+@@ -1182,7 +1216,8 @@
+ 	/* Create pidfile */
+ 	write_pidfile(client_config.pidfile);
+ 	/* Goes to stdout (unless NOMMU) and possibly syslog */
+-	bb_info_msg("%s (v"BB_VER") started", applet_name);
++	bb_info_msg("%s (v"BB_VER") started%s", applet_name,
++			client_config.MisClient == 1 ? " (MIS client mode)" : "");
+ 	/* Set up the signal pipe */
+ 	udhcp_sp_setup();
+ 	/* We want random_xid to be random... */
+@@ -1260,6 +1295,18 @@
+ 				if (packet_num < discover_retries) {
+ 					if (packet_num == 0)
+ 						xid = random_xid();
++					if (packet_num == 0) {
++						/*
++						 * RFC 2131 4.4.1 random wait for 1-10 sec
++						 * before discover
++						 */
++						struct timespec ts;
++						ts.tv_sec = ts.tv_nsec =
++						1 + (int)(10.0 * xid / (RAND_MAX + 1.0));
++						bb_info_msg("%lu sec waiting befor discover",ts.tv_sec);
++						nanosleep(&ts, NULL);
++					}
++
+ 					/* broadcast */
+ 					send_discover(xid, requested_ip);
+ 					timeout = discover_timeout;
+@@ -1427,6 +1474,14 @@
+ 			continue;
+ 		}
+ 
++		if (client_config.MisClient) {
++			temp = udhcp_get_option(&packet, DHCP_MIS_CLIENT);
++			if (!temp) {
++				bb_error_msg("MIS client mode, but message is not MIS");
++				continue;
++			}
++		}
++
+ 		switch (state) {
+ 		case INIT_SELECTING:
+ 			/* Must be a DHCPOFFER to one of our xid's */
+diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.h busybox-1.19.0/networking/udhcp/dhcpc.h
+--- busybox-1.19.0.orig/networking/udhcp/dhcpc.h	2011-08-11 09:23:58.000000000 +0900
++++ busybox-1.19.0/networking/udhcp/dhcpc.h	2013-07-23 13:39:41.444124510 +0900
+@@ -21,6 +21,7 @@
+ 	uint8_t *vendorclass;           /* Optional vendor class-id to use */
+ 	uint8_t *hostname;              /* Optional hostname to use */
+ 	uint8_t *fqdn;                  /* Optional fully qualified domain name to use */
++	int MisClient;                  /* Optional MIS client */
+ 
+ 	uint16_t first_secs;
+ 	uint16_t last_secs;

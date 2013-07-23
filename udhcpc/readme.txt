@@ -1,46 +1,42 @@
-j-panel selfcheck—pdhcpc‚ÌƒCƒ“ƒXƒg[ƒ‹‚É‚Â‚¢‚Ä 2011/8/26
+j-panel selfcheckç”¨dhcpcã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã«ã¤ã„ã¦ 2011/8/26
 
-‚PDƒtƒ@ƒCƒ‹‚É‚Â‚¢‚Ä
+ï¼‘ï¼Žãƒ•ã‚¡ã‚¤ãƒ«ã«ã¤ã„ã¦
 busybox-1.19.0.tarbz2
-.config
-udhcpc  selfcheck—pdhcp
+dot.config
+wpcom.patch
+udhcpc  selfcheckç”¨dhcp
 
-‚QDƒCƒ“ƒXƒg[ƒ‹•û–@
-“Y•t‚µ‚½ƒoƒCƒiƒŠ‚ðŽg—p‚·‚éê‡‚Í(5)‚©‚çì‹Æ‚ðs‚¤B
+ï¼’ï¼Žã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«æ–¹æ³•
+æ·»ä»˜ã—ãŸãƒã‚¤ãƒŠãƒªã‚’ä½¿ç”¨ã™ã‚‹å ´åˆã¯(5)ã‹ã‚‰ä½œæ¥­ã‚’è¡Œã†ã€‚
 
-(1) busybox‚ÌŽæ“¾
-@ƒ\[ƒXƒR[ƒh‚ÍŽŸ‚Ì‚æ‚¤‚ÉŽæ“¾‚µ‚½‚à‚Ì‚ðŽg—p‚·‚éB
-@# wget http://www.busybox.net/downloads/busybox-1.19.0.tar.bz2
-@
-(2) “WŠJ
-@ŽŸ‚Ì‚æ‚¤‚É“WŠJ‚·‚éB
-@# tar xf busybox-1.19.0.tar.bz2
-@
+(1) busyboxã®å–å¾—
+ã€€ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã¯æ¬¡ã®ã‚ˆã†ã«å–å¾—ã—ãŸã‚‚ã®ã‚’ä½¿ç”¨ã™ã‚‹ã€‚
+ã€€# wget http://www.busybox.net/downloads/busybox-1.19.0.tar.bz2
+
+(2) å±•é–‹
+ã€€æ¬¡ã®ã‚ˆã†ã«å±•é–‹ã™ã‚‹ã€‚
+ã€€# tar xf busybox-1.19.0.tar.bz2
+  # cd busybox-1.19.0
+  # patch -p1 < ../wpcom.patch
+
 (3) .config
-@—pˆÓ‚µ‚½.config‚Íbusybox‚Ìƒ\[ƒXƒR[ƒh‚ð“WŠJ‚µ‚½
-@ƒfƒBƒŒƒNƒgƒŠ‚ÖƒRƒs[‚µ‚Ä‚¨‚­B
-@.config‚ðì¬‚·‚éê‡‚ÍŽŸ‚Ì‚æ‚¤‚És‚¤B
-@# cd busybox-1.19.0
-@# make allnoconfig
-@# make menunoconfig
-@ƒƒjƒ…[‰æ–Ê‚ªo‚Ä‚«‚½‚çŽŸ‚Ì€–Ú‚ð—LŒø‚É‚µ‚Äƒƒjƒ…[‰æ–Ê‚ðI—¹‚·‚éB
-@@Networking Utilities  --->
-@@@[*] udhcp client (udhcpc)
-@
-(4) ƒrƒ‹ƒh
-@ŽŸ‚Ì‚æ‚¤‚Éƒrƒ‹ƒh‚·‚éB
-@# make CROSS_COMPILE=arm-none-linux-gnueabi-
-@# mv busybox udhcpc
-@
-(5) ƒRƒs[
-@USBƒƒ‚ƒŠ‚ÉudhcpcƒfƒBƒŒƒNƒgƒŠ‚ðì¬‚µA
-@‚»‚±‚Éì¬‚µ‚½udhcpc‚ðƒRƒs[‚·‚éB
-@
-(6) dhcpƒXƒNƒŠƒvƒg‚ÌC³
-@/mnt/usb/script/wifi-set-infra-dhcp‚ð’¼‚·
-@ŽŸ‚Ì‚æ‚¤‚Ès‚ª‚ ‚éB
-@udhcpc -i $SC_WLAN_IFACE &
-@‚±‚ê‚ðŽŸ‚Ì‚æ‚¤‚É•ÏX‚·‚éB
-@/mnt1/udhcpc/udhcpc -i $SC_WLAN_IFACE &
-@
-ˆÈãB
+ã€€ç”¨æ„ã—ãŸdot.configã¯busyboxã®ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã‚’å±•é–‹ã—ãŸ
+ã€€ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã¸.configã¨ã—ã¦ã‚³ãƒ”ãƒ¼ã—ã¦ãŠãã€‚
+ã€€.configã‚’ä½œæˆã™ã‚‹å ´åˆã¯æ¬¡ã®ã‚ˆã†ã«è¡Œã†ã€‚
+ã€€# cd busybox-1.19.0
+ã€€# make allnoconfig
+ã€€# make menunoconfig
+ã€€ãƒ¡ãƒ‹ãƒ¥ãƒ¼ç”»é¢ãŒå‡ºã¦ããŸã‚‰æ¬¡ã®é …ç›®ã‚’æœ‰åŠ¹ã«ã—ã¦ãƒ¡ãƒ‹ãƒ¥ãƒ¼ç”»é¢ã‚’çµ‚äº†ã™ã‚‹ã€‚
+ã€€ã€€Networking Utilities  --->
+ã€€ã€€ã€€[*] udhcp client (udhcpc)
+
+(4) ãƒ“ãƒ«ãƒ‰
+ã€€æ¬¡ã®ã‚ˆã†ã«ãƒ“ãƒ«ãƒ‰ã™ã‚‹ã€‚
+ã€€# cd busybox-1.19.0
+ã€€# make CROSS_COMPILE=arm-none-linux-gnueabi-
+ã€€# cp busybox ../udhcpc
+
+(5) ã‚³ãƒ”ãƒ¼
+ã€€USBãƒ¡ãƒ¢ãƒªã®binãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã«ä½œæˆã—ãŸudhcpcã‚’ã‚³ãƒ”ãƒ¼ã™ã‚‹ã€‚
+
+ä»¥ä¸Šã€‚
