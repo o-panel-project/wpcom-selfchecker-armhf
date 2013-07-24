@@ -6,7 +6,7 @@ ifdef CROSS_COMPILE
   PKGCONFIG=../scripts/pkg-config.sh
   CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mhard-float
   CFLAGS += -mfloat-abi=softfp -ftree-vectorize -mvectorize-with-neon-quad
-  CFLAGS += -mthumb-interwork -mno-thumb
+  CFLAGS += -mthumb-interwork -mno-thumb -fno-strict-aliasing
   STRIP = ${CROSS_COMPILE}strip
   STRIP_OPT = --remove-section=.comment --remove-section=.note
 else

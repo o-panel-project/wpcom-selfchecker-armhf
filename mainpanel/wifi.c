@@ -15,13 +15,18 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
 #include <gtk/gtk.h>
 #include "common.h"
 #include "md5.h"
 
-static int iw_log_run, ping_log_run, use_crypt;
+static int iw_log_run, ping_log_run, use_misdhcp, use_misping;
 static int pid_ping=0, pid_iw=0;
-GtkWidget *v_main, *b_ping_start, *b_ping_stop, *lb_lq;
+GtkWidget *v_main, *b_ping_start, *b_ping_stop, *lb_lq, *lb_ip;
 GtkWidget *lb_rssi;
 
 struct log_check_info
@@ -78,6 +83,37 @@ static void iwconfig_checker_extract_rssi(char *log, char *buf, int n)
 	gtk_label_set_text(GTK_LABEL(lb_rssi), tmps);
 }
 
+//
+//	display ip addr
+//
+static void display_ip_addr()
+{
+	int fd, ret;
+	struct ifreq ifr;
+	char tmps[SMALL_STR], *p;
+
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		tmps[0] = '\0';
+		gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
+		return;
+	}
+	p = getenv("SC_WLAN_IFACE");
+	if (!p) {
+		tmps[0] = '\0';
+		gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
+		return;
+	}
+	ifr.ifr_addr.sa_family = AF_INET;
+	strncpy(ifr.ifr_name, p, IFNAMSIZ-1);
+	ret = ioctl(fd, SIOCGIFADDR, &ifr);
+	close(fd);
+	if (ret < 0)
+		tmps[0] = '\0';
+	else
+		sprintf(tmps, "ip addr : %s",
+			inet_ntoa(((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr));
+	gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
+}
 
 gboolean iwconfig_checker_step(gpointer point)
 {
@@ -89,6 +125,7 @@ gboolean iwconfig_checker_step(gpointer point)
 	
 	iwconfig_checker_extract_rssi(c->log, c->buf, c->n);
 	log_checker_extract_lq(c->log, c->buf, c->n);
+	display_ip_addr();
 	
 	return FALSE;
 }
@@ -118,7 +155,7 @@ static void *iwconfig_checker(void *a)
 		
 		g_idle_add_full(G_PRIORITY_HIGH, iwconfig_checker_step, c, NULL);
 		
-		sleep(1);
+		sleep(2);
 	}
 	
 	return NULL;
@@ -222,6 +259,9 @@ static void press_start_ping(GtkWidget *widget, gpointer data)
 	case 0:
 		setpgid(getpid(),getpid());
 		sprintf(tmps, "%s/%s", base_path, "script/wifi-ping");
+		if (use_misping)
+			execl("/bin/sh", "sh", tmps, "192.168.173.2", NULL);
+		else
 		execl("/bin/sh", "sh", tmps, NULL);
 		_exit(127);
 		break;
@@ -252,9 +292,14 @@ static void press_browser(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(v_main, TRUE);
 }
 
-static void press_crypt(GtkWidget *widget, gpointer data)
+static void press_misdhcp(GtkWidget *widget, gpointer data)
 {
-	use_crypt=use_crypt ? 0 : 1;
+	use_misdhcp=use_misdhcp ? 0 : 1;
+}
+
+static void press_misping(GtkWidget *widget, gpointer data)
+{
+	use_misping = use_misping ? 0 : 1;
 }
 
 int error_check(GtkTextView *tv)
@@ -402,8 +447,8 @@ void press_configure(GtkWidget *widget, gpointer data)
 		strcat(tmps, "adhoc");
 		break;
 	}
-	if(!use_crypt)
-		strcat(tmps, " nocrypt");
+	if(use_misdhcp)
+		strcat(tmps, " misdhcp");
 	
 	system(tmps);
 	error_check((GtkTextView *)log_check_ping.w);
@@ -421,7 +466,7 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	GtkWidget *v00, *v01, *v10, *v11;
 	GtkWidget *a00, *a01, *a10, *a11;
 	GtkWidget *sc0, *sc1, *tv0, *tv1;
-	GtkWidget *b00, *b01, *b02, *b10, *b11, *b12, *cb0;
+	GtkWidget *b00, *b01, *b02, *b10, *b11, *b12, *cb0, *cb1;
 	GtkWidget *h2;
 	
 	ping_log_run=1;
@@ -447,10 +492,10 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	g_signal_connect(b01, "clicked", G_CALLBACK(press_configure), (gpointer)1);
 	b02=gtk_button_new_with_label("Configure Adhoc - Static IP");
 	g_signal_connect(b02, "clicked", G_CALLBACK(press_configure), (gpointer)2);
-	cb0=gtk_check_button_new_with_label("Use Encryption");
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb0), TRUE);
-	use_crypt=1;
-	g_signal_connect(cb0, "toggled", G_CALLBACK(press_crypt), (gpointer)0);
+	cb0=gtk_check_button_new_with_label("Use MIS DHCP Server");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb0), FALSE);
+	use_misdhcp=0;
+	g_signal_connect(cb0, "toggled", G_CALLBACK(press_misdhcp), (gpointer)0);
 	
 	gtk_container_add(GTK_CONTAINER(v00), b00);
 	gtk_container_add(GTK_CONTAINER(v00), b01);
@@ -472,6 +517,8 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	lb_rssi = gtk_label_new("");
 	gtk_container_add(GTK_CONTAINER(v01), lb_rssi);
 	gtk_container_add(GTK_CONTAINER(v01), tv0);
+	lb_ip = gtk_label_new("");
+	gtk_container_add(GTK_CONTAINER(v01), lb_ip);
 	gtk_container_add(GTK_CONTAINER(a01), v01);
 	gtk_table_attach(GTK_TABLE(tbl), a01, 4, 10, 0, 1, 0, 0, 5, 20);
 	
@@ -490,6 +537,10 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(a10), v10);
 	gtk_table_attach(GTK_TABLE(tbl), a10, 0, 4, 1, 2, 0, 0, 5, 20);
 	
+	gtk_widget_set_sensitive(b10, FALSE);
+	gtk_widget_set_sensitive(b11, FALSE);
+	gtk_widget_set_sensitive(b12, FALSE);
+
 	// bottom-right part = ping info
 	sc1=gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sc1), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
@@ -506,10 +557,17 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	b_ping_stop=gtk_button_new_with_label("Stop Ping");
 	g_signal_connect(b_ping_stop, "clicked", G_CALLBACK(press_stop_ping), (gpointer)0);
 	gtk_widget_set_sensitive(b_ping_stop, FALSE);
+
+	cb1=gtk_check_button_new_with_label("Ping target MIS(192.168.173.2)");
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb1), FALSE);
+	use_misping=0;
+	g_signal_connect(cb1, "toggled", G_CALLBACK(press_misping), (gpointer)0);
+
 	gtk_container_add(GTK_CONTAINER(h2), b_ping_start);
 	gtk_container_add(GTK_CONTAINER(h2), b_ping_stop);
 	gtk_container_add(GTK_CONTAINER(v11), sc1);
 	gtk_container_add(GTK_CONTAINER(v11), h2);
+	gtk_container_add(GTK_CONTAINER(v11), cb1);
 	gtk_container_add(GTK_CONTAINER(a11), v11);
 	gtk_table_attach(GTK_TABLE(tbl), a11, 4, 10, 1, 2, 0, 0, 5, 20);
 	
