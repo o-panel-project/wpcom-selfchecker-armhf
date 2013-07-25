@@ -24,7 +24,9 @@
 #include "wpcio.h"
 #include <sys/ioctl.h>
 
-#define SC_VERSION "v2.0.0 2013/07/19"
+#define SC_TITLE   "New SelfChecker"
+#define SC_VERSION "v2.0.0"
+const char *sc_version_str = SC_TITLE " " SC_VERSION " " __DATE__ " " __TIME__;
 
 static int ignore_count=0;
 extern char usbmem_first_device;	/* RH */
@@ -83,7 +85,7 @@ struct side_menu_list_st {
 //
 //	Main top : showing version
 //
-void sc_mainpanel(GtkWidget *w, char *t, GtkWidget *f, GtkWidget *table)
+void sc_mainpanel(GtkWidget *w, const char *t, GtkWidget *f, GtkWidget *table)
 {
 	gtk_window_set_title(GTK_WINDOW(w), t);
 	gtk_container_set_border_width(GTK_CONTAINER(w), 5);
@@ -488,11 +490,11 @@ struct	utsname	u;
 
 	/*	20110827VACS	*/
 #if 1	/* RH */
-	sprintf(tmps, "New SelfChecker %s\n"
+	sprintf(tmps, "%s\n"
 				  "usb package %s\n\n\n"
 				  "%s\n%s\n%s\n\n"
 				  "root filesystem %s\n",
-			SC_VERSION, kver4, kver21, kver, kver22, kver3);
+			sc_version_str, kver4, kver21, kver, kver22, kver3);
 #else
 	sprintf(tmps, "New SelfChecker %s\n\n\n\nuname version: %s\n\nroot filesystem %s\n\n\n\n%s\n%s\n\n%s%s",
 									SC_VERSION, kver, kver3, kver21, kver22, tpver, egver);
@@ -759,7 +761,7 @@ int main(int argc, char *argv[])
 	gtk_box_pack_start(GTK_BOX(vx), fr, FALSE, FALSE, 0);
 	gtk_container_add(GTK_CONTAINER(vx), v0);
 	
-	sc_mainpanel(window, " New SelfChecker " SC_VERSION, vx, table);
+	sc_mainpanel(window, sc_version_str, vx, table);
 	
 	tr=sc_sidetree(&menupath);
 	gtk_box_pack_start(GTK_BOX(v0), tr, TRUE, TRUE, 0);
@@ -769,8 +771,8 @@ int main(int argc, char *argv[])
 	pthread_create(&th_bsub, NULL, battery_sub_update, 0);
 	
 	while(1){
-		gtk_label_set_text(GTK_LABEL(lb_top), "New SelfChecker");
-		lb=gtk_label_new("New SelfChecker " SC_VERSION);
+		gtk_label_set_text(GTK_LABEL(lb_top), SC_TITLE);
+		lb=gtk_label_new(sc_version_str);
 		a=gtk_alignment_new(0, 0, 0.8, 0.8);
 		bb=sc_bbox2(&st_exit, batsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
 		v1=gtk_vbox_new(FALSE, 10);

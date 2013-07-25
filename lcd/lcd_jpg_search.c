@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <Imlib2.h>
+#include <unistd.h>
 
 #ifdef HAVE_WS
 #include <WScom.h>
@@ -11,7 +12,7 @@
 //----------------------------------------------------------
 #include	<WSCwindow.h>
 #endif
-#include	"../common_functions/misc_funcs.h"
+#include	"misc_funcs.h"
 #include	"lcd_jpg_search.h"
 #include	"lcd_jpg_file.h"
 

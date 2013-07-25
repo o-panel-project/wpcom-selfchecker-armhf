@@ -23,8 +23,10 @@
 #include <gtk/gtk.h>
 #include "common.h"
 #include "md5.h"
+#include "tctlprof.h"
 
-static int iw_log_run, ping_log_run, use_misdhcp, use_misping;
+static int iw_log_run, ping_log_run;
+static int use_wifi_config;
 static int pid_ping=0, pid_iw=0;
 GtkWidget *v_main, *b_ping_start, *b_ping_stop, *lb_lq, *lb_ip;
 GtkWidget *lb_rssi;
@@ -36,10 +38,113 @@ struct log_check_info
 	int *flag;
 	int *pid;
 	int n;
-	char buf[SMALL_STR];
+	char buf[MID_STR];
 };
 static struct log_check_info log_check_ping, log_check_iw;
 
+struct _wifi_config {
+	char label[SMALL_STR];
+	char essid[SMALL_STR];
+	char wepkey[SMALL_STR];
+	char ip_config[SMALL_STR];
+	in_addr_t ping_target;
+	in_addr_t static_ip;
+	in_addr_t static_mask;
+	in_addr_t static_gw;
+};
+#define WIFI_MAX_CONFIG 5
+static struct _wifi_config wifi_config[WIFI_MAX_CONFIG];
+static int wifi_config_entry;
+
+
+//
+//  extract wifi config
+//
+static void wifi_config_setup()
+{
+	int i, count, ret;
+	char sect[SMALL_STR], key[SMALL_STR];
+	struct in_addr ip;
+
+	comn_ProfileSetup("/tmp/selfcheck.ini");
+
+	for (i = 1, count = 0; i <= WIFI_MAX_CONFIG; i++) {
+		sprintf(sect, "wifi_config%d", i);
+		ret = comn_GetProfileString(sect, "label", "", key, sizeof(key), NULL);
+		if (ret == 0) continue;
+		strcpy(wifi_config[count].label, key);
+		comn_GetProfileString(sect, "essid",
+				"MeniukunNet", key, sizeof(key), NULL);
+		strcpy(wifi_config[count].essid, key);
+		comn_GetProfileString(sect, "wepkey",
+				"worldpicom001", key, sizeof(key), NULL);
+		strcpy(wifi_config[count].wepkey, key);
+		comn_GetProfileString(sect, "ip_config",
+				"dhcp", key, sizeof(key), NULL);
+		strcpy(wifi_config[count].ip_config, key);
+		comn_GetProfileString(sect, "ping_target",
+				"8.8.8.8", key, sizeof(key), NULL);
+		ret = inet_aton(key, &ip);
+		if (ret != 0)
+			wifi_config[count].ping_target = ip.s_addr;
+		else
+			wifi_config[count].ping_target = INADDR_NONE;
+
+		if (strcmp(wifi_config[count].ip_config, "static")) {
+			/* not static configuration */
+			wifi_config[count].static_ip = INADDR_NONE;
+			wifi_config[count].static_mask = INADDR_NONE;
+			wifi_config[count].static_gw = INADDR_NONE;
+			count++;
+			continue;
+		}
+
+		/* static configuration */
+		ret = comn_GetProfileString(sect, "ip_config_ip",
+				"", key, sizeof(key), NULL);
+		if (ret > 0)  ret = inet_aton(key, &ip);
+		if (ret != 0) wifi_config[count].static_ip = ip.s_addr;
+		else          wifi_config[count].static_ip = INADDR_NONE;
+		ret = comn_GetProfileString(sect, "ip_config_mask",
+				"", key, sizeof(key), NULL);
+		if (ret > 0)  ret = inet_aton(key, &ip);
+		if (ret != 0) wifi_config[count].static_mask = ip.s_addr;
+		else          wifi_config[count].static_mask = INADDR_NONE;
+		ret = comn_GetProfileString(sect, "ip_config_gw",
+				"", key, sizeof(key), NULL);
+		if (ret > 0)  ret = inet_aton(key, &ip);
+		if (ret != 0) wifi_config[count].static_gw = ip.s_addr;
+		else          wifi_config[count].static_gw = INADDR_NONE;
+
+		count++;
+	}
+
+	comn_ProfileTerm();
+
+	wifi_config_entry = count;
+	if (wifi_config_entry == 0)
+		debug_printf(3, "Wifi configuration not found\n");
+	for(i = 0; i < wifi_config_entry; i++) {
+		debug_printf(3, "%s() (%d) label      [%s]\n",
+				__func__, i+1, wifi_config[i].label);
+		debug_printf(3, "%s() (%d) essid      [%s]\n",
+				__func__, i+1, wifi_config[i].essid);
+		debug_printf(3, "%s() (%d) wepkey     [%s]\n",
+				__func__, i+1, wifi_config[i].wepkey);
+		debug_printf(3, "%s() (%d) ip config  [%s]\n",
+				__func__, i+1, wifi_config[i].ip_config);
+		debug_printf(3, "%s() (%d) ping       [%08x]\n",
+				__func__, i+1, htonl(wifi_config[i].ping_target));
+		if (strcmp(wifi_config[i].ip_config, "static"))
+			continue;
+		debug_printf(3, "%s() (%d) static ip  [%08x]\n",
+				__func__, i+1, htonl(wifi_config[i].static_ip));
+		debug_printf(3, "%s() (%d) static mask[%08x]\n",
+				__func__, i+1, htonl(wifi_config[i].static_mask));
+		debug_printf(3, "%s() (%d) static gw  [%08x]\n",
+				__func__, i+1, htonl(wifi_config[i].static_gw));
+	}
+}
 
 //
 //	extract link quality
@@ -121,7 +226,9 @@ gboolean iwconfig_checker_step(gpointer point)
 	struct log_check_info *c = (struct log_check_info*)point;
 	
 	tb = gtk_text_view_get_buffer((GtkTextView *)c->w);
-	gtk_text_buffer_set_text(tb, c->buf, -1);
+	gtk_text_buffer_set_text(tb, "", 0);
+	usleep(100000);//g_print("%s()\n", __func__);
+	gtk_text_buffer_set_text(tb, c->buf, c->n);
 	
 	iwconfig_checker_extract_rssi(c->log, c->buf, c->n);
 	log_checker_extract_lq(c->log, c->buf, c->n);
@@ -137,18 +244,19 @@ gboolean iwconfig_checker_step(gpointer point)
 static void *iwconfig_checker(void *a)
 {
 	FILE *fp;
-	char buf[256];
+//	char buf[256];
 	struct log_check_info *c;
 	
 	c = (struct log_check_info*)a;
 	
 	while (*(c->flag)) {
-		fp = popen("/sbin/iwconfig $SC_WLAN_IFACE 2>&1 | sed 's/    //'", "r");
+	//	fp = popen("/sbin/iwconfig $SC_WLAN_IFACE 2>&1 | sed 's/    //'", "r");
+		fp = popen("/sbin/iwconfig $SC_WLAN_IFACE 2>&1", "r");
 		if (fp == NULL) {
 			return NULL;
 		}
 		
-		memset(buf, 0, sizeof(buf));
+	//	memset(buf, 0, sizeof(buf));
 		c->n = fread(c->buf, sizeof(c->buf[0]), sizeof(c->buf), fp);
 		
 		pclose(fp);
@@ -157,7 +265,7 @@ static void *iwconfig_checker(void *a)
 		
 		sleep(2);
 	}
-	
+	g_print("%s() thread finish.\n", __func__);
 	return NULL;
 }
 
@@ -185,7 +293,7 @@ static void *log_checker(void *a)
 	
 restart:
 	while(fd<=0){
-		if(!*(c->flag)) return NULL;
+		if(!*(c->flag)) break;//return NULL;
 		fd=open(c->log, O_RDONLY|O_NONBLOCK);
 		usleep(200000);
 	}
@@ -203,7 +311,7 @@ restart:
 		c->n = read(fd, c->buf, SMALL_STR);
 	}
 	close(fd);
-	
+	g_print("%s() thread finish.\n", __func__);
 	return NULL;
 }
 
@@ -259,9 +367,6 @@ static void press_start_ping(GtkWidget *widget, gpointer data)
 	case 0:
 		setpgid(getpid(),getpid());
 		sprintf(tmps, "%s/%s", base_path, "script/wifi-ping");
-		if (use_misping)
-			execl("/bin/sh", "sh", tmps, "192.168.173.2", NULL);
-		else
 		execl("/bin/sh", "sh", tmps, NULL);
 		_exit(127);
 		break;
@@ -292,14 +397,12 @@ static void press_browser(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(v_main, TRUE);
 }
 
-static void press_misdhcp(GtkWidget *widget, gpointer data)
+static void wifi_config_changed(GtkComboBox *combo, gpointer data)
 {
-	use_misdhcp=use_misdhcp ? 0 : 1;
-}
-
-static void press_misping(GtkWidget *widget, gpointer data)
-{
-	use_misping = use_misping ? 0 : 1;
+	gchar *string = gtk_combo_box_get_active_text(combo);
+	use_wifi_config = gtk_combo_box_get_active(combo);
+	g_print("%s() %s (%d) selected.\n", __func__, string, use_wifi_config);
+	g_free(string);
 }
 
 int error_check(GtkTextView *tv)
@@ -429,27 +532,58 @@ void press_upload(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(p, TRUE);
 }
 
+static void wifi_set_config()
+{
+	FILE *fp;
+	struct in_addr ip;
+
+	fp = fopen("/tmp/wifi-set-config", "w");
+	if (!fp) return;
+	fprintf(fp, "ESSID=%s\n", wifi_config[use_wifi_config].essid);
+	fprintf(fp, "KEY=%s\n", wifi_config[use_wifi_config].wepkey);
+	if (wifi_config[use_wifi_config].ping_target != INADDR_NONE) {
+		ip.s_addr = wifi_config[use_wifi_config].ping_target;
+		fprintf(fp, "PING=%s\n", inet_ntoa(ip));
+	}
+	if (wifi_config[use_wifi_config].static_ip != INADDR_NONE) {
+		ip.s_addr = wifi_config[use_wifi_config].static_ip;
+		fprintf(fp, "IP=%s\n", inet_ntoa(ip));
+	}
+	if (wifi_config[use_wifi_config].static_mask != INADDR_NONE) {
+		ip.s_addr = wifi_config[use_wifi_config].static_mask;
+		fprintf(fp, "NM=%s\n", inet_ntoa(ip));
+	}
+	if (wifi_config[use_wifi_config].static_gw != INADDR_NONE) {
+		ip.s_addr = wifi_config[use_wifi_config].static_gw;
+		fprintf(fp, "GW=%s\n", inet_ntoa(ip));
+	}
+	fclose(fp);
+}
+
 void press_configure(GtkWidget *widget, gpointer data)
 {
 	char tmps[SMALL_STR];
-	
+
+	g_print("%s() start\n", __func__);
 	udhcpc_kill_check=1;
+	unlink("/tmp/wifi-set-config");
 	unlink("/tmp/sc-error.log");
+	wifi_set_config();
 	sprintf(tmps, "%s/script/wifi-set-", base_path);
-	switch((int)data){
-	case 0:
+	if (strcmp(wifi_config[use_wifi_config].ip_config, "dhcp") == 0)
 		strcat(tmps, "infra-dhcp");
-		break;
-	case 1:
+	else if (strcmp(wifi_config[use_wifi_config].ip_config, "misdhcp") == 0)
+		strcat(tmps, "infra-dhcp misdhcp");
+	else if (strcmp(wifi_config[use_wifi_config].ip_config, "static") == 0)
 		strcat(tmps, "infra-static");
-		break;
-	case 2:
-		strcat(tmps, "adhoc");
-		break;
+	else if (strcmp(wifi_config[use_wifi_config].ip_config, "adhoc") == 0)
+		strcat(tmps, "adhoc");	/* not supported */
+	else {
+		g_print("%s() ip_config failed\n", __func__);
+		sprintf(tmps,
+			"echo \"%s() ip_config failed\n\" > /tmp/sc-error.log" , __func__);
 	}
-	if(use_misdhcp)
-		strcat(tmps, " misdhcp");
-	
+
 	system(tmps);
 	error_check((GtkTextView *)log_check_ping.w);
 }
@@ -460,24 +594,26 @@ void press_configure(GtkWidget *widget, gpointer data)
 //
 int wifi_main(GtkWidget *table, GtkWidget *bsub)
 {
-	int button_no;
+	int button_no, i;
 	pthread_t th_ping, th_iw;
 	GtkWidget *a0, *tbl, *bb;
 	GtkWidget *v00, *v01, *v10, *v11;
 	GtkWidget *a00, *a01, *a10, *a11;
-	GtkWidget *sc0, *sc1, *tv0, *tv1;
-	GtkWidget *b00, *b01, *b02, *b10, *b11, *b12, *cb0, *cb1;
+	GtkWidget *sc1, *tv0, *tv1;
+	GtkWidget *b10, *b11, *b12;
 	GtkWidget *h2;
+	GtkWidget *combo, *cb_lbl, *b_go;
 	
 	ping_log_run=1;
 	iw_log_run=1;
 	unlink("/tmp/iwconfig.log");
 	unlink("/tmp/ping.log");
 	check_wlan();
+	wifi_config_setup();
 	
 	v_main=gtk_vbox_new(FALSE, 10);
 	a0=gtk_alignment_new(0.5, 0.5, 0, 0);
-	tbl=gtk_table_new(10, 2, FALSE);
+	tbl=gtk_table_new(2, 2, FALSE);
 	gtk_container_add(GTK_CONTAINER(a0), tbl);
 	gtk_container_add(GTK_CONTAINER(v_main), a0);
 	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
@@ -485,72 +621,80 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	
 	// top-left part
 	v00=gtk_vbox_new(FALSE, 10);
-	a00=gtk_alignment_new(0.5, 0.5, 0.5, 0.5);
-	b00=gtk_button_new_with_label("Configure Infrastructure - DHCP");
-	g_signal_connect(b00, "clicked", G_CALLBACK(press_configure), (gpointer)0);
-	b01=gtk_button_new_with_label("Configure Infrastructure - Static IP");
-	g_signal_connect(b01, "clicked", G_CALLBACK(press_configure), (gpointer)1);
-	b02=gtk_button_new_with_label("Configure Adhoc - Static IP");
-	g_signal_connect(b02, "clicked", G_CALLBACK(press_configure), (gpointer)2);
-	cb0=gtk_check_button_new_with_label("Use MIS DHCP Server");
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb0), FALSE);
-	use_misdhcp=0;
-	g_signal_connect(cb0, "toggled", G_CALLBACK(press_misdhcp), (gpointer)0);
-	
-	gtk_container_add(GTK_CONTAINER(v00), b00);
-	gtk_container_add(GTK_CONTAINER(v00), b01);
-	gtk_container_add(GTK_CONTAINER(v00), b02);
-	gtk_container_add(GTK_CONTAINER(v00), cb0);
+	a00=gtk_alignment_new(0.5, 0.5, 0.0, 0.0);
+
+	cb_lbl = gtk_label_new("Select configration settings");
+	use_wifi_config = 0;
+	combo = gtk_combo_box_new_text();
+	if (wifi_config_entry == 0)
+		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), "no config");
+	else
+		for (i = 0; i < wifi_config_entry; i++) {
+			gtk_combo_box_append_text(
+					GTK_COMBO_BOX(combo), wifi_config[i].label);
+		}
+	gtk_combo_box_set_active(GTK_COMBO_BOX(combo), use_wifi_config);
+	g_signal_connect(G_OBJECT(combo), "changed",
+			G_CALLBACK(wifi_config_changed), NULL);
+	b_go = gtk_button_new_with_label("Configure");
+	g_signal_connect(G_OBJECT(b_go), "clicked",
+			G_CALLBACK(press_configure), (gpointer)0);
+
+	gtk_container_add(GTK_CONTAINER(v00), cb_lbl);
+	gtk_container_add(GTK_CONTAINER(v00), combo);
+	gtk_container_add(GTK_CONTAINER(v00), b_go);
 	gtk_container_add(GTK_CONTAINER(a00), v00);
-	gtk_table_attach(GTK_TABLE(tbl), a00, 0, 4, 0, 1, 0, 0, 5, 20);
+	gtk_table_attach_defaults(GTK_TABLE(tbl), a00, 0, 1, 0, 1);
 	
 	// top-right part = iwconfig info 
+	v01=gtk_vbox_new(FALSE, 10);
+	a01=gtk_alignment_new(0.5, 0.5, 0.0, 0.0);
+
 	tv0=gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv0), FALSE);
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(tv0), FALSE);
 	gtk_widget_set_usize(tv0, 410, 150);
-	
-	a01=gtk_alignment_new(0.5, 0.5, 1, 0.8);
-	v01=gtk_vbox_new(FALSE, 10);
 	lb_lq = gtk_label_new("");
-	gtk_container_add(GTK_CONTAINER(v01), lb_lq);
 	lb_rssi = gtk_label_new("");
+	lb_ip = gtk_label_new("");
+
+	gtk_container_add(GTK_CONTAINER(v01), lb_lq);
 	gtk_container_add(GTK_CONTAINER(v01), lb_rssi);
 	gtk_container_add(GTK_CONTAINER(v01), tv0);
-	lb_ip = gtk_label_new("");
 	gtk_container_add(GTK_CONTAINER(v01), lb_ip);
 	gtk_container_add(GTK_CONTAINER(a01), v01);
-	gtk_table_attach(GTK_TABLE(tbl), a01, 4, 10, 0, 1, 0, 0, 5, 20);
+	gtk_table_attach(GTK_TABLE(tbl), a01, 1, 2, 0, 1, 0, 0, 40, 10);
 	
 	// bottom-left part
+	v10=gtk_vbox_new(FALSE, 10);
+	a10=gtk_alignment_new(0.5, 0.5, 0.0, 0.0);
+
 	b10=gtk_button_new_with_label("Download File");
 	g_signal_connect(b10, "clicked", G_CALLBACK(press_download), (gpointer)table);
 	b11=gtk_button_new_with_label("Upload File");
 	g_signal_connect(b11, "clicked", G_CALLBACK(press_upload), (gpointer)table);
 	b12=gtk_button_new_with_label("Invoke Browser");
 	g_signal_connect(b12, "clicked", G_CALLBACK(press_browser), (gpointer)0);
-	v10=gtk_vbox_new(FALSE, 10);
-	a10=gtk_alignment_new(0.5, 0.5, 0.5, 0.5);
+
 	gtk_container_add(GTK_CONTAINER(v10), b10);
 	gtk_container_add(GTK_CONTAINER(v10), b11);
 	gtk_container_add(GTK_CONTAINER(v10), b12);
 	gtk_container_add(GTK_CONTAINER(a10), v10);
-	gtk_table_attach(GTK_TABLE(tbl), a10, 0, 4, 1, 2, 0, 0, 5, 20);
+	gtk_table_attach_defaults(GTK_TABLE(tbl), a10, 0, 1, 1, 2);
 	
 	gtk_widget_set_sensitive(b10, FALSE);
 	gtk_widget_set_sensitive(b11, FALSE);
 	gtk_widget_set_sensitive(b12, FALSE);
 
 	// bottom-right part = ping info
+	v11=gtk_vbox_new(FALSE, 10);
+	a11=gtk_alignment_new(0.5, 0.5, 0.0, 0.0);
+
 	sc1=gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sc1), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
 	gtk_widget_set_usize(sc1, 410, 120);
 	tv1=gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv1), FALSE);
-	gtk_container_add(GTK_CONTAINER(sc1), tv1);
-	a11=gtk_alignment_new(0.5, 0.5, 1, 0.8);
-	v11=gtk_vbox_new(FALSE, 10);
-	a11=gtk_alignment_new(0.5, 0.5, 0.5, 0.5);
 	h2=gtk_hbox_new(FALSE, 10);
 	b_ping_start=gtk_button_new_with_label("Start Ping");
 	g_signal_connect(b_ping_start, "clicked", G_CALLBACK(press_start_ping), (gpointer)0);
@@ -558,26 +702,20 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	g_signal_connect(b_ping_stop, "clicked", G_CALLBACK(press_stop_ping), (gpointer)0);
 	gtk_widget_set_sensitive(b_ping_stop, FALSE);
 
-	cb1=gtk_check_button_new_with_label("Ping target MIS(192.168.173.2)");
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(cb1), FALSE);
-	use_misping=0;
-	g_signal_connect(cb1, "toggled", G_CALLBACK(press_misping), (gpointer)0);
-
+	gtk_container_add(GTK_CONTAINER(sc1), tv1);
 	gtk_container_add(GTK_CONTAINER(h2), b_ping_start);
 	gtk_container_add(GTK_CONTAINER(h2), b_ping_stop);
 	gtk_container_add(GTK_CONTAINER(v11), sc1);
 	gtk_container_add(GTK_CONTAINER(v11), h2);
-	gtk_container_add(GTK_CONTAINER(v11), cb1);
 	gtk_container_add(GTK_CONTAINER(a11), v11);
-	gtk_table_attach(GTK_TABLE(tbl), a11, 4, 10, 1, 2, 0, 0, 5, 20);
+	gtk_table_attach(GTK_TABLE(tbl), a11, 1, 2, 1, 2, 0, 0, 40, 20);
 	
 	log_check_iw.w=tv0;
 	log_check_iw.log="/tmp/iwconfig.log";
-	log_check_iw.flag=&ping_log_run;
+//	log_check_iw.flag=&ping_log_run;
+	log_check_iw.flag=&iw_log_run;
 	log_check_iw.pid=&pid_iw;
 	pthread_create(&th_iw, NULL, iwconfig_checker, (void *)&log_check_iw);
-//	pthread_create(&th_iw, NULL, log_checker, (void *)&log_check_iw);
-//	iwconfig_start();
 	
 	log_check_ping.w=tv1;
 	log_check_ping.log="/tmp/ping.log";
