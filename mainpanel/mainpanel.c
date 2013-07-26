@@ -837,8 +837,10 @@ fin:
 	battery_sub_run=0;
 	if(udhcpc_kill_check){
 		system("killall udhcpc");
+		system("killall wpa_supplicant");
 		usleep(200000);
 		system("killall -9 udhcpc");
+		system("killall -9 wpa_supplicant");
 	}
 	pthread_join(th_bsub, NULL);
     return 0;

@@ -26,7 +26,7 @@
 #include "tctlprof.h"
 
 static int iw_log_run, ping_log_run;
-static int use_wifi_config;
+static int use_wifi_config = 0;
 static int pid_ping=0, pid_iw=0;
 GtkWidget *v_main, *b_ping_start, *b_ping_stop, *lb_lq, *lb_ip;
 GtkWidget *lb_rssi;
@@ -623,8 +623,7 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	v00=gtk_vbox_new(FALSE, 10);
 	a00=gtk_alignment_new(0.5, 0.5, 0.0, 0.0);
 
-	cb_lbl = gtk_label_new("Select configration settings");
-	use_wifi_config = 0;
+	cb_lbl = gtk_label_new("Select wifi configuration");
 	combo = gtk_combo_box_new_text();
 	if (wifi_config_entry == 0)
 		gtk_combo_box_append_text(GTK_COMBO_BOX(combo), "no config");
@@ -653,7 +652,7 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	tv0=gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv0), FALSE);
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(tv0), FALSE);
-	gtk_widget_set_usize(tv0, 410, 150);
+	gtk_widget_set_usize(tv0, 430, 150);
 	lb_lq = gtk_label_new("");
 	lb_rssi = gtk_label_new("");
 	lb_ip = gtk_label_new("");
@@ -663,7 +662,7 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(v01), tv0);
 	gtk_container_add(GTK_CONTAINER(v01), lb_ip);
 	gtk_container_add(GTK_CONTAINER(a01), v01);
-	gtk_table_attach(GTK_TABLE(tbl), a01, 1, 2, 0, 1, 0, 0, 40, 10);
+	gtk_table_attach(GTK_TABLE(tbl), a01, 1, 2, 0, 1, 0, 0, 30, 10);
 	
 	// bottom-left part
 	v10=gtk_vbox_new(FALSE, 10);
@@ -692,8 +691,9 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 
 	sc1=gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sc1), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-	gtk_widget_set_usize(sc1, 410, 120);
+	gtk_widget_set_usize(sc1, 430, 120);
 	tv1=gtk_text_view_new();
+	sc_gtk_text_view_insert_ping(NULL, NULL, 0);
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv1), FALSE);
 	h2=gtk_hbox_new(FALSE, 10);
 	b_ping_start=gtk_button_new_with_label("Start Ping");
@@ -708,11 +708,10 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(v11), sc1);
 	gtk_container_add(GTK_CONTAINER(v11), h2);
 	gtk_container_add(GTK_CONTAINER(a11), v11);
-	gtk_table_attach(GTK_TABLE(tbl), a11, 1, 2, 1, 2, 0, 0, 40, 20);
+	gtk_table_attach(GTK_TABLE(tbl), a11, 1, 2, 1, 2, 0, 0, 30, 20);
 	
 	log_check_iw.w=tv0;
 	log_check_iw.log="/tmp/iwconfig.log";
-//	log_check_iw.flag=&ping_log_run;
 	log_check_iw.flag=&iw_log_run;
 	log_check_iw.pid=&pid_iw;
 	pthread_create(&th_iw, NULL, iwconfig_checker, (void *)&log_check_iw);

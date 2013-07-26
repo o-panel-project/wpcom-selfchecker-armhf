@@ -1,6 +1,6 @@
 diff -urN busybox-1.19.0.orig/networking/udhcp/common.c busybox-1.19.0/networking/udhcp/common.c
 --- busybox-1.19.0.orig/networking/udhcp/common.c	2011-08-11 09:23:58.000000000 +0900
-+++ busybox-1.19.0/networking/udhcp/common.c	2013-07-23 13:45:07.031624214 +0900
++++ busybox-1.19.0/networking/udhcp/common.c	2013-07-25 14:43:18.155624273 +0900
 @@ -61,6 +61,7 @@
  #endif
  	{ OPTION_STATIC_ROUTES                    , 0xf9 }, /* DHCP_MS_STATIC_ROUTES */
@@ -19,7 +19,7 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/common.c busybox-1.19.0/networkin
  /* Lengths of the option types in binary form.
 diff -urN busybox-1.19.0.orig/networking/udhcp/common.h busybox-1.19.0/networking/udhcp/common.h
 --- busybox-1.19.0.orig/networking/udhcp/common.h	2011-08-11 09:23:58.000000000 +0900
-+++ busybox-1.19.0/networking/udhcp/common.h	2013-07-23 13:39:07.628124314 +0900
++++ busybox-1.19.0/networking/udhcp/common.h	2013-07-25 14:43:18.155624273 +0900
 @@ -147,6 +147,7 @@
  //#define DHCP_STATIC_ROUTES    0x79 /* RFC 3442. (mask,ip,router) tuples */
  #define DHCP_VLAN_ID            0x84 /* 802.1P VLAN ID */
@@ -30,7 +30,7 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/common.h busybox-1.19.0/networkin
  #define DHCP_END                0xff
 diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking/udhcp/dhcpc.c
 --- busybox-1.19.0.orig/networking/udhcp/dhcpc.c	2011-08-11 09:23:58.000000000 +0900
-+++ busybox-1.19.0/networking/udhcp/dhcpc.c	2013-07-23 13:43:42.919624487 +0900
++++ busybox-1.19.0/networking/udhcp/dhcpc.c	2013-07-25 15:09:42.380124706 +0900
 @@ -55,6 +55,7 @@
  	"foreground\0"     No_argument       "f"
  	"background\0"     No_argument       "b"
@@ -100,13 +100,25 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking
  	bb_info_msg("Sending release...");
  	return udhcp_send_kernel_packet(&packet, ciaddr, CLIENT_PORT, server, SERVER_PORT);
  }
-@@ -1041,6 +1058,19 @@
+@@ -1041,6 +1058,32 @@
  //usage:     "\n	USR1	Renew current lease"
  //usage:     "\n	USR2	Release current lease"
  
 +static void check_mis_client(void)
 +{
++#if 1
++	client_config.MisClient = 0;
++#else
++	struct stat st;
 +	char check_file[128];
++	if (stat("/config/network", &st) < 0) {
++		client_config.MisClient = 0;
++		return;
++	}
++	if (!S_ISDIR(st.st_mode)) {
++		client_config.MisClient = 0;
++		return;
++	}
 +	sprintf(check_file, "/config/network/%s.no_wpc_client",
 +			client_config.interface);
 +	if (access(check_file, F_OK)) {
@@ -116,11 +128,12 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking
 +		/* no wpc client */
 +		client_config.MisClient = 0;
 +	}
++#endif
 +}
  
  int udhcpc_main(int argc, char **argv) MAIN_EXTERNALLY_VISIBLE;
  int udhcpc_main(int argc UNUSED_PARAM, char **argv)
-@@ -1083,7 +1113,7 @@
+@@ -1083,7 +1126,7 @@
  #endif
  		;
  	IF_LONG_OPTS(applet_long_options = udhcpc_longopts;)
@@ -129,7 +142,7 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking
  		USE_FOR_MMU("b")
  		IF_FEATURE_UDHCPC_ARPING("a")
  		IF_FEATURE_UDHCP_PORT("P:")
-@@ -1174,6 +1204,10 @@
+@@ -1174,6 +1217,10 @@
  		openlog(applet_name, LOG_PID, LOG_DAEMON);
  		logmode |= LOGMODE_SYSLOG;
  	}
@@ -140,7 +153,7 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking
  
  	/* Make sure fd 0,1,2 are open */
  	bb_sanitize_stdio();
-@@ -1182,7 +1216,8 @@
+@@ -1182,7 +1229,8 @@
  	/* Create pidfile */
  	write_pidfile(client_config.pidfile);
  	/* Goes to stdout (unless NOMMU) and possibly syslog */
@@ -150,7 +163,7 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking
  	/* Set up the signal pipe */
  	udhcp_sp_setup();
  	/* We want random_xid to be random... */
-@@ -1260,6 +1295,18 @@
+@@ -1260,6 +1308,18 @@
  				if (packet_num < discover_retries) {
  					if (packet_num == 0)
  						xid = random_xid();
@@ -169,7 +182,7 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking
  					/* broadcast */
  					send_discover(xid, requested_ip);
  					timeout = discover_timeout;
-@@ -1427,6 +1474,14 @@
+@@ -1427,6 +1487,14 @@
  			continue;
  		}
  
@@ -186,7 +199,7 @@ diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.c busybox-1.19.0/networking
  			/* Must be a DHCPOFFER to one of our xid's */
 diff -urN busybox-1.19.0.orig/networking/udhcp/dhcpc.h busybox-1.19.0/networking/udhcp/dhcpc.h
 --- busybox-1.19.0.orig/networking/udhcp/dhcpc.h	2011-08-11 09:23:58.000000000 +0900
-+++ busybox-1.19.0/networking/udhcp/dhcpc.h	2013-07-23 13:39:41.444124510 +0900
++++ busybox-1.19.0/networking/udhcp/dhcpc.h	2013-07-25 14:43:18.155624273 +0900
 @@ -21,6 +21,7 @@
  	uint8_t *vendorclass;           /* Optional vendor class-id to use */
  	uint8_t *hostname;              /* Optional hostname to use */

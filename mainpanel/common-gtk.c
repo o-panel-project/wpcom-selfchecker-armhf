@@ -176,7 +176,17 @@ void sc_gtk_text_view_insert_ping(GtkTextView *tv, char *buf, int n)
 	GtkTextBuffer *tb;
 	GList         *l;
 	guint len;
-	
+
+	if (tv == NULL) {
+		if (list != NULL) {
+			g_list_foreach(list, (GFunc)g_free, NULL);
+			g_list_free(list);
+			list = NULL;
+			g_print("%s() clear\n",__func__);
+		}
+		return;
+	}
+
 	list = g_list_append(list, g_strndup((gchar*)buf,n));
 	len = g_list_length(list);
 	if (len >= 7) {
