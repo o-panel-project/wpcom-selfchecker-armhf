@@ -8,6 +8,7 @@
 #include <gtk/gtk.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <pthread.h>
 
 GtkTreeIter iter_battery, iter_audio;
 GtkWidget *tv_sidemenu, *lb_menutop;
@@ -396,7 +397,7 @@ void sc_wait_dialog(char *msg, char *btnlabel, char *(*event)(void))
 	
 	// ボタン
 	wait_dlg_btn_close = gtk_button_new_from_stock (GTK_STOCK_OK);
-	gtk_button_set_label(wait_dlg_btn_close, btnlabel);
+	gtk_button_set_label(GTK_BUTTON(wait_dlg_btn_close), btnlabel);
 	g_signal_connect(G_OBJECT(wait_dlg_btn_close), "clicked", G_CALLBACK(btn_wate_dlg_close), window);
 	gtk_table_attach_defaults(GTK_TABLE(table), wait_dlg_btn_close, 21, 29, 5, 9);
 	gtk_widget_set_sensitive(wait_dlg_btn_close, FALSE);

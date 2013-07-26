@@ -314,9 +314,11 @@ xlib_lcdcheck(int use_timer, int usec0, char *jpeg_path)
 int
 wpcio_open_dipsw(int n, char *tag)
 {
-int	i, fd;
+	int	fd;
 
 	ENTER();
+	fd = wpcio_open(n, tag);
+#if 0
 	for(i=0;i<n;i++){
 		fd=open("/dev/wpcio", O_RDWR);
 		if(0<=fd)	break;
@@ -329,7 +331,7 @@ int	i, fd;
 		debug_printf(3, "%s : Could not open /dev/wpcio (%d).\n", tag, getpid());
 #endif
 	}
-
+#endif
 	LEAVE();
 	return	fd;
 }

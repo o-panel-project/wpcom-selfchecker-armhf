@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+/* define this to get getpgid() */
+#define __USE_XOPEN_EXTENDED
 #include <unistd.h>
 #include <string.h>
 #include <time.h>

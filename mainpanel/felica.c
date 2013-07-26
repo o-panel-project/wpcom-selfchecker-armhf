@@ -44,7 +44,7 @@ static GtkWidget *lb_error_rate;
 static GtkWidget *tv_result;
 static ICS_HW_DEVICE rcs956dev;
 static felica_cc_devf_t rcs956devf;
-static icsdrv_basic_func_t *g_drv_func = &rcs956_usb_basic_func;
+const static icsdrv_basic_func_t *g_drv_func = &rcs956_usb_basic_func;
 static UINT32 (*g_felica_cc_stub_initialize_func)(felica_cc_devf_t* devf, ICS_HW_DEVICE* dev) = felica_cc_stub_rcs956_initialize;
 static guint felica_timer_tag = (guint)0;	/*	20110818VACS	*/
 

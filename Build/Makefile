@@ -52,7 +52,7 @@ demoapp:
 
 clean:
 	make -C ../lcd clean
-	make -C ../demoapp clean
+	make -C ../prismapp/demoapp clean
 	make -C ../mainpanel clean
 	make -C ../tp-grid clean
 	make -C ../cpprogress clean

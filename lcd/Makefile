@@ -18,7 +18,7 @@ else
 endif
 
 PROGRAM	= xlib_lcdcheck
-SRCS	= lcd_jpg_search.c xlib_lcdcheck.c
+SRCS	= lcd_jpg_search.c xlib_lcdcheck.c common.c md5.c
 OBJS	= ${SRCS:%.c=%.o}
 
 VPATH = ./ ../common
