@@ -42,11 +42,11 @@ FELICA_SDK_LIB0 = \
 	librcs956 \
 	libutl \
 	libfelica_cc_stub_rcs956
-FELICA_SDK_LIB  = $(FELICA_SDK_LIB0:%=../felica-sdk/arch/linux/build/%.a)
+FELICA_SDK_LIB  = $(FELICA_SDK_LIB0:%=../libs/%.a)
 LDFLAGS += $(FELICA_SDK_LIB)
 
 NFCEXT_LIB0 = librcs956_typea librcs956_typeb
-NFCEXT_LIB  = $(NFCEXT_LIB0:%=../nfc-extension/arch/linux/build/%.a)
+NFCEXT_LIB  = $(NFCEXT_LIB0:%=../libs/%.a)
 LDFLAGS += $(NFCEXT_LIB)
 
 all: depend.inc $(PROGRAM)

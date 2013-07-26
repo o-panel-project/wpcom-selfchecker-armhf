@@ -22,7 +22,7 @@ TARGET= mainpanel tp-grid log-battery cpprogress xlib_lcdcheck demoapp
 .PHONY: $(TARGET)
 all: $(TARGET)
 
-mainpanel: felicalib
+mainpanel:
 	make -C ../mainpanel
 	@cp -p ../mainpanel/mainpanel .
 
