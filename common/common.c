@@ -251,7 +251,7 @@ int sc_i2c_write_cradle(unsigned char *buf)
 
 int wpcio_open(int n, char *tag)
 {
-	int i, fd;
+	int i, fd = -1;
 	
 	for(i=0;i<n;i++){
 		fd=open("/dev/wpcio", O_RDWR);

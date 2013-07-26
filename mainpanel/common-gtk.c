@@ -356,6 +356,7 @@ void *th_my_useraction(void *data)
 	
 	str = event();
 	g_idle_add_full(G_PRIORITY_HIGH, my_useraction, str, NULL);
+	return NULL;
 }
 
 /**
