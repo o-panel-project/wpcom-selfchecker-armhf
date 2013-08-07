@@ -37,6 +37,7 @@ int version_main(GtkWidget *table, GtkWidget *bsub);
 int wlantool_main(GtkWidget *table, GtkWidget *bsub);
 int display_main(GtkWidget *table, GtkWidget *bsub);
 int lcdinspect_main(GtkWidget *table, GtkWidget *bsub);
+int dmesg_main(GtkWidget *table, GtkWidget *bsub);
 
 struct side_menu_list_st {
 	int enable;
@@ -79,6 +80,7 @@ struct side_menu_list_st {
 	{ 1, 1, "Movie Play", "Movie Play", "16", movie_main },
 	{ 1, 1, "LCD Inspect", "LCD Inspect", "17", lcdinspect_main },
 	{ 1, 1, "Version", "Version", "18", version_main },
+	{ 1, 1, "dmesg", "boot message", "19", dmesg_main },
 	{ 0, 0, NULL, NULL, NULL, NULL },
 };
 

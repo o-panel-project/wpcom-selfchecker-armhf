@@ -20,7 +20,7 @@ endif
 PROGRAM	= mainpanel
 SRCS	= mainpanel.c sdram.c common.c common-gtk.c audio_mov.c wifi.c md5.c \
 		  lcd-pwm.c battery.c strategy.c led.c dipsw.c tpoff.c i2c-cradle.c \
-		  felica.c usbmem.c updown.c date.c rcs956scan.c tctlprof.c
+		  felica.c usbmem.c updown.c date.c rcs956scan.c tctlprof.c dmesg.c
 OBJS	= ${SRCS:%.c=%.o}
 
 VPATH = ./ ../common

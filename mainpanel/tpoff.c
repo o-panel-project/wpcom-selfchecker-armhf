@@ -37,10 +37,11 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	r=ioctl(fd_wpcio, WPC_SET_TP_ONOFF, 0);
 	if(r<0){
 		printf("Connect/Disconnect SDIO WIFI, error code = %d\n", r);
+		close(fd_wpcio);
 		return;
 	}
 	
-	for(i=5;0<i;i--){
+	for(i=5;0<=i;i--){
 		sprintf(tmps, "Now touch pad is OFF.\n"
 						"Confirm that touch pad is not working. \n"
 						"%d second(s) to restart Xorg.",
@@ -52,6 +53,7 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	r=ioctl(fd_wpcio, WPC_SET_TP_ONOFF, 1);
 	if(r<0){
 		printf("Connect/Disconnect SDIO WIFI, error code = %d\n", r);
+		close(fd_wpcio);
 		return;
 	}
 	exit(100);
