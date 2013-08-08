@@ -26,9 +26,7 @@
 #include <linux/hidraw.h>
 #include <errno.h>
 
-#define SC_TITLE   "New SelfChecker"
-#define SC_VERSION "v2.0.0"
-const char *sc_version_str = SC_TITLE " " SC_VERSION " " __DATE__ " " __TIME__;
+extern const char *sc_version_str;
 
 static int ignore_count=0;
 extern char usbmem_first_device;	/* RH */

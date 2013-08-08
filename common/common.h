@@ -3,7 +3,15 @@
  *
  *					2011.6	written by Omoikane Inc.
  */
+
+#ifndef __COMMON_H__
+#define __COMMON_H__
+
 //#include <gtk/gtk.h>
+#include <sys/time.h>
+
+#define SC_TITLE   "New SelfChecker"
+#define SC_VERSION "v2.0.0"
 
 //
 //	global vars and defs
@@ -150,3 +158,4 @@ extern void create_updown(struct updown *ud, char *caption, char *plus_caption, 
 
 #endif
 
+#endif /* __COMMON_H__ */

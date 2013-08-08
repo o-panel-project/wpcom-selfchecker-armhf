@@ -19,6 +19,8 @@ static void dmesg_view(GtkTextBuffer *buffer)
 	char *p;
 	int rc;
 
+	gtk_text_buffer_set_text(buffer, "", 0);
+
 	system("dmesg > /tmp/sc_dmesg.txt");
 
 	sleep(1);
@@ -27,14 +29,16 @@ static void dmesg_view(GtkTextBuffer *buffer)
 		return;
 	}
 	fstat(fd, &st);
-	p = (char*)malloc(st.st_size);
+	p = (char*)malloc(st.st_size + 1);
 	SYSCALL(rc = read(fd, p, st.st_size));
 	close(fd);
-	if (rc <= 0) {
+	if (rc != st.st_size) {
 		gtk_text_buffer_set_text(buffer, "dmesg read error, try again.", -1);
 		free(p);
 		return;
 	}
+	printf("dmesg %d bytes readn\n", rc);
+	p[rc] = '\0';
 	if (!g_utf8_validate(p, -1, NULL)) {
 		gtk_text_buffer_set_text(buffer,
 				"dmesg validate error, try again.", -1);
@@ -57,6 +61,7 @@ int dmesg_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledwindow),
 			GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 	view = gtk_text_view_new();
+	sc_gtk_text_view_clear(GTK_TEXT_VIEW(view));
 	buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 	dmesg_view(buffer);
 	gtk_container_add(GTK_CONTAINER(scrolledwindow), view);

@@ -53,7 +53,8 @@ LDFLAGS += $(NFCEXT_LIB)
 all: depend.inc $(PROGRAM)
 
 $(PROGRAM): $(OBJS) $(FELICA_SDK_LIB) $(NFCEXT_LIB)
-	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+	$(CC) -c $(CFLAGS) -o version.o version.c
+	$(CC) -o $@ $(OBJS) version.o $(LDFLAGS)
 	$(STRIP) $(STRIP_OPT) $@
 
 %.o: %.c
