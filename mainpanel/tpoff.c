@@ -36,7 +36,7 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	
 	r=ioctl(fd_wpcio, WPC_SET_TP_ONOFF, 0);
 	if(r<0){
-		printf("Connect/Disconnect SDIO WIFI, error code = %d\n", r);
+		printf("WPC_SET_TP_ONOFF error code = %d\n", r);
 		close(fd_wpcio);
 		return;
 	}
@@ -52,7 +52,7 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	}
 	r=ioctl(fd_wpcio, WPC_SET_TP_ONOFF, 1);
 	if(r<0){
-		printf("Connect/Disconnect SDIO WIFI, error code = %d\n", r);
+		printf("WPC_SET_TP_ONOFF error code = %d\n", r);
 		close(fd_wpcio);
 		return;
 	}

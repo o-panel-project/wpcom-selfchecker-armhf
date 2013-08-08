@@ -24,6 +24,8 @@ extern int cr_mount_ok;							/*	20110905VACS	*/
 #define WPCIO_OPEN_RETRY 10
 #define	AUDIO_VALUME_MAX	63					/*	20110917VACS	*/
 
+#define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
+
 //
 //	common functions
 //

@@ -23,6 +23,8 @@
 #include "common.h"
 #include "wpcio.h"
 #include <sys/ioctl.h>
+#include <linux/hidraw.h>
+#include <errno.h>
 
 #define SC_TITLE   "New SelfChecker"
 #define SC_VERSION "v2.0.0"
@@ -38,6 +40,7 @@ int wlantool_main(GtkWidget *table, GtkWidget *bsub);
 int display_main(GtkWidget *table, GtkWidget *bsub);
 int lcdinspect_main(GtkWidget *table, GtkWidget *bsub);
 int dmesg_main(GtkWidget *table, GtkWidget *bsub);
+int reset_main(GtkWidget *table, GtkWidget *bsub);
 
 struct side_menu_list_st {
 	int enable;
@@ -48,7 +51,7 @@ struct side_menu_list_st {
 	int (*func)(GtkWidget *, GtkWidget *);
 } side_menu_list[] = {
 	{ 1, 1, "Wlan Tool", "Wlan Tool", "0", wlantool_main },
-	{ 1, 1, "---------------", NULL, NULL, NULL },	/* separator */
+	{ 1, 1, "---------------", NULL, NULL/*1*/, NULL },	/* separator */
 	{ 1, 1, "Demo", "Demo", "2", demo_main },
 	{ 1, 1, "Strategy File", "Strategy File", "3", strategy_main },
 	{ 1, 1, "Date", "Date", "4", date_main },
@@ -81,6 +84,8 @@ struct side_menu_list_st {
 	{ 1, 1, "LCD Inspect", "LCD Inspect", "17", lcdinspect_main },
 	{ 1, 1, "Version", "Version", "18", version_main },
 	{ 1, 1, "dmesg", "boot message", "19", dmesg_main },
+	{ 1, 1, "---------------", NULL, NULL/*20*/, NULL },	/* separator */
+	{ 1, 1, "Soft Reset", "Soft Reset", "21", reset_main },
 	{ 0, 0, NULL, NULL, NULL, NULL },
 };
 
@@ -350,6 +355,87 @@ fin:
 	close(fd);
 }
 
+const static char *mms_ctrl_dev = "/dev/mms_ts";
+#define IOCTL_GET_VERSION   _IOR('W', 0xA5, u_char *)
+
+static void fetch_tpver_melfas(char *fwver)
+{
+	int fd;
+	u_char ver[6];
+	int ret;
+
+	fwver[0] = '\0';
+
+	fd = open(mms_ctrl_dev, O_RDWR);
+	if (fd < 0) {
+		perror("open");
+		return;
+	}
+	SYSCALL(ret = ioctl(fd, IOCTL_GET_VERSION, (u_char *)ver));
+	if (ret < 0) {
+		perror("ioctl");
+		close(fd);
+		return;
+	}
+	close(fd);
+	sprintf(fwver, "%02x:%02x:%02x:%02x:%02x:%02x",
+			ver[0], ver[1], ver[2], ver[3], ver[4], ver[5]);
+	fprintf(stdout, "%s\n", fwver);
+}
+
+const static char *ega_ctrl_dev = "/dev/hidraw0";
+
+static void fetch_tpver_egalax(char *fwver)
+{
+	int fd;
+	fd_set rfds;
+	struct timeval tv;
+	int retval;
+	struct hidraw_devinfo dinfo;
+	char buf[SMALL_STR];
+	char *p;
+
+	fwver[0] = '\0';
+
+    fd = open(ega_ctrl_dev, O_RDWR|O_NONBLOCK);
+	if (fd < 0) {
+		perror("open");
+		return;
+	}
+
+	if (ioctl(fd, HIDIOCGRAWINFO, &dinfo) < 0) {
+		perror("ioctl");
+		close(fd);
+		return;
+	}
+	printf("hidraw0: bustype=%d vendor=0x%04x product=0x%04x\n",
+			dinfo.bustype, dinfo.vendor, dinfo.product);
+
+	buf[0] = '\0';
+	buf[1] = '\3';
+	buf[2] = '\1';
+	buf[3] = 'D';
+
+	SYSCALL(retval = write(fd, buf, 4));
+	FD_ZERO(&rfds);
+	FD_SET(fd, &rfds);
+	tv.tv_sec = 0;
+	tv.tv_usec = 100000;
+	SYSCALL(retval = select(fd+1, &rfds, NULL, NULL, &tv));
+	if (retval > 0) {
+		SYSCALL(retval = read(fd, buf, SMALL_STR));
+		if (retval > 0) {
+			printf("%02x,%02x,%02x,%02x,%02x,...\n",
+				buf[0], buf[1], buf[2], buf[3], buf[4]);
+			p = strchr(buf, 'D');
+			if (p)
+				strcpy(fwver, p+1);
+		}
+	}
+	close(fd);
+}
+
+void fetch_egver(char *);
 //	20121002VACS
 //
 //	tpfirmware version fetcher
@@ -357,30 +443,21 @@ fin:
 void
 fetch_tpver(char *kver)
 {
-#if 1
-	kver[0] = '\0';
-#else
-	FILE *fp;
-	char *cmd = "/mnt1/eUpgrade.dat -help";
 	char buf[SMALL_STR];
+	char egb[SMALL_STR];
 
-	if ( (fp=popen(cmd,"r")) ==NULL) {
-		sprintf(kver, "TPfirmware version Unknown");
-		pclose(fp);
-
-		return;
-	}
-	while(fgets(buf, SMALL_STR, fp)!=NULL){
-		if(strstr(buf,"Version")){
-			sprintf(kver, "TPfirmware version:%s", buf+13);
-			pclose(fp);
-
-			return;
-		}
-	}
-	pclose(fp);
-	sprintf(kver, "TPfirmware version Unknown");
-#endif
+	sleep(2);
+	if (g_board_type == WPC_BOARD_TYPE_J) {
+		fetch_tpver_egalax(buf);
+		fetch_egver(egb);
+		strcat(buf, "\n");
+		strcat(buf, egb);
+	} else if (g_board_type == WPC_BOARD_TYPE_J3)
+		fetch_tpver_melfas(buf);
+	else
+		strcpy(buf, "unknown");
+	sprintf(kver, "TP FW Version:%s", buf);
+	return;
 }
 
 //	20121002VACS
@@ -390,9 +467,6 @@ fetch_tpver(char *kver)
 void
 fetch_egver(char *kver)
 {
-#if 1
-	kver[0] = '\0';
-#else
 	FILE *fp;
 	char *cmd = "eGestured -v";
 	char buf[SMALL_STR];
@@ -413,7 +487,6 @@ fetch_egver(char *kver)
 	}
 	pclose(fp);
 	sprintf(kver, "eGestured version Unknown");
-#endif
 }
 
 /*
@@ -484,23 +557,19 @@ struct	utsname	u;
 
 	/*	20121002VACS	*/
 	fetch_tpver(tpver);
-	fetch_egver(egver);
+//	fetch_egver(egver);
 
 	v0=gtk_vbox_new(FALSE, 10);
 	a1=gtk_alignment_new(0.5, 0.5, 0.5, 0.5);
 	lb=gtk_label_new("");
 
 	/*	20110827VACS	*/
-#if 1	/* RH */
+	/* RH */
 	sprintf(tmps, "%s\n"
 				  "usb package %s\n\n\n"
 				  "%s\n%s\n%s\n\n"
-				  "root filesystem %s\n",
-			sc_version_str, kver4, kver21, kver, kver22, kver3);
-#else
-	sprintf(tmps, "New SelfChecker %s\n\n\n\nuname version: %s\n\nroot filesystem %s\n\n\n\n%s\n%s\n\n%s%s",
-									SC_VERSION, kver, kver3, kver21, kver22, tpver, egver);
-#endif
+				  "root filesystem %s\n%s\n",
+			sc_version_str, kver4, kver21, kver, kver22, kver3, tpver);
 
 	gtk_label_set_markup(GTK_LABEL(lb), tmps);
 	gtk_container_add(GTK_CONTAINER(a1), lb);

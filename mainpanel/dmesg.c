@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <gtk/gtk.h>
+#include <errno.h>
 #include "common.h"
 
 static void dmesg_view(GtkTextBuffer *buffer)
@@ -16,14 +17,30 @@ static void dmesg_view(GtkTextBuffer *buffer)
 	int fd;
 	struct stat st;
 	char *p;
+	int rc;
 
 	system("dmesg > /tmp/sc_dmesg.txt");
 
-	fd = open("/tmp/sc_dmesg.txt", O_RDONLY);
+	sleep(1);
+	if ((fd = open("/tmp/sc_dmesg.txt", O_RDONLY)) < 0) {
+		gtk_text_buffer_set_text(buffer, "dmesg open error, try again.", -1);
+		return;
+	}
 	fstat(fd, &st);
 	p = (char*)malloc(st.st_size);
-	read(fd, p, st.st_size);
+	SYSCALL(rc = read(fd, p, st.st_size));
 	close(fd);
+	if (rc <= 0) {
+		gtk_text_buffer_set_text(buffer, "dmesg read error, try again.", -1);
+		free(p);
+		return;
+	}
+	if (!g_utf8_validate(p, -1, NULL)) {
+		gtk_text_buffer_set_text(buffer,
+				"dmesg validate error, try again.", -1);
+		free(p);
+		return;
+	}
 	gtk_text_buffer_set_text(buffer, p, -1);
 	free(p);
 }
