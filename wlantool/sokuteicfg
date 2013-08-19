@@ -1,0 +1,22 @@
+192.168.3.102
+result.dat
+/mnt1/wlantoolapp/tmp/testfile1.csv
+/mnt1/wlantoolapp/tmp/testfile2.csv
+/mnt1/wlantoolapp/tmp/testfile3.csv
+/mnt1/wlantoolapp/tmp/tempfile.dat
+/mnt1/wlantoolapp/tmp/ftptemp.dat
+/dummy.dat
+iwconfig wlan0
+
+iwconfig wlan0
+ifconfig wlan0
+iwlist wlan0 channel
+iwlist wlan0 scanning
+ifconfig wlan0
+wget
+-q -O
+/mnt1/wlantoolapp/ping -q -f -s 1400 -c 1000
+/mnt1/wlantoolapp/ping -q -c 1 -s 1400
+/sbin/ifup -f -i /config/network/wlan0.interfaces wlan0
+/sbin/ifdown wlan0
+exit_button_on
