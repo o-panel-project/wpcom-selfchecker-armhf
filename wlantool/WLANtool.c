@@ -13,6 +13,8 @@
 
 
 #include "WLANtool.h"
+#include "common.h"
+#include "wpcio.h"
 
 
 typedef struct tag_Rect {
@@ -27,6 +29,7 @@ Rect nw_status_coor = {.x=620, .y=165, .w=10, .h=10};  // ネットワークデ�
 
 void DrawStatusIndicator(Display *d, Window w, GC gc, Rect *rect, char *bgColor);
 
+int g_board_type = WPC_BOARD_TYPE_J;
 
 /*************************************************************************************
 ** Function:     Main Function
@@ -56,6 +59,9 @@ printf("wlantool build(%s,%s)\n",__DATE__,__TIME__);
 	signal(SIGQUIT, (void *)int_handler);
 	signal(SIGTERM, (void *)int_handler);
 	
+	g_board_type = sc_get_board_type();
+	printf("wlantool execute on j%d-PANEL\n", g_board_type);
+
 	// 設定ファイル読み込み（先頭５つ）
 	if (ReadParamFile() != OK) {
 		printf("\nError in reading Config File\n");

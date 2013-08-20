@@ -18,6 +18,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include "wpcio.h"
 
 #if 1
 #define PING_COUNT 1000
@@ -30,6 +31,7 @@
 int	search_token(char *token, int start, int num);
 int	do_scan ();
 int	get_scan ( int ch );
+extern int g_board_type;
 
 
 static	char	ssid[64]		= "@NoAP@";
@@ -356,7 +358,7 @@ int	do_ftp()
 					exit(1);
 				}
 				fseek(fp, 0, SEEK_END);
-				fgetpos(fp, &tmp_byte);
+				fgetpos(fp, (fpos_t*)&tmp_byte);
 				fclose(fp);
 			}
 			tmp_time = diff_time( start_time, end_time );
@@ -697,7 +699,7 @@ int	get_scan ( int ch )
 }
 
 
-#define MAX_READ_LINE 1024
+#define MAX_READ_LINE 10240
 #define MAX_CHARACTER 80
 static char tmp[MAX_READ_LINE][MAX_CHARACTER];  // file_analysisで読み込んだデータを格納するバッファ
 
@@ -980,7 +982,7 @@ int	file_analysis( int mode, int ch )
 		// getting information
 		for (i=0;i<MAX_READ_LINE;i++){
 			fscanf(fp,"%s",tmp[i]);
-//			printf( " > tmp[%d]=%s\n", i, tmp[i] );  // For test
+//			printf( "FOR_RSSI > tmp[%d]=%s\n", i, tmp[i] );  // For test
 			ret = feof(fp);
 			if (ret != 0) {
 				break;
@@ -1004,8 +1006,14 @@ int	file_analysis( int mode, int ch )
 			tmp3 = strtok( tmp[i+1], ")" );
 			ret = atoi(tmp3);
 			if (ch == ret) {
-				strtok( tmp[i+4], "=" );
-				tmp3 = strtok( NULL, "=" );
+				if (g_board_type == WPC_BOARD_TYPE_J) {
+					strtok( tmp[i+4], "=" );
+					tmp3 = strtok( NULL, "=" );
+				} else if (g_board_type == WPC_BOARD_TYPE_J3) {
+					strtok( tmp[i+4], ":" );
+					tmp3 = strtok( NULL, ":" );
+				} else
+					tmp3 = NULL;
 printf( " >> %s\n", tmp3 );
 #if 1
 				if (tmp3 == NULL) {

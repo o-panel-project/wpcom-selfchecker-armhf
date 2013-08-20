@@ -1,37 +1,61 @@
-HOST = arm-none-linux-gnueabi
+CROSS_COMPILE = arm-none-linux-gnueabi-
 
-ifdef HOST
-  CC = $(HOST)-gcc
-  PREFIX  = /opt/sysroots/armv7a-none-linux-gnueabi
+ifdef CROSS_COMPILE
+  CC = $(CROSS_COMPILE)gcc
+  SYSROOT=/opt/arm-dev/sysroots/armv7a-none-linux-gnueabi
+  PKGCONFIG=../scripts/pkg-config.sh
+  CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mhard-float
+  CFLAGS += -mfloat-abi=softfp -ftree-vectorize -mvectorize-with-neon-quad
+  CFLAGS += -mthumb-interwork -mno-thumb
+  STRIP = ${CROSS_COMPILE}strip
+  STRIP_OPT = --remove-section=.comment --remove-section=.note
 else
   CC = gcc
+  SYSROOT=
+  PKGCONFIG=/usr/bin/pkg-config
+  STRIP = strip
+  STRIP_OPT =
 endif
 
 PROGRAM  = wlantool
-OBJS     = ReadWLAN.o WLANtool.o
+SRCS     = ReadWLAN.c WLANtool.c common.c md5.c
+OBJS     = ${SRCS:%.c=%.o}
+
+VPATH = ./:../common
+
 PING_DIR = netkit-base
 PING     = ping
 
-PKG_CONFIG = PKG_CONFIG_SYSROOT_DIR=$(PREFIX) pkg-config
+CFLAGS += -Wall -O2
+CFLAGS += -I. -I../common -I$(SYSROOT)/usr/include
+CFLAGS += $(shell $(PKGCONFIG) --cflags pangoxft)
 
-#CFLAGS  = -Wall -Wno-unused-result -g -O0 -I$(PREFIX)/usr/include $(shell $(PKG_CONFIG) --cflags pangoxft)
-CFLAGS  = -Wall -g -O0 -I$(PREFIX)/usr/include $(shell $(PKG_CONFIG) --cflags pangoxft)
-LDFLAGS = -L$(PREFIX)/usr/lib -Wl,--rpath-link,$(PREFIX)/usr/lib $(shell $(PKG_CONFIG) --libs pangoxft)
+LDFLAGS += -L$(SYSROOT)/usr/lib
+LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib
+LDFLAGS += $(shell $(PKGCONFIG) --libs pangoxft)
 
-all : $(PROGRAM) $(PING)
+all: $(PROGRAM) $(PING)
 
-$(PROGRAM) : $(OBJS)
+$(PROGRAM): $(OBJS) depend.inc
 	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+	$(STRIP) $(STRIP_OPT) $@
 
-.c.o :
-	$(CC) -c $< $(CFLAGS)
+%.o: %.c
+	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(PING) :
+$(PING):
 	cd $(PING_DIR) ; ./configure --with-c-compiler=$(CC)
 	cd $(PING_DIR) ; make SUB=$(PING)
 	cp $(PING_DIR)/$(PING)/$(PING) .
 
-clean :
-	rm -rf *.o *.a $(PROGRAM) $(PING)
+clean:
+	rm -rf *.o *.a $(PROGRAM)
+
+clean-ping:
+	rm -rf $(PING)
 	cd $(PING_DIR) ; make distclean
-	
+
+depend.inc: $(SRCS)
+	$(CC) -MM $(CFLAGS) $^ > depend.inc
+
+-include depend.inc
