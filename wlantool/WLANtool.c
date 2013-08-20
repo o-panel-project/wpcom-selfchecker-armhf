@@ -30,6 +30,7 @@ Rect nw_status_coor = {.x=620, .y=165, .w=10, .h=10};  // ネットワークデ�
 void DrawStatusIndicator(Display *d, Window w, GC gc, Rect *rect, char *bgColor);
 
 int g_board_type = WPC_BOARD_TYPE_J;
+int g_noifup = 0;
 
 /*************************************************************************************
 ** Function:     Main Function
@@ -101,7 +102,12 @@ printf("wlantool build(%s,%s)\n",__DATE__,__TIME__);
 	
 	// フォント作成
 	if (ac == 2) {
-		strcpy(fontname, av[1]);
+		if (strcmp(av[1], "-n") != 0)
+			strcpy(fontname, av[1]);
+		else {
+			g_noifup = 1;
+			strcpy(fontname, "DFPHSGothic-W7 12");
+		}
 	} else {
 		strcpy(fontname, "DFPHSGothic-W7 12");
 	}
@@ -1734,8 +1740,15 @@ void ExecIfip()
 	XCheckWindowEvent(dpy, w, EVT_MSK, &event);
 	ret = ReadOneConfig(20, command);
 	if (ret != -1) {
-		printf("exec:%s\n", command);
-		system(command);
+		if (g_noifup) {
+			if (!IsGetIP()) {
+				printf("exec:%s\n", command);
+				system(command);
+			}
+		} else {
+			printf("exec:%s\n", command);
+			system(command);
+		}
 	}
 }
 
