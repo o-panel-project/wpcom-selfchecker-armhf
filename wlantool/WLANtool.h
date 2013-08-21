@@ -5,6 +5,7 @@
 /*                        the data graphically.                           */
 /*  --------------------------------------------------------------------  */
 /*  History     : 2012.02.06 (v1.0) -  First release                      */
+/*  History     : 2013.08.21 (v2.0) -  for j3                             */
 /*  --------------------------------------------------------------------  */
 
 
@@ -120,7 +121,7 @@ char param[5][256];
 char *info[22];
 
 #if 1
-char *page1[32] = {
+char *page1[66] = {
 		"無線 LAN 環境測定モード",  // 0
 		"接続先",        // 1
 		"接続状況",      // 2
@@ -143,7 +144,15 @@ char *page1[32] = {
 		"WLAN MAC",      // 28
 		"スキャン開始",  // 29
 		"スキャン停止",  // 30
-		"終了"           // 31
+		"終了",          // 31
+		"1", "2", "3", "4", "5", "6", "7", "8", "9", // 40
+		"10", "11", "12", "13", "14", "36", "40", "44", "48", "52", // 50
+		"56", "60", "64", "100", "104", "108", "112", "116", "120", "124", //60
+		"128",           // 61
+		"132",           // 62
+		"136",           // 63
+		"140",           // 64
+		"[CH]"           // 65
 	};
 char *page2[14] = {
 		"無線 LAN 性能測定モード",  // 0
@@ -182,11 +191,14 @@ char *judgement[7] = {
 #define MSG_IFUP                   "Initialize …"
 #define MSG_NOIP                   "IPアドレスが取得できていません"
 #else
-char *page1[32] = {
+char *page1[66] = {
 		"WLAN Environmental measurement mode", "destination", "status", "WEP", "channel",
 		"field intensity", "throughput", "erorr rate", "other channel field intensity", "start",
 		"stop", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",  "11", "12", "13",
-		"[channel]", "MAC address", "->", "AP MAC", "WLAN MAC", "scan start", "scan stop", "Quit"
+		"[channel]", "MAC address", "->", "AP MAC", "WLAN MAC", "scan start", "scan stop", "Quit",
+		"1", "2", "3", "4", "5", "6", "7", "8", "9", "10",  "11", "12", "13",
+		"14", "36", "40", "44", "48", "52", "56", "60", "64", "100", "104",
+		"108", "112", "116", "120", "124", "128", "132", "136", "140", "[CH]"
 	};
 char *page2[14] = {
 		"WLAN Performance measurement mode", "down stream rate", "network delay",

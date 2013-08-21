@@ -999,7 +999,6 @@ int	file_analysis( int mode, int ch )
 		
 		while (1) {
 			i = search_token( "(Channel", i, 0 );
-			printf( " %d",i );
 			if (i == -1) {
 				break;
 			}
@@ -1014,7 +1013,7 @@ int	file_analysis( int mode, int ch )
 					tmp3 = strtok( NULL, ":" );
 				} else
 					tmp3 = NULL;
-printf( " >> %s\n", tmp3 );
+				printf( "idx %d ch%d >> %s\n", i, ret, tmp3 );
 #if 1
 				if (tmp3 == NULL) {
 					ret = 0;

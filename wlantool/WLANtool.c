@@ -1,15 +1,16 @@
-/*	--------------------------------------------------------------------------- */
+/*	------------------------------------------------------------------------- */
 /*	Wireless LAN Environment Measurement Tool	(GUI)			    */
-/*	--------------------------------------------------------------------------- */
+/*	------------------------------------------------------------------------- */
 /*	Function	: Reads information from target files and displays          */
-/*                        the data graphically.                     		    */
+/*                        the data graphically.                     	    */
 /*	Author          : Diana Dee Tan (AWS Systems,Inc)           		    */
 /*	Contact         : dianadee.tan@awsys-i.com				    */
-/*	Last update     : 2006.11.02           					    */
-/*	--------------------------------------------------------------------------- */
-/*	History	   : 2006.11.22 (v2.0) -  Added Scan Other Channels Function	    */
+/*	Last update     : 2013.08.21           					    */
+/*	------------------------------------------------------------------------- */
+/*	History	   : 2013.08.21 (v3.0) -  for j3	    */
+/*	       	     2006.11.22 (v2.0) -  Added Scan Other Channels Function    */
 /*	             2006.11.02 (v1.0) -  First release				    */
-/*	--------------------------------------------------------------------------- */
+/*	------------------------------------------------------------------------- */
 
 
 #include "WLANtool.h"
@@ -302,10 +303,10 @@ envt_mode:
 					printf("\nERROR READING FILE!!!\n");
 				}
 				XSetForeground(dpy, gc, WhitePixel(dpy,screen));
-				XFillRectangle(dpy, w, gc, 66, 316, 549,199);
+				XFillRectangle(dpy, w, gc, 31, 316, 959,199);
 				XSetForeground(dpy, gc, BlackPixel(dpy,screen));
 				for (z=315; z<515; z+=25) {
-					XDrawLine(dpy,w,gc,65,z,615,z);
+					XDrawLine(dpy,w,gc,30,z,990,z);
 				}
 				XFlush(dpy);
 				for (z=9; z<=21; z++) {
@@ -673,14 +674,17 @@ void EnvtPage()
 	}
 	
 	// 他のチャンネルの電界強度
-	XDrawRectangle(dpy, w, gc, 65, 315, 550, 200);
+	XDrawRectangle(dpy, w, gc, 30, 315, 960, 200);
 	for (a=315; a<515; a+=25) {
-		XDrawLine(dpy, w, gc, 65, a, 615, a);  //inner lines of ScanArea
+		XDrawLine(dpy, w, gc, 30, a, 990, a);  //inner lines of ScanArea
 	}
-	a = 89;
-	for (z=11; z<25; z++) {
+	a = 45;
+	for (z=32; z<66; z++) {
+		if (z%2)
+		DrawPangoXftRenderLayout(draw, &color_black, layout, a, 520, page1[z]);
+		else
 		DrawPangoXftRenderLayout(draw, &color_black, layout, a, 515, page1[z]);
-		a += 40;
+		a += 28;
 	}
 	
 	if (run_once == 0) {
@@ -695,12 +699,12 @@ void EnvtPage()
 		MakeButton(NEXT, xyz, page1[26]);
 		
 		// 「スキャン開始」ボタン
-		xyz[0] = 640; xyz[1] = 380; xyz[2] = 120; xyz[3] = 30;
+		xyz[0] = 300; xyz[1] = 280; xyz[2] = 120; xyz[3] = 30;
 		xyz[4] =  11; xyz[5] =   5;
 		MakeButton(START_SCAN, xyz, page1[29]);
 		
 		// 「スキャン停止」ボタン
-		xyz[0] = 640; xyz[1] = 420; xyz[2] = 120; xyz[3] = 30;
+		xyz[0] = 430; xyz[1] = 280; xyz[2] = 120; xyz[3] = 30;
 		xyz[4] =  11; xyz[5] =   5;
 		MakeButton(STOP_SCAN, xyz, page1[30]);
 		
@@ -1052,11 +1056,11 @@ void UpdateUI(int f, char *data)
 			tbuf=abs(atoi(data));
 			if (tbuf%2 == 1 ) tbuf+=1;  // debug
 			if (res == OK) {
-				XFillRectangle(dpy,w,gc,85+(40*(f-9)),515-((100-tbuf)*2.5),15,(100-tbuf)*2.5);
+				XFillRectangle(dpy,w,gc,45+(28*(f-9)),515-((100-tbuf)*2.5),15,(100-tbuf)*2.5);
 			} else {
 				if(tbuf > 100) tbuf = 100;
 				if(tbuf < 20) tbuf = 20;
-				XFillRectangle(dpy,w,gc,85+(40*(f-9)),515-((100-tbuf)*2.5),15,(100-tbuf)*2.5);
+				XFillRectangle(dpy,w,gc,45+(28*(f-9)),515-((100-tbuf)*2.5),15,(100-tbuf)*2.5);
 			}
 			XFlush(dpy);
 		}
@@ -1125,7 +1129,7 @@ int ParseFile()
 #if 1
 	int  fd, bytesRead;
 	int  b=0, i=0, c_flg=0;
-	char buf[150];
+	char buf[300];
 	char filename[256];
 	char temp[150];
 	
@@ -1194,7 +1198,7 @@ int ParseFile()
 	id = 0;
 	
 // Parser
-printf("ParseFile:");
+printf("ParseFile %s/%dbytes:", filename, bytesRead);
 	while(1) {
 		// 44=0x2c=',', 33=0x21='!', 126=0x7e='~'
 		// ','以外の文字？
