@@ -1,16 +1,16 @@
-/*	------------------------------------------------------------------------- */
-/*	Wireless LAN Environment Measurement Tool	(GUI)			    */
-/*	------------------------------------------------------------------------- */
-/*	Function	: Reads information from target files and displays          */
-/*                        the data graphically.                     	    */
-/*	Author          : Diana Dee Tan (AWS Systems,Inc)           		    */
-/*	Contact         : dianadee.tan@awsys-i.com				    */
-/*	Last update     : 2013.08.21           					    */
-/*	------------------------------------------------------------------------- */
-/*	History	   : 2013.08.21 (v3.0) -  for j3	    */
-/*	       	     2006.11.22 (v2.0) -  Added Scan Other Channels Function    */
-/*	             2006.11.02 (v1.0) -  First release				    */
-/*	------------------------------------------------------------------------- */
+/*	--------------------------------------------------------------------  */
+/*	Wireless LAN Environment Measurement Tool    (GUI)                    */
+/*	--------------------------------------------------------------------  */
+/*	Function    : Reads information from target files and displays        */
+/*                        the data graphically.                           */
+/*	Author      : Diana Dee Tan (AWS Systems,Inc)                         */
+/*	Contact     : dianadee.tan@awsys-i.com                                */
+/*	Last update : 2013.08.21                                              */
+/*	--------------------------------------------------------------------  */
+/*  History    : 2006.11.02 (v1.0) -  First release	                      */
+/*	       	     2006.11.22 (v2.0) -  Added Scan Other Channels Function  */
+/*	       	     2013.08.21 (v3.0) -  for j3                              */
+/*	--------------------------------------------------------------------  */
 
 
 #include "WLANtool.h"

@@ -4,6 +4,7 @@
 /*  Function    : WLAN environment & performance examination.             */
 /*  --------------------------------------------------------------------  */
 /*  History     : 2012.02.06 (v1.0) -  First release                      */
+/*                2013.08.21 (v3.0) -  for j3                             */
 /*  --------------------------------------------------------------------  */
 
 
@@ -30,6 +31,7 @@
 #define FOR_THROUGHPUT 1
 #define FOR_ERROR_RATE 2
 #define FOR_RSSI       3
+#define FOR_RSSI_PRE   4
 
 #define CONFIG_FILE "./sokuteicfg"
 

@@ -4,6 +4,7 @@
 /*  Function    : WLAN environment & performance examination.             */
 /*  --------------------------------------------------------------------  */
 /*  History     : 2012.02.06 (v1.0) -  First release                      */
+/*                2013.08.21 (v3.0) -  for j3                             */
 /*  --------------------------------------------------------------------  */
 
 
@@ -554,11 +555,8 @@ int	get_errorrate_info()
 int	get_otherchannel_info()
 {        
 
-	int		loop = 0;
 	int		child_pid = 0;
 	int		status;
-	FILE	*fp;
-	int		sock;
 		
 	printf( "[get_otherchannel_info] start\n" );
 	
@@ -579,38 +577,6 @@ int	get_otherchannel_info()
 			printf( "[get_otherchannel_info::child] child process start!\n" );
 			
 			do_scan();
-			other_rssi[0]  = get_scan(1);
-			other_rssi[1]  = get_scan(2);
-			other_rssi[2]  = get_scan(3);
-			other_rssi[3]  = get_scan(4);
-			other_rssi[4]  = get_scan(5);
-			other_rssi[5]  = get_scan(6);
-			other_rssi[6]  = get_scan(7);
-			other_rssi[7]  = get_scan(8);
-			other_rssi[8]  = get_scan(9);
-			other_rssi[9]  = get_scan(10);
-			other_rssi[10] = get_scan(11);
-			other_rssi[11] = get_scan(12);
-			other_rssi[12] = get_scan(13);
-			
- 			// This is for test
-			sock = socket(AF_INET, SOCK_STREAM, 0);
-			printf( "socket number=%d\n", sock );
-			
-			// file open and check
-			fp = fopen( "/tmp/scantemp.dat", "w" );
-			if ( fp < 0 ) {
-				printf( "[get_otherchannel_info::child] /tmp/scantemp.dat file cannot open!\n" );
-				exit( 1 );
-			}
-			
-			// data write to file
-			for ( loop=0; loop<13; loop++ ) {
-				fprintf( fp, "%d\n", other_rssi[loop] );
-			}
-			
-			// close file
-			fclose( fp );
 			exit( 0 );
 			break;
 		}
@@ -627,21 +593,20 @@ int	get_otherchannel_info()
 				sleep( 1 );
 			}
 			printf( "\n" );
-			
-			fp = fopen( "/tmp/scantemp.dat", "r" );
-			if ( fp < 0 ) {
-				printf( "[get_otherchannel_info::child] /tmp/scantemp.dat file cannot open!\n" );
-				return -1;
-			}
-			
-			// data read from file
-			for ( loop=0; loop<13; loop++ ) {
-				fscanf( fp, "%d", &other_rssi[loop] );
-				printf( " > otehr_rssi[%d] = %d\n", loop, other_rssi[loop] );
-			}
-			
-			// close file
-			fclose( fp );
+			get_scan(0);
+			other_rssi[0]  = get_scan(1);
+			other_rssi[1]  = get_scan(2);
+			other_rssi[2]  = get_scan(3);
+			other_rssi[3]  = get_scan(4);
+			other_rssi[4]  = get_scan(5);
+			other_rssi[5]  = get_scan(6);
+			other_rssi[6]  = get_scan(7);
+			other_rssi[7]  = get_scan(8);
+			other_rssi[8]  = get_scan(9);
+			other_rssi[9]  = get_scan(10);
+			other_rssi[10] = get_scan(11);
+			other_rssi[11] = get_scan(12);
+			other_rssi[12] = get_scan(13);
 			
 		}
 	}	
@@ -686,6 +651,11 @@ int	get_scan ( int ch )
 {
 	int		ret = 0;
 	
+	if (ch == 0) {
+		// file analysis initialize
+		file_analysis(FOR_RSSI_PRE, 0);
+		return 0;
+	}
 	// getting maximum rssi
 	ret = file_analysis(FOR_RSSI, ch);
 	if ( ret == -1 ) {
@@ -699,9 +669,11 @@ int	get_scan ( int ch )
 }
 
 
+// file_analysisで読み込んだデータを格納するバッファ
 #define MAX_READ_LINE 10240
-#define MAX_CHARACTER 80
-static char tmp[MAX_READ_LINE][MAX_CHARACTER];  // file_analysisで読み込んだデータを格納するバッファ
+#define MAX_CHARACTER 256
+static char parseToken[MAX_READ_LINE][MAX_CHARACTER];
+static int line = 0;
 
 int	file_analysis( int mode, int ch )
 {
@@ -714,9 +686,9 @@ int	file_analysis( int mode, int ch )
 	int  current = 0;
 	
 	int rssibuf = 0;
-	int line = 0;
 	
-	memset(tmp, 0x00, sizeof(tmp));
+	if (mode != FOR_RSSI)
+	memset(parseToken, 0x00, sizeof(parseToken));
 	
 	switch (mode) {
 	case FOR_BASIC:
@@ -734,8 +706,8 @@ int	file_analysis( int mode, int ch )
 		
 		// getting information
 		for (i=0;i<MAX_READ_LINE;i++){
-			fscanf(fp,"%s",tmp[i]);
-			printf( " > tmp[%d]=%s\n", i, tmp[i] );  // For test
+			fscanf(fp,"%s",parseToken[i]);
+			printf( " > parseToken[%d]=%s\n", i, parseToken[i] );  // For test
 			ret = feof(fp);
 			if (ret != 0) {
 				break;
@@ -752,7 +724,7 @@ int	file_analysis( int mode, int ch )
 		if (i == -1) {
 			return -2;
 		}
-		strtok( tmp[i], "\"" );
+		strtok( parseToken[i], "\"" );
 		tmp3 = strtok( NULL, "\"" );
 		if (tmp3 != NULL) {
 			strcpy( ssid, tmp3 );
@@ -767,7 +739,7 @@ int	file_analysis( int mode, int ch )
 		if (i == -1) {
 			return -3;
 		}
-		tmp3 = strtok( tmp[i+4], ")" );
+		tmp3 = strtok( parseToken[i+4], ")" );
 		if (tmp3 != NULL) {
 			strcpy( channel, tmp3 );
 			printf( " > (2) detect Channel:\n" );
@@ -780,12 +752,12 @@ int	file_analysis( int mode, int ch )
 		if (i == -1) {
 			return -4;
 		}
-		strcpy( bssid, tmp[i+1] );
+		strcpy( bssid, parseToken[i+1] );
 		printf( " > (3) detect BSSID:\n" );
 		
 		// WEPSTATUS
 		i = search_token( "key:", 0, 0 );
-		tmp3 = strchr( tmp[i], ':' );
+		tmp3 = strchr( parseToken[i], ':' );
 		if (strcmp(tmp3+1,"off") == 0) {
 			strcpy( wep, "0" );
 		}
@@ -799,7 +771,7 @@ int	file_analysis( int mode, int ch )
 		i = 0;
 		for( j=0;j<5;j++ ) {
 			i = search_token( "Signal", i+1, 0 );
-			tmp3 = strpbrk( tmp[i+1], "=:" );
+			tmp3 = strpbrk( parseToken[i+1], "=:" );
 			if (tmp3 != NULL) {
 				rssibuf += atoi(tmp3+1);
 			} else {
@@ -811,7 +783,7 @@ int	file_analysis( int mode, int ch )
 		
 		// MAC Address
 		i = search_token( "HWaddr", 0, 0 );
-		strcpy( macadrs, tmp[i+1] );
+		strcpy( macadrs, parseToken[i+1] );
 		printf( " > (6) detect HWaddr\n" );
 		
 		printf ( " --------------------------------\n" );
@@ -840,8 +812,8 @@ int	file_analysis( int mode, int ch )
 		
 		// getting information
 		for (i=0;i<MAX_READ_LINE;i++){
-			fscanf(fp,"%s",tmp[i]);
-//			printf( " > tmp[%d]=%s\n", i, tmp[i] );  // For test
+			fscanf(fp,"%s",parseToken[i]);
+//			printf( " > parseToken[%d]=%s\n", i, parseToken[i] );  // For test
 			ret = feof(fp);
 			if (ret != 0) {
 				break;
@@ -852,7 +824,7 @@ int	file_analysis( int mode, int ch )
 		fclose(fp);
 		
 		// start analysis
-		if ( strncmp( tmp[0], "wlan", 4) == 0 ) {		// checking adapter
+		if ( strncmp( parseToken[0], "wlan", 4) == 0 ) {	// checking adapter
 			printf( " > (1) detect wlan0:\n" );
 		}
 		else {
@@ -860,7 +832,7 @@ int	file_analysis( int mode, int ch )
 			return -1;
 		}
 		
-		if ( strcmp( tmp[5], "inet" ) == 0 ) {		// check link status
+		if ( strcmp( parseToken[5], "inet" ) == 0 ) {		// check link status
 			printf( " > (2) detect inet:\n" );
 		}
 		else {
@@ -873,7 +845,7 @@ int	file_analysis( int mode, int ch )
 			printf(" > (3) error\n");
 			return -1;
 		}
-		tmp3 = strchr( tmp[i+1], ':' );
+		tmp3 = strchr( parseToken[i+1], ':' );
 		ret = atoi(tmp3+1);
 		
 		printf( " > get_byte=%d\n", ret );
@@ -895,8 +867,8 @@ int	file_analysis( int mode, int ch )
 		
 		// getting information
 		for (i=0; i<MAX_READ_LINE; i++) {
-			fscanf(fp, "%s", tmp[i]);
-			printf(" > tmp[%d]=%s\n", i, tmp[i]);
+			fscanf(fp, "%s", parseToken[i]);
+			printf(" > parseToken[%d]=%s\n", i, parseToken[i]);
 			ret = feof(fp);
 			if (ret != 0) {
 				break;
@@ -910,7 +882,7 @@ int	file_analysis( int mode, int ch )
 		if (i == -1) {
 			return -1;
 		}
-		sscanf(tmp[i+1], "%d%%", &tmp_a);
+		sscanf(parseToken[i+1], "%d%%", &tmp_a);
 #else
 		// open temporary file
 		fp = fopen( TEMPFILE, "r" );
@@ -967,32 +939,37 @@ int	file_analysis( int mode, int ch )
 #endif	
 		return 0;
 		
-	case FOR_RSSI:
-		printf( "[file_analysis] analysis for rssi of other channel\n" );
-		
+	case FOR_RSSI_PRE:
+		printf("[%s] result file parsing\n", __func__);
+		line = 0;
+
 		// open the temporary file
-		fp = fopen( TEMPFILE, "r" );
-		if (fp == 0) {
-			printf( "[file_analysis] %s cannot open!\n", TEMPFILE );
+		fp = fopen(TEMPFILE, "r");
+		if (fp == NULL) {
 			perror(NULL);
+			printf("[%s] %s cannot open!\n", __func__, TEMPFILE);
 			test_error = 3;
 			return -1;
 		}
-		
+
 		// getting information
-		for (i=0;i<MAX_READ_LINE;i++){
-			fscanf(fp,"%s",tmp[i]);
-//			printf( "FOR_RSSI > tmp[%d]=%s\n", i, tmp[i] );  // For test
+		for (i = 0; i < MAX_READ_LINE; i++) {
+			fscanf(fp, "%s", parseToken[i]);
+//			printf("FOR_RSSI_PRE > parseToken[%d]=%s\n", i, parseToken[i]);
 			ret = feof(fp);
 			if (ret != 0) {
 				break;
 			}
 		}
-		line = i-1;
-		
 		// close the temporary file
 		fclose(fp);
-		
+
+		line = i;
+		return 0;
+
+	case FOR_RSSI:
+		printf( "[file_analysis] analysis for rssi of other channel\n" );
+
 		i = 0;
 		j = 0;
 		max = -100;
@@ -1002,14 +979,14 @@ int	file_analysis( int mode, int ch )
 			if (i == -1) {
 				break;
 			}
-			tmp3 = strtok( tmp[i+1], ")" );
+			tmp3 = strtok( parseToken[i+1], ")" );
 			ret = atoi(tmp3);
 			if (ch == ret) {
 				if (g_board_type == WPC_BOARD_TYPE_J) {
-					strtok( tmp[i+4], "=" );
+					strtok( parseToken[i+4], "=" );
 					tmp3 = strtok( NULL, "=" );
 				} else if (g_board_type == WPC_BOARD_TYPE_J3) {
-					strtok( tmp[i+4], ":" );
+					strtok( parseToken[i+4], ":" );
 					tmp3 = strtok( NULL, ":" );
 				} else
 					tmp3 = NULL;
@@ -1057,7 +1034,7 @@ int	search_token(char *token, int start, int num)
 	len = strlen(token);
 	
 	for (i=start;i<MAX_READ_LINE;i++) {
-		if (strncmp(tmp[i],token,len) == 0) {
+		if (strncmp(parseToken[i],token,len) == 0) {
 			if (count == num) {
 				return i;
 			}
