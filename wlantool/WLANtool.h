@@ -121,8 +121,26 @@ int  TstRunning=0;
 char param[5][256];
 char *info[9+MAX_CH_NUM];
 
-#if 1
-char *page1[65] = {
+enum mesg_id {
+	MSG_SECOND = 0,
+	MSG_PROCESSING,
+	MSG_MEASURING,
+	MSG_ERROR,
+	MSG_RESULT_FILE_READ_ERROR,
+	MSG_TEST_FILE_READ_ERROR,
+	MSG_DS_TEST_CANNOT_START,
+	MSG_NW_TEST_CANNOT_START,
+	MSG_FAILING,
+	MSG_IFUP,
+	MSG_NOIP
+};
+
+char **page1;
+char **page2;
+char **judgement;
+char **mesg;
+
+char *page1_jpn[65] = {
 		"無線 LAN 環境測定モード",  // 0
 		"接続先",        // 1
 		"接続状況",      // 2
@@ -154,7 +172,7 @@ char *page1[65] = {
 		"140",           // 63
 		"[CH]"           // 64
 	};
-char *page2[14] = {
+char *page2_jpn[14] = {
 		"無線 LAN 性能測定モード",  // 0
 		"ダウンストリームレート",   // 1
 		"ネットワークディレイ",     // 2
@@ -170,7 +188,7 @@ char *page2[14] = {
 		"測定結果",                 // 12
 		"(現在)"                    // 13
 	};
-char *judgement[7] = {
+char *judgement_jpn[7] = {
 		"合格",    // 0
 		"不合格",  // 1
 		"確認",    // 2
@@ -179,19 +197,21 @@ char *judgement[7] = {
 		"使用",    // 5
 		"未使用"   // 6
 	};
-#define MSG_SECOND     "秒"
-#define MSG_PROCESSING "処理中"
-#define MSG_MEASURING  "測定中"
-#define MSG_ERROR      "エラー"
-#define MSG_RESULT_FILE_READ_ERROR "測定結果ファイルが読み込めません"
-#define MSG_TEST_FILE_READ_ERROR   "テストファイルの読み込みエラー"
-#define MSG_DS_TEST_CANNOT_START   "ダウンストリームテストを開始できません"
-#define MSG_NW_TEST_CANNOT_START   "ネットワークテストを開始できません"
-#define MSG_FAILING                "不合格"
-#define MSG_IFUP                   "Initialize …"
-#define MSG_NOIP                   "IPアドレスが取得できていません"
-#else
-char *page1[65] = {
+char *mesg_jpn[11] = {
+	"秒",
+	"処理中",
+	"測定中",
+	"エラー",
+	"測定結果ファイルが読み込めません",
+	"テストファイルの読み込みエラー",
+	"ダウンストリームテストを開始できません",
+	"ネットワークテストを開始できません",
+	"不合格",
+	"Initialize ...",
+	"IPアドレスが取得できていません"
+	};
+
+char *page1_eng[65] = {
 		"WLAN Environmental measurement mode", "destination", "status", "WEP", "channel",
 		"field intensity", "throughput", "erorr rate", "other channel field intensity", "start",
 		"stop", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",  "11", "12", "13",
@@ -200,25 +220,28 @@ char *page1[65] = {
 		"36", "40", "44", "48", "52", "56", "60", "64", "100", "104",
 		"108", "112", "116", "120", "124", "128", "132", "136", "140", "[CH]"
 	};
-char *page2[14] = {
+char *page2_eng[14] = {
 		"WLAN Performance measurement mode", "down stream rate", "network delay",
 		"(average)", "(min)", "(max)", "down stream test", "network test",
 		"reset down stream", "reset network test", "<-",
 		"test interval", "result of a measurement", "(current)"
 	};
-char *judgement[7] = {
+char *judgement_eng[7] = {
 		"passing", "failing", "confirm", "connect", "unconnect", "use", "unuse"
 	};
-#define MSG_SECOND     "sec"
-#define MSG_PROCESSING "processing"
-#define MSG_MEASURING  "measuring"
-#define MSG_ERROR      "Error"
-#define MSG_RESULT_FILE_READ_ERROR "Reading error of measurement result file."
-#define MSG_TEST_FILE_READ_ERROR   "Reading error of test file."
-#define MSG_DS_TEST_CANNOT_START   "A downstream test cannot start. "
-#define MSG_NW_TEST_CANNOT_START   "A network test cannot start. "
-#define MSG_FAILING                "failing"
-#endif
+char *mesg_eng[11] = {
+	"sec",
+	"processing",
+	"measuring",
+	"Error",
+	"Reading error of measurement result file.",
+	"Reading error of test file.",
+	"A downstream test cannot start. ",
+	"A network test cannot start. ",
+	"failing",
+	"Initialize ...",
+	"No ip address."
+	};
 
 #define EXIT_BUTTON_ON "exit_button_on"
 

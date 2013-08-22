@@ -53,6 +53,7 @@ int main(int ac, char *av[])
 	char fontname[256];
 	char command[256];
 	int ret;
+	int opt, opt_eng = 0;
 	
 printf("wlantool build(%s,%s)\n",__DATE__,__TIME__);
 
@@ -63,6 +64,35 @@ printf("wlantool build(%s,%s)\n",__DATE__,__TIME__);
 	
 	g_board_type = sc_get_board_type();
 	printf("wlantool execute on j%d-PANEL\n", g_board_type);
+
+	/* default settings */
+	page1 = page1_jpn;
+	page2 = page2_jpn;
+	judgement = judgement_jpn;
+	mesg = mesg_jpn;
+	strcpy(fontname, "DFPHSGothic-W7 12");
+	/* opt parse */
+	while ((opt = getopt(ac, av, "ef:n")) != -1) {
+		switch (opt) {
+		case 'e':
+			opt_eng = 1;
+			break;
+		case 'f':
+			strcpy(fontname, optarg);
+			break;
+		case 'n':
+			g_noifup = 1;
+			break;
+		default:
+			break;
+		}
+	}
+	if (opt_eng) {
+		page1 = page1_eng;
+		page2 = page2_eng;
+		judgement = judgement_eng;
+		mesg = mesg_eng;
+	}
 
 	// 設定ファイル読み込み（先頭５つ）
 	if (ReadParamFile() != OK) {
@@ -102,16 +132,6 @@ printf("wlantool build(%s,%s)\n",__DATE__,__TIME__);
 	XSetBackground(dpy, gc, WhitePixel(dpy,screen));
 	
 	// フォント作成
-	if (ac == 2) {
-		if (strcmp(av[1], "-n") != 0)
-			strcpy(fontname, av[1]);
-		else {
-			g_noifup = 1;
-			strcpy(fontname, "DFPHSGothic-W7 12");
-		}
-	} else {
-		strcpy(fontname, "DFPHSGothic-W7 12");
-	}
 	fd = pango_font_description_from_string(fontname);
 	printf("font name %s\n", pango_font_description_to_filename(fd));
 	
@@ -176,19 +196,19 @@ envt_mode:
 		// IP取得確認
 		if (!IsGetIP()) {
 			// 取得できてない画面表示
-			MakePopUpMsgWithConfirmButton(MSG_ERROR, 140, MSG_NOIP, 45);
+			MakePopUpMsgWithConfirmButton(mesg[MSG_ERROR], 140, mesg[MSG_NOIP], 45);
 			EnvtPage();
 			goto envt_mode;
 		}
 		
 		StartFlag = ON;
 		isDataOK = OK;
-		MakePopUpMsg(MSG_PROCESSING, MSG_MEASURING);
+		MakePopUpMsg(mesg[MSG_PROCESSING], mesg[MSG_MEASURING]);
 		XftDrawDestroy(popUp_draw);
 		XDestroyWindow(dpy, popUp);
 		get_environment_info(0);
 		if (test_error == 3) {
-			MakePopUpMsg2(MSG_ERROR, MSG_RESULT_FILE_READ_ERROR);
+			MakePopUpMsg2(mesg[MSG_ERROR], mesg[MSG_RESULT_FILE_READ_ERROR]);
 			ClearFields();
 			EnvtPage();
 			ConfirmButton = OFF;
@@ -199,7 +219,7 @@ envt_mode:
 		//display Pop up Msg at least 2 seconds
 		if (ParseFile() == NG) {
 			ConfirmButton = ErrorButton = ON;
-			MakePopUpMsg(MSG_ERROR, MSG_TEST_FILE_READ_ERROR);
+			MakePopUpMsg(mesg[MSG_ERROR], mesg[MSG_TEST_FILE_READ_ERROR]);
 			EnvtPage();
 			ConfirmButton = OFF;
 			goto envt_mode;
@@ -384,7 +404,7 @@ performance_mode:
 				// IP取得確認
 				if (!IsGetIP()) {
 					// 取得できてない画面表示
-					MakePopUpMsgWithConfirmButton(MSG_ERROR, 140, MSG_NOIP, 45);
+					MakePopUpMsgWithConfirmButton(mesg[MSG_ERROR], 140, mesg[MSG_NOIP], 45);
 					PerformPage();
 					goto performance_mode;
 				}
@@ -414,7 +434,7 @@ performance_mode:
 				// IP取得確認
 				if (!IsGetIP()) {
 					// 取得できてない画面表示
-					MakePopUpMsgWithConfirmButton(MSG_ERROR, 140, MSG_NOIP, 45);
+					MakePopUpMsgWithConfirmButton(mesg[MSG_ERROR], 140, mesg[MSG_NOIP], 45);
 					PerformPage();
 					goto performance_mode;
 				}
@@ -437,7 +457,7 @@ performance_mode:
 				reset[4]=50;
 				ShadeForm(win[N_RESET], win_draw[N_RESET], reset, page2[9],  &color_black, C_WHITE);
 				for (z=5;z<8;z++) {
-					sprintf(tmp,"%d" MSG_SECOND,z-4);
+					sprintf(tmp,"%d%s", z-4, mesg[MSG_SECOND]);
 					coor[0] = coor[1] = 0; coor[2] = 40; coor[3] = 30;
 					coor[4] = 7; coor[5] = 5;
 					ShadeForm(win[z], win_draw[z], coor, tmp, &color_black, C_WHITE);
@@ -493,7 +513,7 @@ performance_mode:
 				}
 				dwnstream_test=OFF;
 				ConfirmButton=ErrorButton=ON; 
-				MakePopUpMsg(MSG_ERROR, MSG_DS_TEST_CANNOT_START);
+				MakePopUpMsg(mesg[MSG_ERROR], mesg[MSG_DS_TEST_CANNOT_START]);
 				PerformPage();
 				ConfirmButton =OFF;
 				ShadeForm(win[D_STOP],  win_draw[D_STOP],  abc,   page1[10], &color_black, C_GRAY);
@@ -766,6 +786,7 @@ void EnvtPage()
 void PerformPage()
 {
 	int xyz[6] = {0,0,0,0,0,0};
+	char tmpstr[256];
 	
 	XDrawRectangle(dpy, w, gc, 5 ,5, 1012, 590);
 	// draw Border for Window Title
@@ -824,15 +845,18 @@ void PerformPage()
 		// 「1秒」ボタン
 		xyz[0] = 530; xyz[1] = 410; xyz[2] = 40; xyz[3] = 30;
 		xyz[4] =   7; xyz[5] =  5;
-		MakeButton(5, xyz, "1" MSG_SECOND);
+		sprintf(tmpstr, "1%s", mesg[MSG_SECOND]);
+		MakeButton(5, xyz, tmpstr);
 		
 		// 「2秒」ボタン
 		xyz[0] = 580; xyz[1] = 410;
-		MakeButton(6, xyz, "2" MSG_SECOND);
+		sprintf(tmpstr, "2%s", mesg[MSG_SECOND]);
+		MakeButton(6, xyz, tmpstr);
 		
 		// 「3秒」ボタン
 		xyz[0] = 630; xyz[1] = 410;
-		MakeButton(7, xyz, "3" MSG_SECOND);
+		sprintf(tmpstr, "3%s", mesg[MSG_SECOND]);
+		MakeButton(7, xyz, tmpstr);
 		
 		// 「ダウンストリームテストのリセット」ボタン
 		xyz[0] = 60; xyz[1] = 460; xyz[2] = 330; xyz[3] = 40;
@@ -1444,7 +1468,7 @@ void MakePopUpMsg(char *Title, char *Message)
 		} else {
 			wxy[4] = 140; wxy[5] = 5;
 			ShadeForm(popUp, popUp_draw, wxy, Title, &color_black, C_WHITE);
-			if (strcmp(Message,MSG_FAILING) == 0) {
+			if (strcmp(Message,mesg[MSG_FAILING]) == 0) {
 				printf("\nNOT O K\n");
 				wxy[4] = 145; wxy[5] = 50;
 				ShadeForm(popUp, popUp_draw, wxy, Message, &color_red, C_WHITE);
@@ -1594,9 +1618,9 @@ void TimeButton(int btn_num)
 	if (btn_num == 2) { first = 1; second =3; }
 	if (btn_num == 3) { first = 1; second =2; }
 	
-	sprintf(buf,  "%d" MSG_SECOND, first);
-	sprintf(buf1, "%d" MSG_SECOND, second);
-	sprintf(btn,  "%d" MSG_SECOND, btn_num);
+	sprintf(buf,  "%d%s", first, mesg[MSG_SECOND]);
+	sprintf(buf1, "%d%s", second, mesg[MSG_SECOND]);
+	sprintf(btn,  "%d%s", btn_num, mesg[MSG_SECOND]);
 	
 	ShadeForm(win[4+btn_num], win_draw[4+btn_num], xy, btn,  &color_black, C_WHITE);
 	ShadeForm(win[4+first],   win_draw[4+first],   xy, buf,  &color_black, C_GRAY);
@@ -1758,7 +1782,7 @@ void DrawPangoXftRenderLayout(XftDraw *draw, XftColor *color, PangoLayout *layou
 
 void ExecIfipPage()
 {
-	DrawPangoXftRenderLayout(draw, &color_black, layout, 450, 280, MSG_IFUP);
+	DrawPangoXftRenderLayout(draw, &color_black, layout, 450, 280, mesg[MSG_IFUP]);
 }
 
 
