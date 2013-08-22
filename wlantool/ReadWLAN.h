@@ -41,6 +41,8 @@
 #define   DOWN_ERROR 1
 #define   NO_ERROR   0
 
+#define MAX_CH_NUM 13
+
 // -------------------------------------
 // 	Function prototype
 // -------------------------------------

@@ -118,7 +118,7 @@ int network_test=0, dwnstream_test=0, res=0, ConfirmButton=0;
 
 int  TstRunning=0;
 char param[5][256];
-char *info[22];
+char *info[9+MAX_CH_NUM];
 
 #if 1
 char *page1[66] = {

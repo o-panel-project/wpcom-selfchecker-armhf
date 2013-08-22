@@ -44,7 +44,7 @@ static	char	macadrs[32]		= "XX:XX:XX:XX:XX:XX";
 static	int 	rssi			= -100;
 static	int	throughput		= 0;
 static	float	error_rate		= 100.00;
-static	int	other_rssi[13]	= {-100,-50,-100,-30,-100,-80,-100,-60,-50,-50,-100,-100,-100};
+static	int	other_rssi[MAX_CH_NUM]	= {0,};
 
 static	int	processing_flag = 0;
 static	pid_t	down_pid;
@@ -85,9 +85,9 @@ char EXIT_BTN[256];     // 21
 // -- Getting WLAN environment information --
 int	get_environment_info ( int mode )
 {
-	int		ret = 0;
+	int		ret = 0, olen, i;
 	int		fp1;
-	char	tmp[200];
+	char	tmp[512];
 
 	ret = ReadConfig(); 
 	printf( "[get environment_info] start\n" );
@@ -98,6 +98,19 @@ int	get_environment_info ( int mode )
 		ret += get_errorrate_info();
 	}
 	ret += get_otherchannel_info();	
+
+	/* csv string for output. */
+	olen = sprintf(tmp, "%s,%s,%s,%s,%s,%s,%d,%d,%.2f", ssid, association, wep,
+			channel, bssid, macadrs, rssi, throughput, error_rate);
+	if (olen <= 0) {
+		printf("[%s] invalid output\n", __func__);
+		test_error =3;
+		perror(NULL);
+		return -1;
+	}
+	for (i = 0; i < MAX_CH_NUM; i++) {
+		olen += sprintf(&tmp[olen], ",%d", other_rssi[i]);
+	}
 
 	// file open
 	fp1 = open(TESTFILE1,(O_WRONLY|O_CREAT|O_TRUNC),((mode_t)0777));
@@ -113,17 +126,7 @@ int	get_environment_info ( int mode )
 	flock( fp1, LOCK_EX );
 	printf( "  > file lock\n" );
 
-	printf( "%s,%s,%s,%s,%s,%s,%d,%d,%.2f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-		ssid, association, wep, channel,bssid, macadrs, rssi, throughput, error_rate,
-		other_rssi[0], other_rssi[1], other_rssi[2], other_rssi[3], other_rssi[4],  other_rssi[5],
-		other_rssi[6], other_rssi[7], other_rssi[8], other_rssi[9], other_rssi[10], other_rssi[11],
-		other_rssi[12]);
-
-	sprintf( tmp, "%s,%s,%s,%s,%s,%s,%d,%d,%.2f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-		ssid, association, wep, channel, bssid,macadrs, rssi, throughput, error_rate,
-		other_rssi[0], other_rssi[1], other_rssi[2], other_rssi[3], other_rssi[4],  other_rssi[5],
-		other_rssi[6], other_rssi[7], other_rssi[8], other_rssi[9], other_rssi[10], other_rssi[11],
-		other_rssi[12]);
+	printf("%s\n", tmp);
 
 	// date write
 	write( fp1, tmp, strlen(tmp) );
@@ -223,19 +226,8 @@ error_macadrs:
          printf("\nMAC: %s\n",macadrs);
 	throughput = 0;
 	error_rate = 100.00;
-	other_rssi[0] = -100;
-	other_rssi[1] = -100;
-	other_rssi[2] = -100;
-	other_rssi[3] = -100;
-	other_rssi[4] = -100;
-	other_rssi[5] = -100;
-	other_rssi[6] = -100;
-	other_rssi[7] = -100;
-	other_rssi[8] = -100;
-	other_rssi[9] = -100;
-	other_rssi[10] = -100;
-	other_rssi[11] = -100;
-	other_rssi[12] = -100;
+	for (i = 0; i < MAX_CH_NUM; i++)
+		other_rssi[i] = -100;
 
 	printf( "[get_basic_info] something had error\n" );
 

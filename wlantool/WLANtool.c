@@ -232,23 +232,24 @@ envt_mode:
 		fprintf(fp,"ASSOC:%s\n",info[1]);
 		fprintf(fp,"WEP:%s\n",info[2]);
 		fprintf(fp,"MYCH:%s\n",info[3]);
-		fprintf(fp,"MAC:%s\n",info[4]);
-		fprintf(fp,"RSSI:%s\n",info[5]);
-		fprintf(fp,"THRU:%s\n",info[6]);
-		fprintf(fp,"ERATE:%s\n",info[7]);
-		fprintf(fp,"CH1:%s\n",info[8]);
-		fprintf(fp,"CH2:%s\n",info[9]);
-		fprintf(fp,"CH3:%s\n",info[10]);
-		fprintf(fp,"CH4:%s\n",info[11]);
-		fprintf(fp,"CH5:%s\n",info[12]);
-		fprintf(fp,"CH6:%s\n",info[13]);
-		fprintf(fp,"CH7:%s\n",info[14]);
-		fprintf(fp,"CH8:%s\n",info[15]);
-		fprintf(fp,"CH9:%s\n",info[16]);
-		fprintf(fp,"CH10:%s\n",info[17]);
-		fprintf(fp,"CH11:%s\n",info[18]);
-		fprintf(fp,"CH12:%s\n",info[19]);
-		fprintf(fp,"CH13:%s\n",info[20]);
+		fprintf(fp,"BSSID:%s\n",info[4]);
+		fprintf(fp,"MAC:%s\n",info[5]);
+		fprintf(fp,"RSSI:%s\n",info[6]);
+		fprintf(fp,"THRU:%s\n",info[7]);
+		fprintf(fp,"ERATE:%s\n",info[8]);
+		fprintf(fp,"CH1:%s\n",info[9]);
+		fprintf(fp,"CH2:%s\n",info[10]);
+		fprintf(fp,"CH3:%s\n",info[11]);
+		fprintf(fp,"CH4:%s\n",info[12]);
+		fprintf(fp,"CH5:%s\n",info[13]);
+		fprintf(fp,"CH6:%s\n",info[14]);
+		fprintf(fp,"CH7:%s\n",info[15]);
+		fprintf(fp,"CH8:%s\n",info[16]);
+		fprintf(fp,"CH9:%s\n",info[17]);
+		fprintf(fp,"CH10:%s\n",info[18]);
+		fprintf(fp,"CH11:%s\n",info[19]);
+		fprintf(fp,"CH12:%s\n",info[20]);
+		fprintf(fp,"CH13:%s\n",info[21]);
 		fclose(fp);
 		
 		//Update screen after Confirmed Button is pressed
@@ -699,12 +700,12 @@ void EnvtPage()
 		MakeButton(NEXT, xyz, page1[26]);
 		
 		// 「スキャン開始」ボタン
-		xyz[0] = 300; xyz[1] = 280; xyz[2] = 120; xyz[3] = 30;
+		xyz[0] = 740; xyz[1] = 280; xyz[2] = 120; xyz[3] = 30;
 		xyz[4] =  11; xyz[5] =   5;
 		MakeButton(START_SCAN, xyz, page1[29]);
 		
 		// 「スキャン停止」ボタン
-		xyz[0] = 430; xyz[1] = 280; xyz[2] = 120; xyz[3] = 30;
+		xyz[0] = 870; xyz[1] = 280; xyz[2] = 120; xyz[3] = 30;
 		xyz[4] =  11; xyz[5] =   5;
 		MakeButton(STOP_SCAN, xyz, page1[30]);
 		
@@ -1052,7 +1053,7 @@ void UpdateUI(int f, char *data)
 		break;
 		
 	default:  // 他のチャンネルの電界強度
-		if ( f >=9 && f < 22) {
+		if ( f >=9 && f < (9+MAX_CH_NUM)) {
 			tbuf=abs(atoi(data));
 			if (tbuf%2 == 1 ) tbuf+=1;  // debug
 			if (res == OK) {
@@ -1245,7 +1246,7 @@ printf("(%d)%s\n", id, info[id]);
 *************************************************************************************/
 int ValidateData(int idNo)
 {
-   if(idNo == 0){
+   if(idNo == 0){	// SSID
       if ((strlen(info[idNo]) !=0 ) && (strcmp(info[idNo],"@NoAP@")!=0) &&
           (strlen(info[idNo]) <= 17 )) return OK;
       if  (strlen(info[idNo]) >=33){
@@ -1255,7 +1256,7 @@ int ValidateData(int idNo)
       return NG;
    }
    
-   if(idNo == 1 || idNo == 2){
+   if(idNo == 1 || idNo == 2){	// assoc, wep
       if (atoi(info[idNo]) == 1 || atoi(info[idNo]) == 0 ) return OK;
       isDataOK = NG;
       return NG;
@@ -1266,28 +1267,24 @@ int ValidateData(int idNo)
       return NG;
    }         
    
-//   if(idNo == 4){   //MAC Address
    if(idNo == 4 || idNo == 5){   //MAC Address
       if ((strlen(info[idNo]) == 17) && 
           (strcmp(info[idNo],"XX:XX:XX:XX:XX:XX")!=0)) return OK;
       return NG;
    }
    
-   if(idNo == 6 || (idNo >= 9 && idNo <=21)){
+   if(idNo == 6 || (idNo >= 9 && idNo < (9+MAX_CH_NUM))){	// RSSI
       if ( abs(atoi(info[idNo])) >= 20 && abs(atoi(info[idNo])) <= 100 ) return OK;
-      if (idNo == 5) isDataOK = NG;
       return NG;     
    }
    
-   if (idNo == 7){
-//      if (atoi(info[idNo]) >= 0 && atoi(info[idNo]) <= 10000 ) return OK;
+   if (idNo == 7){	// throuput
       if (atoi(info[idNo]) >= 0) return OK;
       isDataOK = NG;
       return NG;
    }
    
-   if (idNo == 8){
-//      if (atoi(info[idNo]) >= 0 && atoi(info[idNo]) <= 10 ) return OK;
+   if (idNo == 8){	// errorrate
       if (atoi(info[idNo]) >= 0 && atoi(info[idNo]) <= 50 ) return OK;
       isDataOK = NG;
       return NG;
@@ -1448,7 +1445,7 @@ void MakePopUpMsg(char *Title, char *Message)
 		for (;;) {
 			XCheckWindowEvent(dpy,win[12], EVT_MSK, &event2 );
 			if(event2.type == ButtonRelease){
-				printf("\nConfirm Button\n");
+				printf("\n%s::Confirm Button\n", __func__);
 				event2.type =0;
 				break;
 			}
@@ -1508,7 +1505,7 @@ void MakePopUpMsgWithConfirmButton(char *Title, int posTitle, char *Message, int
 		for (;;) {
 			XCheckWindowEvent(dpy,win[12], EVT_MSK, &event2 );
 			if(event2.type == ButtonRelease){
-				printf("\nConfirm Button\n");
+				printf("\n%s::Confirm Button\n", __func__);
 				event2.type =0;
 				break;
 			}
