@@ -599,7 +599,25 @@ int	get_otherchannel_info()
 			other_rssi[10] = get_scan(11);
 			other_rssi[11] = get_scan(12);
 			other_rssi[12] = get_scan(13);
-			
+			other_rssi[13] = get_scan(36);
+			other_rssi[14] = get_scan(40);
+			other_rssi[15] = get_scan(44);
+			other_rssi[16] = get_scan(48);
+			other_rssi[17] = get_scan(52);
+			other_rssi[18] = get_scan(56);
+			other_rssi[19] = get_scan(60);
+			other_rssi[20] = get_scan(64);
+			other_rssi[21] = get_scan(100);
+			other_rssi[22] = get_scan(104);
+			other_rssi[23] = get_scan(108);
+			other_rssi[24] = get_scan(112);
+			other_rssi[25] = get_scan(116);
+			other_rssi[26] = get_scan(120);
+			other_rssi[27] = get_scan(124);
+			other_rssi[28] = get_scan(128);
+			other_rssi[29] = get_scan(132);
+			other_rssi[30] = get_scan(136);
+			other_rssi[31] = get_scan(140);
 		}
 	}	
 	
@@ -699,7 +717,7 @@ int	file_analysis( int mode, int ch )
 		// getting information
 		for (i=0;i<MAX_READ_LINE;i++){
 			fscanf(fp,"%s",parseToken[i]);
-			printf( " > parseToken[%d]=%s\n", i, parseToken[i] );  // For test
+//			printf( " > parseToken[%d]=%s\n", i, parseToken[i] );  // For test
 			ret = feof(fp);
 			if (ret != 0) {
 				break;
@@ -860,7 +878,7 @@ int	file_analysis( int mode, int ch )
 		// getting information
 		for (i=0; i<MAX_READ_LINE; i++) {
 			fscanf(fp, "%s", parseToken[i]);
-			printf(" > parseToken[%d]=%s\n", i, parseToken[i]);
+//			printf(" > parseToken[%d]=%s\n", i, parseToken[i]);
 			ret = feof(fp);
 			if (ret != 0) {
 				break;

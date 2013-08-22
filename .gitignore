@@ -6,6 +6,7 @@ Build/log-battery
 Build/mainpanel
 Build/tp-grid
 Build/xlib_lcdcheck
+Build/wlantool
 cpprogress/cpprogress
 prismapp/demoapp/demoapp-arm
 lcd/xlib_lcdcheck

@@ -250,6 +250,25 @@ envt_mode:
 		fprintf(fp,"CH11:%s\n",info[19]);
 		fprintf(fp,"CH12:%s\n",info[20]);
 		fprintf(fp,"CH13:%s\n",info[21]);
+		fprintf(fp,"CH36:%s\n",info[22]);
+		fprintf(fp,"CH40:%s\n",info[23]);
+		fprintf(fp,"CH44:%s\n",info[24]);
+		fprintf(fp,"CH48:%s\n",info[25]);
+		fprintf(fp,"CH52:%s\n",info[26]);
+		fprintf(fp,"CH56:%s\n",info[27]);
+		fprintf(fp,"CH60:%s\n",info[28]);
+		fprintf(fp,"CH64:%s\n",info[29]);
+		fprintf(fp,"CH100:%s\n",info[30]);
+		fprintf(fp,"CH104:%s\n",info[31]);
+		fprintf(fp,"CH108:%s\n",info[32]);
+		fprintf(fp,"CH112:%s\n",info[33]);
+		fprintf(fp,"CH116:%s\n",info[34]);
+		fprintf(fp,"CH120:%s\n",info[35]);
+		fprintf(fp,"CH124:%s\n",info[36]);
+		fprintf(fp,"CH128:%s\n",info[37]);
+		fprintf(fp,"CH132:%s\n",info[38]);
+		fprintf(fp,"CH136:%s\n",info[39]);
+		fprintf(fp,"CH140:%s\n",info[40]);
 		fclose(fp);
 		
 		//Update screen after Confirmed Button is pressed
@@ -309,8 +328,13 @@ envt_mode:
 				for (z=315; z<515; z+=25) {
 					XDrawLine(dpy,w,gc,30,z,990,z);
 				}
+				XSetLineAttributes(dpy, gc, 1, LineOnOffDash,CapButt,JoinMiter);
+				XDrawLine(dpy, w, gc, 415, 315, 415, 515);
+				XDrawLine(dpy, w, gc, 531, 315, 531, 515);
+				XDrawLine(dpy, w, gc, 647, 315, 647, 515);
+				XSetLineAttributes(dpy, gc, 1, LineSolid,CapButt,JoinMiter);
 				XFlush(dpy);
-				for (z=9; z<=21; z++) {
+				for (z=9; z<(9+MAX_CH_NUM); z++) {
 					res = ValidateData(z);
 					UpdateUI(z, info[z]);
 				}
@@ -679,14 +703,20 @@ void EnvtPage()
 	for (a=315; a<515; a+=25) {
 		XDrawLine(dpy, w, gc, 30, a, 990, a);  //inner lines of ScanArea
 	}
+	XSetLineAttributes(dpy, gc, 1, LineOnOffDash, CapButt, JoinMiter);
+	XDrawLine(dpy, w, gc, 415, 315, 415, 515);
+	XDrawLine(dpy, w, gc, 531, 315, 531, 515);
+	XDrawLine(dpy, w, gc, 647, 315, 647, 515);
+	XSetLineAttributes(dpy, gc, 1, LineSolid, CapButt, JoinMiter);
 	a = 45;
-	for (z=32; z<66; z++) {
+	for (z=32; z<(32+MAX_CH_NUM); z++) {
 		if (z%2)
 		DrawPangoXftRenderLayout(draw, &color_black, layout, a, 520, page1[z]);
 		else
 		DrawPangoXftRenderLayout(draw, &color_black, layout, a, 515, page1[z]);
-		a += 28;
+		a += CH_COL_WIDTH;
 	}
+	DrawPangoXftRenderLayout(draw, &color_black, layout, a+2, 515, page1[z]);
 	
 	if (run_once == 0) {
 		// 「スタート」ボタン
@@ -1057,11 +1087,11 @@ void UpdateUI(int f, char *data)
 			tbuf=abs(atoi(data));
 			if (tbuf%2 == 1 ) tbuf+=1;  // debug
 			if (res == OK) {
-				XFillRectangle(dpy,w,gc,45+(28*(f-9)),515-((100-tbuf)*2.5),15,(100-tbuf)*2.5);
+				XFillRectangle(dpy,w,gc,45+(CH_COL_WIDTH*(f-9)),515-((100-tbuf)*2.5),15,(100-tbuf)*2.5);
 			} else {
 				if(tbuf > 100) tbuf = 100;
 				if(tbuf < 20) tbuf = 20;
-				XFillRectangle(dpy,w,gc,45+(28*(f-9)),515-((100-tbuf)*2.5),15,(100-tbuf)*2.5);
+				XFillRectangle(dpy,w,gc,45+(CH_COL_WIDTH*(f-9)),515-((100-tbuf)*2.5),15,(100-tbuf)*2.5);
 			}
 			XFlush(dpy);
 		}

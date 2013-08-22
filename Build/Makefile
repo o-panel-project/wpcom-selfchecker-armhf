@@ -17,7 +17,7 @@ export CC
 export LD
 
 #TARGET=tp-grid mainpanel log-battery cpprogress
-TARGET= mainpanel tp-grid log-battery cpprogress xlib_lcdcheck demoapp
+TARGET= mainpanel tp-grid log-battery cpprogress xlib_lcdcheck demoapp wlantool
 
 .PHONY: $(TARGET)
 all: $(TARGET)
@@ -49,6 +49,10 @@ xlib_lcdcheck:
 demoapp:
 	make -C ../prismapp/demoapp
 	@cp -p ../prismapp/demoapp/demoapp-arm .
+
+wlantool:
+	make -C ../wlantool
+	@cp -p ../wlantool/wlantool .
 
 clean:
 	make -C ../lcd clean
