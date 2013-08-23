@@ -17,6 +17,7 @@
 #include "common.h"
 #include "wpcio.h"
 
+extern const char *wl_version_str;
 
 typedef struct tag_Rect {
 	int x;
@@ -55,7 +56,7 @@ int main(int ac, char *av[])
 	int ret;
 	int opt, opt_eng = 0;
 	
-printf("wlantool build(%s,%s)\n",__DATE__,__TIME__);
+	printf("wlantool build(%s)\n",wl_version_str);
 
 	signal(SIGINT,  (void *)int_handler);
 	signal(SIGHUP,  (void *)int_handler);

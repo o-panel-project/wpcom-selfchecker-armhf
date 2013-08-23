@@ -683,7 +683,8 @@ int	get_scan ( int ch )
 #define MAX_READ_LINE 10240
 #define MAX_CHARACTER 256
 static char parseToken[MAX_READ_LINE][MAX_CHARACTER];
-static int line = 0;
+static int parse_line = 0;
+static int search_pos = 0;
 
 int	file_analysis( int mode, int ch )
 {
@@ -726,6 +727,7 @@ int	file_analysis( int mode, int ch )
 		
 		// close the temporary file
 		fclose(fp);
+		parse_line = i;
 		
 		// start analysis
 		
@@ -832,6 +834,7 @@ int	file_analysis( int mode, int ch )
 		
 		// close the temporary file
 		fclose(fp);
+		parse_line = i;
 		
 		// start analysis
 		if ( strncmp( parseToken[0], "wlan", 4) == 0 ) {	// checking adapter
@@ -887,6 +890,7 @@ int	file_analysis( int mode, int ch )
 		
 		// close the temporary file
 		fclose(fp);
+		parse_line = i;
 		
 		i = search_token("received,", 0, 0);
 		if (i == -1) {
@@ -950,8 +954,9 @@ int	file_analysis( int mode, int ch )
 		return 0;
 		
 	case FOR_RSSI_PRE:
-		printf("[%s] result file parsing\n", __func__);
-		line = 0;
+		printf("[%s] rssi for oether ch result file parsing\n", __func__);
+		parse_line = 0;
+		search_pos = 0;
 
 		// open the temporary file
 		fp = fopen(TEMPFILE, "r");
@@ -974,14 +979,13 @@ int	file_analysis( int mode, int ch )
 		// close the temporary file
 		fclose(fp);
 
-		line = i;
+		parse_line = i;
 		return 0;
 
 	case FOR_RSSI:
-		printf( "[file_analysis] analysis for rssi of other channel\n" );
+		printf("[%s] analysis for rssi of ch%d\n", __func__, ch);
 
-		i = 0;
-		j = 0;
+		i = search_pos;
 		max = -100;
 		
 		while (1) {
@@ -1011,18 +1015,18 @@ int	file_analysis( int mode, int ch )
 				ret = atoi(tmp3);
 #endif
 				current = ret;
-				printf( " > this is different channel\n" );
 				if ( current > max ) {
 					max = current;
-					printf( " > update maximum RSSI=%d\n", max );
+					printf(" > update maximum, ch%d use RSSI=%d\n", ch, max);
 				}
+				search_pos = i;
 			}
 			i++;
 		}
 		
 		// if cannot detect RSSI
 		if ( max == -100 ) {
-			printf( "[file_analysis] It cannot detect RSSI!\n" );
+			printf("[%s] ch%d cannot detect RSSI!\n", __func__, ch);
 		}
 		
 		return max;
@@ -1043,7 +1047,7 @@ int	search_token(char *token, int start, int num)
 	
 	len = strlen(token);
 	
-	for (i=start;i<MAX_READ_LINE;i++) {
+	for (i=start;i<parse_line;i++) {
 		if (strncmp(parseToken[i],token,len) == 0) {
 			if (count == num) {
 				return i;

@@ -18,7 +18,7 @@ else
 endif
 
 PROGRAM  = wlantool
-SRCS     = ReadWLAN.c WLANtool.c common.c md5.c
+SRCS     = ReadWLAN.c WLANtool.c version.c common.c md5.c
 OBJS     = ${SRCS:%.c=%.o}
 
 VPATH = ./:../common
@@ -37,6 +37,7 @@ LDFLAGS += $(shell $(PKGCONFIG) --libs pangoxft)
 all: $(PROGRAM) $(PING)
 
 $(PROGRAM): $(OBJS) depend.inc
+	$(CC) -c $(CFLAGS) -o version.o version.c
 	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 	$(STRIP) $(STRIP_OPT) $@
 
