@@ -5,6 +5,7 @@
 /*  --------------------------------------------------------------------  */
 /*  History     : 2012.02.06 (v1.0) -  First release                      */
 /*                2013.08.21 (v3.0) -  for j3                             */
+/*                2013.09.17 (v3.1) -  for j                              */
 /*  --------------------------------------------------------------------  */
 
 
@@ -954,7 +955,7 @@ int	file_analysis( int mode, int ch )
 		return 0;
 		
 	case FOR_RSSI_PRE:
-		printf("[%s] rssi for oether ch result file parsing\n", __func__);
+		printf("[%s] rssi for other ch result file parsing\n", __func__);
 		parse_line = 0;
 		search_pos = 0;
 
@@ -1019,7 +1020,10 @@ int	file_analysis( int mode, int ch )
 					max = current;
 					printf(" > update maximum, ch%d use RSSI=%d\n", ch, max);
 				}
-				search_pos = i;
+				if (g_board_type == WPC_BOARD_TYPE_J3)
+					search_pos = i;	/* j3 scan result is channel ascending */
+				else
+					search_pos = 0;	/* j scan result is not channel ascending */
 			}
 			i++;
 		}
