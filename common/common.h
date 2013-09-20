@@ -11,7 +11,7 @@
 #include <sys/time.h>
 
 #define SC_TITLE   "New SelfChecker"
-#define SC_VERSION "v2.0.0"
+#define SC_VERSION "v2.0.1"
 
 //
 //	global vars and defs

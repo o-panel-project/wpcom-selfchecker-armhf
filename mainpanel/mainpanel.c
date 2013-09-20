@@ -30,6 +30,7 @@ extern const char *sc_version_str;
 
 static int ignore_count=0;
 extern char usbmem_first_device;	/* RH */
+extern int i2c_main_auto_menu;	/* RH */
 int g_board_type = WPC_BOARD_TYPE_J;
 
 int demo_main(GtkWidget *table, GtkWidget *bsub);
@@ -70,7 +71,7 @@ struct side_menu_list_st {
 	{ 1, 1, "SW(GPIO)", "SW(GPIO)", "12", dipsw_main },
 	{ 1, 1, "I2C", NULL, NULL, NULL },
 	{ 0, 2, "Bus1:PMIC", "i2c1(PMIC)", "13:0", NULL },
-	{ 1, 2, "BUs2:Cradle", "i2c2(Cradle)", "13:1", i2c_cradle_main },
+	{ 1, 2, "Bus2:Cradle", "i2c2(Cradle)", "13:1", i2c_cradle_main },
 	{ 0, 2, "Bus3:LCD/TP", "i2c3(LCD/TP)", "13:2", NULL },
 	{ 1, 1, "WiFi", "WiFi", "14", wifi_main },
 	{ 1, 1, "HSUSB2", NULL, NULL, NULL },
@@ -763,7 +764,7 @@ int main(int argc, char *argv[])
 	base_path="/mnt1";
 	log_dir="/media/sda1/log";
 	while(1){
-		c=getopt(argc, argv, "M:T:I:L:b:d:gf:t:");
+		c=getopt(argc, argv, "M:T:I:L:b:d:gf:t:i:");
 		if(c==-1) break;
 		switch(c){
 		case 'I':
@@ -792,6 +793,9 @@ int main(int argc, char *argv[])
 			break;
 		case 't':
 			ival=atoi(optarg);
+			break;
+		case 'i':
+			i2c_main_auto_menu = atoi(optarg);
 			break;
 		}
 	}

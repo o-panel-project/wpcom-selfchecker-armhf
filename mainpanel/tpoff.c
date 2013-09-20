@@ -122,7 +122,7 @@ int tpfunc_main(GtkWidget *table, GtkWidget *i)
 	gtk_widget_show_all(w);
 	sc_gtk_update();
 	
-	sprintf(tmps, "tp-grid -b %s", base_path);
+	sprintf(tmps, "/mnt1/bin/tp-grid -b %s", base_path);
 	if(0<ival)
 		append_sprintf(tmps, " -t %d", ival);
 	

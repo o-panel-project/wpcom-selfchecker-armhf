@@ -18,6 +18,8 @@
 #include <linux/i2c-dev.h>
 #include "common.h"
 
+int i2c_main_auto_menu = 0;	/* RH */
+
 GtkWidget *lb_result, *lb_write, *lb_read;
 GtkWidget *lb_error_rate;
 GtkWidget *b_single, *b_cycle_wv, *b_cycle_read, *b_quit;
@@ -63,7 +65,7 @@ static void read_cradle()
 		update_result(1, r==1 ? "Device Open ERROR" : "Read IOCTL ERROR");
 		return;
 	}
-	sprintf(tmps, "<span size='xx-large'>Read : 0x%02x%02x%02x%02x(%c%c%c%c)¥n</span>",
+	sprintf(tmps, "<span size='xx-large'>Read : 0x%02x%02x%02x%02x(%c%c%c%c)</span>",
 							rbuf[0], rbuf[1], rbuf[2], rbuf[3], 
 							rbuf[0], rbuf[1], rbuf[2], rbuf[3]);
 	gtk_label_set_markup(GTK_LABEL(lb_read), tmps);
@@ -87,7 +89,7 @@ int write_verify_cradle()
 		return r;
 	}
 	
-	sprintf(tmps, "<span size='xx-large'>Write : 0x%02x%02x%02x%02x(%c%c%c%c)¥n</span>",
+	sprintf(tmps, "<span size='xx-large'>Write : 0x%02x%02x%02x%02x(%c%c%c%c)</span>",
 							wbuf[0], wbuf[1], wbuf[2], wbuf[3], 
 							wbuf[0], wbuf[1], wbuf[2], wbuf[3]);
 	gtk_label_set_text(GTK_LABEL(lb_read), "");
@@ -204,7 +206,7 @@ int i2c_cradle_main(GtkWidget *table, GtkWidget *bsub)
 	int button_no;
 	GtkWidget *v0, *bb;
 	GtkWidget *a1, *v1;
-	
+	printf("%s():auto menuno=%d\n",__func__,i2c_main_auto_menu);
 	// ボタン部分格納用hbox
 	GtkWidget *h0;
 	
@@ -259,6 +261,20 @@ int i2c_cradle_main(GtkWidget *table, GtkWidget *bsub)
 	
 	/*	20110818VACS	*/
 	i2c_cradle_timer_tag = g_timeout_add(500, loop_test, 0);
+
+	switch (i2c_main_auto_menu) {
+	case 1:
+		gtk_button_clicked(GTK_BUTTON(b_single));
+		break;
+	case 2:
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(b_cycle_wv), TRUE);
+		break;
+	case 3:
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(b_cycle_read), TRUE);
+		break;
+	default:
+		break;
+	}
 
 	gtk_main();
 	sc_bbox2_remove(bsub);
