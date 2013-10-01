@@ -7,12 +7,13 @@
 /*  History     : 2012.02.06 (v1.0) -  First release                      */
 /*                2013.08.21 (v3.0) -  for j3                             */
 /*                2013.09.17 (v3.1) -  for j                              */
+/*                2013.10.01 (v3.2) -  Validate Channel No. fix           */
 /*  --------------------------------------------------------------------  */
 
 
 // バージョン
 #define VER_MAJOR 3
-#define VER_MINOR 1
+#define VER_MINOR 2
 
 
 // defined values

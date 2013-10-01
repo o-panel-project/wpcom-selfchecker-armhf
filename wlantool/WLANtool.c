@@ -5,11 +5,12 @@
 /*                        the data graphically.                           */
 /*	Author      : Diana Dee Tan (AWS Systems,Inc)                         */
 /*	Contact     : dianadee.tan@awsys-i.com                                */
-/*	Last update : 2013.08.21                                              */
+/*	Last update : 2013.10.01                                              */
 /*	--------------------------------------------------------------------  */
 /*  History    : 2006.11.02 (v1.0) -  First release	                      */
 /*	       	     2006.11.22 (v2.0) -  Added Scan Other Channels Function  */
 /*	       	     2013.08.21 (v3.0) -  for j3                              */
+/*               2013.10.01 (v3.2) -  Validate Channel No. fix            */
 /*	--------------------------------------------------------------------  */
 
 
@@ -1301,6 +1302,7 @@ printf("(%d)%s\n", id, info[id]);
 *************************************************************************************/
 int ValidateData(int idNo)
 {
+	int chn, i;
    if(idNo == 0){	// SSID
       if ((strlen(info[idNo]) !=0 ) && (strcmp(info[idNo],"@NoAP@")!=0) &&
           (strlen(info[idNo]) <= 17 )) return OK;
@@ -1318,7 +1320,12 @@ int ValidateData(int idNo)
    }
    
    if(idNo == 3){   //Channel
-      if ( atoi(info[idNo]) >0 && atoi(info[idNo]) < 14) return OK;
+	   chn = atoi(info[idNo]);
+      if ( chn >0 && chn < 14) return OK;	/* 2.4GHz */
+		for (i = 36; i <= 64; i += 4)		/* 5GHz W52,W53 */
+			if (chn == i) return OK;
+		for (i = 100; i <= 140; i += 4)		/* 5GHz W56 */
+			if (chn == i) return OK;
       return NG;
    }         
    
