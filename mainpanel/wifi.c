@@ -28,7 +28,7 @@
 static int iw_log_run, ping_log_run;
 static int use_wifi_config = 0;
 static int pid_ping=0, pid_iw=0;
-GtkWidget *v_main, *b_ping_start, *b_ping_stop, *lb_lq, *lb_ip;
+GtkWidget *v_main, *b_ping_start, *b_ping_stop, *lb_lq, *lb_ip, *lb_mac;
 GtkWidget *lb_rssi;
 
 struct log_check_info
@@ -193,30 +193,49 @@ static void iwconfig_checker_extract_rssi(char *log, char *buf, int n)
 //
 static void display_ip_addr()
 {
-	int fd, ret;
-	struct ifreq ifr;
+	int fd, ret_ip, ret_mac;
+	struct ifreq ifr_ip, ifr_mac;
 	char tmps[SMALL_STR], *p;
 
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		tmps[0] = '\0';
+		gtk_label_set_text(GTK_LABEL(lb_mac), tmps);
 		gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
 		return;
 	}
 	p = getenv("SC_WLAN_IFACE");
 	if (!p) {
 		tmps[0] = '\0';
+		gtk_label_set_text(GTK_LABEL(lb_mac), tmps);
 		gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
 		return;
 	}
-	ifr.ifr_addr.sa_family = AF_INET;
-	strncpy(ifr.ifr_name, p, IFNAMSIZ-1);
-	ret = ioctl(fd, SIOCGIFADDR, &ifr);
+	ifr_mac.ifr_addr.sa_family = AF_INET;
+	strncpy(ifr_mac.ifr_name, p, IFNAMSIZ-1);
+	ret_mac = ioctl(fd, SIOCGIFHWADDR, &ifr_mac);
+
+	ifr_ip.ifr_addr.sa_family = AF_INET;
+	strncpy(ifr_ip.ifr_name, p, IFNAMSIZ-1);
+	ret_ip = ioctl(fd, SIOCGIFADDR, &ifr_ip);
 	close(fd);
-	if (ret < 0)
+
+	if (ret_mac < 0)
+		tmps[0] = '\0';
+	else
+		sprintf(tmps, "mac addr : %02x:%02x:%02x:%02x:%02x:%02x",
+			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[0],
+			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[1],
+			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[2],
+			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[3],
+			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[4],
+			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[5]);
+	gtk_label_set_text(GTK_LABEL(lb_mac), tmps);
+
+	if (ret_ip < 0)
 		tmps[0] = '\0';
 	else
 		sprintf(tmps, "ip addr : %s",
-			inet_ntoa(((struct sockaddr_in*)&ifr.ifr_addr)->sin_addr));
+			inet_ntoa(((struct sockaddr_in*)&ifr_ip.ifr_addr)->sin_addr));
 	gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
 }
 
@@ -578,6 +597,8 @@ void press_configure(GtkWidget *widget, gpointer data)
 		strcat(tmps, "infra-static");
 	else if (strcmp(wifi_config[use_wifi_config].ip_config, "adhoc") == 0)
 		strcat(tmps, "adhoc");	/* not supported */
+	else if (strcmp(wifi_config[use_wifi_config].ip_config, "pskdhcp") == 0)
+		strcat(tmps, "psk-dhcp");
 	else {
 		g_print("%s() ip_config failed\n", __func__);
 		sprintf(tmps,
@@ -655,11 +676,13 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_widget_set_usize(tv0, 430, 150);
 	lb_lq = gtk_label_new("");
 	lb_rssi = gtk_label_new("");
+	lb_mac = gtk_label_new("");
 	lb_ip = gtk_label_new("");
 
 	gtk_container_add(GTK_CONTAINER(v01), lb_lq);
 	gtk_container_add(GTK_CONTAINER(v01), lb_rssi);
 	gtk_container_add(GTK_CONTAINER(v01), tv0);
+	gtk_container_add(GTK_CONTAINER(v01), lb_mac);
 	gtk_container_add(GTK_CONTAINER(v01), lb_ip);
 	gtk_container_add(GTK_CONTAINER(a01), v01);
 	gtk_table_attach(GTK_TABLE(tbl), a01, 1, 2, 0, 1, 0, 0, 30, 10);
