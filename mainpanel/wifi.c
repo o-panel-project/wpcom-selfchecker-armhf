@@ -222,14 +222,15 @@ static void display_ip_addr()
 	if (ret_mac < 0)
 		tmps[0] = '\0';
 	else
-		sprintf(tmps, "mac addr : %02x:%02x:%02x:%02x:%02x:%02x",
+		sprintf(tmps, "MAC Address : <span font_desc=\"monospace bold 20.0\" "
+				"foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
 			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[0],
 			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[1],
 			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[2],
 			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[3],
 			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[4],
 			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[5]);
-	gtk_label_set_text(GTK_LABEL(lb_mac), tmps);
+	gtk_label_set_markup(GTK_LABEL(lb_mac), tmps);
 
 	if (ret_ip < 0)
 		tmps[0] = '\0';
