@@ -189,55 +189,97 @@ static void iwconfig_checker_extract_rssi(char *log, char *buf, int n)
 }
 
 //
-//	display ip addr
+//	get ip addr
 //
-static void display_ip_addr()
+unsigned long get_ip_addr()
 {
-	int fd, ret_ip, ret_mac;
-	struct ifreq ifr_ip, ifr_mac;
-	char tmps[SMALL_STR], *p;
+	int fd, ret_ip;
+	struct ifreq ifr_ip;
+	char *p;
 
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		tmps[0] = '\0';
-		gtk_label_set_text(GTK_LABEL(lb_mac), tmps);
-		gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
-		return;
+		return 0;
 	}
+
 	p = getenv("SC_WLAN_IFACE");
 	if (!p) {
-		tmps[0] = '\0';
-		gtk_label_set_text(GTK_LABEL(lb_mac), tmps);
-		gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
-		return;
+		close(fd);
+		return 0;
 	}
-	ifr_mac.ifr_addr.sa_family = AF_INET;
-	strncpy(ifr_mac.ifr_name, p, IFNAMSIZ-1);
-	ret_mac = ioctl(fd, SIOCGIFHWADDR, &ifr_mac);
 
 	ifr_ip.ifr_addr.sa_family = AF_INET;
 	strncpy(ifr_ip.ifr_name, p, IFNAMSIZ-1);
 	ret_ip = ioctl(fd, SIOCGIFADDR, &ifr_ip);
 	close(fd);
-
-	if (ret_mac < 0)
-		tmps[0] = '\0';
-	else
-		sprintf(tmps, "MAC Address : <span font_desc=\"monospace bold 20.0\" "
-				"foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
-			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[0],
-			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[1],
-			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[2],
-			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[3],
-			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[4],
-			(unsigned char)ifr_mac.ifr_hwaddr.sa_data[5]);
-	gtk_label_set_markup(GTK_LABEL(lb_mac), tmps);
-
 	if (ret_ip < 0)
-		tmps[0] = '\0';
-	else
-		sprintf(tmps, "ip addr : %s",
-			inet_ntoa(((struct sockaddr_in*)&ifr_ip.ifr_addr)->sin_addr));
-	gtk_label_set_text(GTK_LABEL(lb_ip), tmps);
+		return 0;
+
+	return ((struct sockaddr_in*)&ifr_ip.ifr_addr)->sin_addr.s_addr;
+}
+
+//
+//	get mac addr
+//
+int get_mac_addr(unsigned char *mac_addr)
+{
+	int fd, ret_mac;
+	struct ifreq ifr_mac;
+	char *p;
+
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		return -1;
+	}
+
+	p = getenv("SC_WLAN_IFACE");
+	if (!p) {
+		close(fd);
+		return -1;
+	}
+
+	ifr_mac.ifr_addr.sa_family = AF_INET;
+	strncpy(ifr_mac.ifr_name, p, IFNAMSIZ-1);
+	ret_mac = ioctl(fd, SIOCGIFHWADDR, &ifr_mac);
+	close(fd);
+	if (ret_mac < 0)
+		return -1;
+
+	mac_addr[0] = (unsigned char)ifr_mac.ifr_hwaddr.sa_data[0];
+	mac_addr[1] = (unsigned char)ifr_mac.ifr_hwaddr.sa_data[1];
+	mac_addr[2] = (unsigned char)ifr_mac.ifr_hwaddr.sa_data[2];
+	mac_addr[3] = (unsigned char)ifr_mac.ifr_hwaddr.sa_data[3];
+	mac_addr[4] = (unsigned char)ifr_mac.ifr_hwaddr.sa_data[4];
+	mac_addr[5] = (unsigned char)ifr_mac.ifr_hwaddr.sa_data[5];
+
+	return 0;
+}
+
+//
+//	display ip addr
+//
+static void display_ip_addr()
+{
+	char ipstr[SMALL_STR], macstr[SMALL_STR];
+	unsigned long ipaddr;
+	unsigned char macaddr[SMALL_STR];
+	struct in_addr ia;
+
+	ipstr[0] = '\0';
+	macstr[0] = '\0';
+
+	if (get_mac_addr(macaddr) == 0)
+		sprintf(macstr, "MAC Address : <span font_desc=\"monospace bold 20.0\" "
+				"foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
+			macaddr[0], macaddr[1], macaddr[2],
+			macaddr[3], macaddr[4], macaddr[5]);
+
+	ipaddr = get_ip_addr();
+	if (ipaddr != 0) {
+		ia.s_addr = ipaddr;
+		sprintf(ipstr, "ip addr : %s", inet_ntoa(ia));
+	}
+
+	gtk_label_set_markup(GTK_LABEL(lb_mac), macstr);
+	gtk_label_set_text(GTK_LABEL(lb_ip), ipstr);
 }
 
 gboolean iwconfig_checker_step(gpointer point)
@@ -333,27 +375,6 @@ restart:
 	close(fd);
 	g_print("%s() thread finish.\n", __func__);
 	return NULL;
-}
-
-//
-//	wifi interface checker
-//
-static void check_wlan()
-{
-	char tmps[SMALL_STR];
-	int i=0, r;
-	
-	for(i=0;i<9;i++){
-		sprintf(tmps, "iwconfig wlan%d 2>&1 | grep 'No such device' >/dev/null", i);
-		r=system(tmps);
-		if(r!=-1&&WEXITSTATUS(r)==1){
-			sprintf(tmps, "wlan%d", i);
-			setenv("SC_WLAN_IFACE", strdup(tmps), 1);
-			debug_printf(3, "Found wifi interface %s. (set to SC_WLAN_IFACE)\n", getenv("SC_WLAN_IFACE"));
-			return;
-		}
-	}
-	debug_printf(3, "ERROR: Could not find wlan device.\n");
 }
 
 static int iwconfig_start()
@@ -630,7 +651,7 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	iw_log_run=1;
 	unlink("/tmp/iwconfig.log");
 	unlink("/tmp/ping.log");
-	check_wlan();
+	/* check_wlan();		move to mainpanel.c */
 	wifi_config_setup();
 	
 	v_main=gtk_vbox_new(FALSE, 10);

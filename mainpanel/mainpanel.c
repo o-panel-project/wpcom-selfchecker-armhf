@@ -27,6 +27,7 @@
 #include <errno.h>
 
 extern const char *sc_version_str;
+extern void check_wlan();	/* wifisub.c */
 
 static int ignore_count=0;
 extern char usbmem_first_device;	/* RH */
@@ -843,6 +844,8 @@ int main(int argc, char *argv[])
 	battery_sub_run=1;
 	pthread_create(&th_bsub, NULL, battery_sub_update, 0);
 	
+	check_wlan(); /* wifisub.c *//* moved from wifi.c*/
+
 	while(1){
 		gtk_label_set_text(GTK_LABEL(lb_top), SC_TITLE);
 		lb=gtk_label_new(sc_version_str);
