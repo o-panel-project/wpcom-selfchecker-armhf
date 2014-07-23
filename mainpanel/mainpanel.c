@@ -28,6 +28,7 @@
 
 extern const char *sc_version_str;
 extern void check_wlan();	/* wifisub.c */
+extern int get_mac_addr(unsigned char *);	/* wifi.c */
 
 static int ignore_count=0;
 extern char usbmem_first_device;	/* RH */
@@ -753,10 +754,12 @@ int main(int argc, char *argv[])
 {
 	int c, gargc=1, st_exit=0, menu_by_arg=0, ival=-1;
 //	int	flg=0;	/*	20110822VACS	*/
-	GtkWidget *window, *v0, *v1, *lb, *a, *bb, *tr;
+	GtkWidget *window, *v0, *v1, *lb, *a, *bb, *tr, *lb_mac, *al_mac;
 	GtkWidget *table;
 	GtkWidget *vx, *lb_top, *fr, *batsub;
 	int i;
+	char macstr[SMALL_STR];
+	unsigned char macaddr[SMALL_STR];
 	
 	char *menupath=NULL;//, tmps[SMALL_STR];
 	pthread_t th_bsub;
@@ -846,16 +849,28 @@ int main(int argc, char *argv[])
 	
 	check_wlan(); /* wifisub.c *//* moved from wifi.c*/
 
+	macstr[0] = '\0';
+	if (get_mac_addr(macaddr) == 0)
+		sprintf(macstr, "MAC Address : <span font_desc=\"monospace bold 20.0\""
+				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
+				macaddr[0], macaddr[1], macaddr[2],
+				macaddr[3], macaddr[4], macaddr[5]);
+
 	while(1){
 		gtk_label_set_text(GTK_LABEL(lb_top), SC_TITLE);
 		lb=gtk_label_new(sc_version_str);
-		a=gtk_alignment_new(0, 0, 0.8, 0.8);
+		a=gtk_alignment_new(0.5, 0.9, 0.0, 0.0);
+		lb_mac = gtk_label_new("");
+		gtk_label_set_markup(GTK_LABEL(lb_mac), macstr);
+		al_mac = gtk_alignment_new(0.5, 0.2, 0.0, 0.0);
 		bb=sc_bbox2(&st_exit, batsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
 		v1=gtk_vbox_new(FALSE, 10);
 		
 		gtk_widget_set_sensitive(tr, TRUE);
 		gtk_container_add(GTK_CONTAINER(a), lb);
+		gtk_container_add(GTK_CONTAINER(al_mac), lb_mac);
 		gtk_container_add(GTK_CONTAINER(v1), a);
+		gtk_container_add(GTK_CONTAINER(v1), al_mac);
 		gtk_box_pack_start(GTK_BOX(v1), bb, FALSE, FALSE, 0);
 		sc_table_attach2(GTK_TABLE(table), v1);
 		gtk_widget_show_all(window);
