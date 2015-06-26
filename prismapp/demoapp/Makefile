@@ -20,7 +20,7 @@ STRIP_OPT = --remove-section=.comment --remove-section=.note
 
 CFLAGS += -Wall
 ifeq ($(ARCH),armel)
-CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mhard-float
+CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon -msoft-float
 CFLAGS += -mfloat-abi=softfp -ftree-vectorize -mvectorize-with-neon-quad
 CFLAGS += -mthumb-interwork -mno-thumb
 endif

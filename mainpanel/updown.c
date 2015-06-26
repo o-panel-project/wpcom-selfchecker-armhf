@@ -70,6 +70,7 @@ static gboolean timer_updown_up(gpointer point)
 {
 	struct updown *ud = (struct updown*)point;
 	
+	if (ud->up_timer_tag)
 	g_source_remove(ud->up_timer_tag);
 	ud->up_timer_tag = g_timeout_add(ud->accl2, timer_updown_up, ud);
 	
@@ -139,6 +140,7 @@ static gboolean timer_updown_down(gpointer point)
 {
 	struct updown *ud = (struct updown*)point;
 	
+	if (ud->down_timer_tag)
 	g_source_remove(ud->down_timer_tag);
 	ud->down_timer_tag = g_timeout_add(ud->accl2, timer_updown_down, ud);
 	

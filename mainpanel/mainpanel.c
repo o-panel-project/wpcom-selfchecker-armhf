@@ -53,7 +53,11 @@ struct side_menu_list_st {
 } side_menu_list[] = {
 	{ 1, 1, "Wlan Tool", "Wlan Tool", "0", wlantool_main },
 	{ 1, 1, "---------------", NULL, NULL/*1*/, NULL },	/* separator */
+#ifdef __J4PANEL__
+	{ 0, 1, "Demo", "Demo", "2", demo_main },
+#else
 	{ 1, 1, "Demo", "Demo", "2", demo_main },
+#endif
 	{ 1, 1, "Strategy File", "Strategy File", "3", strategy_main },
 	{ 1, 1, "Date", "Date", "4", date_main },
 	{ 1, 1, "LCD", NULL, NULL, NULL },

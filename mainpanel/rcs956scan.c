@@ -52,7 +52,11 @@ static int find_rcs956(const char *fpath, const struct stat *sb, int typeflags)
 	UINT8 desc[18];	/* usb_device_descriptor */
 	char *rcs956_proc_path;
 
+#ifdef __J4PANEL__
+	if (typeflags != S_IFCHR)
+#else
 	if (typeflags != S_IFREG)
+#endif
 		return 0;
 	/* ignore /proc/bus/usb/{devices,drivers} */
 	if (strrchr(fpath, '/')[1] == 'd')
@@ -99,8 +103,13 @@ static int scan_dir(const char *dirpath)
 		if (S_ISDIR(st.st_mode))
 			scan_dir(buff);
 		else
+#ifdef __J4PANEL__
+		if (S_ISCHR(st.st_mode)) {
+			ret = find_rcs956(buff, &st, S_IFCHR);
+#else
 		if (S_ISREG(st.st_mode)) {
 			ret = find_rcs956(buff, &st, S_IFREG);
+#endif
 			if (ret != 0) {
 				/* found */
 				if (nfind < 5) {
@@ -130,7 +139,11 @@ char *scan_rcs956()
 	for (cnt = 1; cnt <= 15; cnt++ ) {	// 3sec
 		LOGWARNING("%s():rcs956 scan start. cnt=%d\r\n", __func__, cnt);
 		nfind = 0;
+#ifdef __J4PANEL__
+		ret = scan_dir("/dev/bus/usb");
+#else
 		ret = scan_dir("/proc/bus/usb");
+#endif
 		if (ret == -1) {
 			LOGERR("%s():ftw() error.\r\n", __func__);
 			return NULL;

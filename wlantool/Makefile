@@ -1,20 +1,7 @@
-CROSS_COMPILE = arm-none-linux-gnueabi-
-
-ifdef CROSS_COMPILE
-  CC = $(CROSS_COMPILE)gcc
-  SYSROOT=/opt/arm-dev/sysroots/armv7a-none-linux-gnueabi
-  PKGCONFIG=../scripts/pkg-config.sh
-  CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mhard-float
-  CFLAGS += -mfloat-abi=softfp -ftree-vectorize -mvectorize-with-neon-quad
-  CFLAGS += -mthumb-interwork -mno-thumb
-  STRIP = ${CROSS_COMPILE}strip
-  STRIP_OPT = --remove-section=.comment --remove-section=.note
+ifeq ($(BOARD_TYPE),j4)
+include ../Build/rules-j4.mk
 else
-  CC = gcc
-  SYSROOT=
-  PKGCONFIG=/usr/bin/pkg-config
-  STRIP = strip
-  STRIP_OPT =
+include ../Build/rules.mk
 endif
 
 PROGRAM  = wlantool
@@ -32,7 +19,7 @@ CFLAGS += $(shell $(PKGCONFIG) --cflags pangoxft)
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
 LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib
-LDFLAGS += $(shell $(PKGCONFIG) --libs pangoxft)
+LDFLAGS += $(shell $(PKGCONFIG) --libs pangoxft x11)
 
 all: $(PROGRAM) $(PING)
 

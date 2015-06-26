@@ -173,7 +173,11 @@ int is_mountpoint(const char *path)
 //
 
 #define CRADLE_ADDR 0x55
+#ifdef __J4PANEL__
+#define I2C_DEVICE "/dev/i2c-1"
+#else
 #define I2C_DEVICE "/dev/i2c-2"
+#endif
 
 int sc_i2c_check_open(int *fd)
 {

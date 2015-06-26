@@ -30,7 +30,12 @@ extern int cr_mount_ok;							/*	20110905VACS	*/
 #define MID_STR	2048							/*	20110826VACS	*/
 #define SMALL_STR 1024
 #define WPCIO_OPEN_RETRY 10
-#define	AUDIO_VALUME_MAX	63					/*	20110917VACS	*/
+#ifdef __J4PANEL__
+#define	AUDIO_VOLUME_MAX	127
+#define	AUDIO_VOLUME2_MAX	118
+#else
+#define	AUDIO_VOLUME_MAX	63					/*	20110917VACS	*/
+#endif
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 

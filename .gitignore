@@ -7,6 +7,7 @@ Build/mainpanel
 Build/tp-grid
 Build/xlib_lcdcheck
 Build/wlantool
+*.j4obj
 cpprogress/cpprogress
 prismapp/demoapp/demoapp-arm
 lcd/xlib_lcdcheck
@@ -14,3 +15,9 @@ log-battery/log-battery
 mainpanel/mainpanel
 tp-grid/tp-grid
 wlantool/wlantool
+felica-sdk/arch/linux/build/*.a
+felica-sdk/arch/linux/build/*.so
+felica-sdk/arch/linux/build/*.So
+nfc-extension/arch/linux/build/*.a
+nfc-extension/arch/linux/build/*.so
+nfc-extension/arch/linux/build/*.So

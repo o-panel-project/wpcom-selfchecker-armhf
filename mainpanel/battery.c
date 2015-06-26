@@ -713,7 +713,8 @@ void *battery_sub_update(void *data)
 
 		tag=g_idle_add_full(G_PRIORITY_HIGH, battery_sub_update_step, NULL, NULL);
 		usleep(1000*1000);
-		g_source_remove(tag);
+		/*g_source_remove(tag);*/
+		/* if function returns FALSE, tag is automatically removed */
 	}	
 	return NULL;
 }

@@ -1,20 +1,7 @@
-CROSS_COMPILE = arm-none-linux-gnueabi-
-
-ifdef CROSS_COMPILE
-  CC = $(CROSS_COMPILE)gcc
-  SYSROOT=/opt/arm-dev/sysroots/armv7a-none-linux-gnueabi
-  PKGCONFIG=../scripts/pkg-config.sh
-  CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mhard-float
-  CFLAGS += -mfloat-abi=softfp -ftree-vectorize -mvectorize-with-neon-quad
-  CFLAGS += -mthumb-interwork -mno-thumb -fno-strict-aliasing
-  STRIP = ${CROSS_COMPILE}strip
-  STRIP_OPT = --remove-section=.comment --remove-section=.note
+ifeq ($(BOARD_TYPE),j4)
+include ../Build/rules-j4.mk
 else
-  CC = gcc
-  SYSROOT=
-  PKGCONFIG=/usr/bin/pkg-config
-  STRIP = strip
-  STRIP_OPT =
+include ../Build/rules.mk
 endif
 
 PROGRAM	= mainpanel
@@ -35,7 +22,7 @@ CFLAGS += $(shell $(PKGCONFIG) --cflags gtk+-2.0)
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
 LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib
-LDFLAGS += $(shell $(PKGCONFIG) --libs gtk+-2.0 alsa)
+LDFLAGS += $(shell $(PKGCONFIG) --libs gtk+-2.0 alsa x11 gthread-2.0)
 
 FELICA_SDK_LIB0 = \
 	libfelica_cc \
@@ -43,11 +30,19 @@ FELICA_SDK_LIB0 = \
 	librcs956 \
 	libutl \
 	libfelica_cc_stub_rcs956
+ifeq ($(BOARD_TYPE),j4)
+FELICA_SDK_LIB  = $(FELICA_SDK_LIB0:%=../libs.j4/%.a)
+else
 FELICA_SDK_LIB  = $(FELICA_SDK_LIB0:%=../libs/%.a)
+endif
 LDFLAGS += $(FELICA_SDK_LIB)
 
 NFCEXT_LIB0 = librcs956_typea librcs956_typeb
+ifeq ($(BOARD_TYPE),j4)
+NFCEXT_LIB  = $(NFCEXT_LIB0:%=../libs.j4/%.a)
+else
 NFCEXT_LIB  = $(NFCEXT_LIB0:%=../libs/%.a)
+endif
 LDFLAGS += $(NFCEXT_LIB)
 
 all: depend.inc $(PROGRAM)

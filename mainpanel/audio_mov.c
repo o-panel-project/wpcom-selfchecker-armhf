@@ -19,11 +19,12 @@
 
 
 static int button_no=0;
-static int vol, play_mode=0;
+static int vol, vol1, vol2, play_mode=0;
 static GtkWidget *cb, *b_stop, *b_quit, *hs;
 static snd_mixer_elem_t *elem;
+static snd_mixer_elem_t *elem1;
+static snd_mixer_elem_t *elem2;
 static snd_mixer_t *handle;
-static snd_mixer_elem_t *elem;
 static snd_mixer_selem_id_t *sid;
 int audio_pid=0, audio_is_loop=0, movie_is_loop=0;
 
@@ -34,6 +35,7 @@ int audio_pid=0, audio_is_loop=0, movie_is_loop=0;
 static int alsa_setup(int start_up)
 {
 	int r;
+	int j4vol = 0;
 	
 	if((r=snd_mixer_open(&handle, 0)) < 0) {
 		printf("Mixer open error: %s", snd_strerror(r));
@@ -58,13 +60,42 @@ static int alsa_setup(int start_up)
 	for(elem=snd_mixer_first_elem(handle); elem; elem = snd_mixer_elem_next(elem)){
 		if(snd_mixer_selem_has_playback_volume(elem)||snd_mixer_selem_has_common_volume(elem)){
 			snd_mixer_selem_id_alloca(&sid);
+#ifdef __J4PANEL__
+			{
+			snd_mixer_selem_get_id(elem, sid);
+			char *p = snd_mixer_selem_id_get_name(sid);
+			//g_print("Playback Vol = %s\n", p);
+			if(start_up)
+				snd_mixer_selem_get_playback_volume(elem, 0, (long *)&vol);
+			if (strcmp(p, "PCM") == 0) {
+				elem1 = elem;
+				vol1 = vol;
+				j4vol++;
+				if (j4vol == 2) {
+					vol = (vol1 + vol2) / 2;
+					return 0;
+				}
+			}
+			if (strcmp(p, "Line DAC") == 0) {
+				elem2 = elem;
+				vol2 = vol;
+				j4vol++;
+				if (j4vol == 2) {
+					vol = (vol1 + vol2) / 2;
+					return 0;
+				}
+			}
+			}
+#else
 			if(start_up)
 				snd_mixer_selem_get_playback_volume(elem, 0, (long *)&vol);
 			snd_mixer_selem_get_id(elem, sid);
 			if(strcmp(snd_mixer_selem_id_get_name(sid), "DAC1 Digital Fine")==0)
 				return 0;
+#endif
 		}
 	}
+	g_print("%s():Playback volume not found\n", __func__);
 	return 5;
 }
 
@@ -72,6 +103,70 @@ static int alsa_setup(int start_up)
 //
 //	set ALSA volume
 //
+#ifdef __J4PANEL__
+void sc_alsa_set_volume(int v0, int v1)
+{
+	int		r;
+	int		r0, r1;
+	int		r2, r3;
+	long	pvol0, pvol1;
+	long	pvol2, pvol3;
+
+	int x, y;
+
+	/* PCM */
+	if ((r = snd_mixer_selem_get_playback_volume(
+					elem1, SND_MIXER_SCHN_FRONT_LEFT, &pvol0)) < 0) {
+		g_print("PCM Mixer get0 error: %s", snd_strerror(r));
+	}
+	if ((r = snd_mixer_selem_get_playback_volume(
+					elem1, SND_MIXER_SCHN_FRONT_RIGHT, &pvol1)) <0) {
+		g_print("PCM Mixer get1 error: %s", snd_strerror(r));
+	}
+	if ((r = snd_mixer_selem_get_playback_volume(
+					elem2, SND_MIXER_SCHN_FRONT_LEFT, &pvol2)) < 0) {
+		g_print("Line DAC Mixer get0 error: %s", snd_strerror(r));
+	}
+	if ((r = snd_mixer_selem_get_playback_volume(
+					elem2, SND_MIXER_SCHN_FRONT_RIGHT, &pvol3)) <0) {
+		g_print("Line DAC Mixer get1 error: %s", snd_strerror(r));
+	}
+
+	if ((!pvol0 && !pvol1) && (!pvol2 && !pvol3) && vol) {
+		snd_mixer_close(handle);
+//		sync();
+		debug_printf(3, "Reopening alsa\n");
+		alsa_setup(0);
+		gtk_range_set_value(GTK_RANGE(hs), vol);
+	}
+
+	debug_printf(3, "set volume (elem:0x%x) (%d, %d) -> (%d, %d)",
+			elem1, pvol0, pvol1, v0, v1);
+	fflush(0);
+	if ((r0 = snd_mixer_selem_set_playback_volume(
+					elem1, SND_MIXER_SCHN_FRONT_LEFT, v0)) < 0) {
+		g_print("PCM Mixer set0 error: %s", snd_strerror(r0));
+	}
+	if ((r1 = snd_mixer_selem_set_playback_volume(
+					elem1, SND_MIXER_SCHN_FRONT_RIGHT, v1)) < 0) {
+		g_print("PCM Mixer set1 error: %s", snd_strerror(r1));
+	}
+	debug_printf(3, " : (%d, %d)\n", r0, r1);
+
+	debug_printf(3, "set volume (elem:0x%x) (%d, %d) -> (%d, %d)",
+			elem2, pvol2, pvol3, v0, v1);
+	fflush(0);
+	if ((r2 = snd_mixer_selem_set_playback_volume(
+					elem2, SND_MIXER_SCHN_FRONT_LEFT, v0)) < 0) {
+		g_print("Line DAC Mixer set0 error: %s", snd_strerror(r0));
+	}
+	if ((r3 = snd_mixer_selem_set_playback_volume(
+					elem2, SND_MIXER_SCHN_FRONT_RIGHT, v1)) < 0) {
+		printf("Line DAC Mixer set1 error: %s", snd_strerror(r1));
+	}
+	debug_printf(3, " : (%d, %d)\n", r2, r3);
+}
+#else
 void
 sc_alsa_set_volume(int v0, int v1)
 {
@@ -110,6 +205,7 @@ long	pvol0, pvol1;
 	}
 	debug_printf(3, "(%d, %d)\n", r0, r1);
 }
+#endif
 
 void
 audio_set_volume(void)
@@ -206,7 +302,12 @@ GtkWidget *put_vol(GtkWidget *c, int *check, int *is_loop)
 	a=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
 
 	/*	20110917VACS	*/
-	hs=gtk_hscale_new_with_range(0, AUDIO_VALUME_MAX, 1);
+#ifdef __J4PANEL__
+	int volume_max = AUDIO_VOLUME_MAX > AUDIO_VOLUME2_MAX ? AUDIO_VOLUME2_MAX : AUDIO_VOLUME_MAX;
+#else
+	int volume_max = AUDIO_VOLUME_MAX;
+#endif
+	hs=gtk_hscale_new_with_range(0, volume_max, 1);
 
 	gtk_range_set_value(GTK_RANGE(hs), vol);
 	g_signal_connect(hs, "value-changed", G_CALLBACK(vol_got), (gpointer)0);
@@ -275,7 +376,7 @@ int audio_main(GtkWidget *p, GtkWidget *bsub)
 	
 	play_mode=0;
 	if(alsa_setup(1)){
-		printf("Could not intiailize alsa. Aborted Audio Test.\n");
+		printf("Could not initialize alsa. Aborted Audio Test.\n");
 		return 1;
 	}
 	
@@ -414,7 +515,7 @@ int movie_play(int *pid)
 		dup2(fdnull,0);
 		sprintf(f, "%s/data/sample.mp4", base_path);
 		if(movie_is_loop){
-			execl("/usr/bin/mplayer", "mplayer", "-geometry", "460:60", "-loop", "0", f, NULL);
+			execl("/usr/bin/mplayer", "mplayer", "-geometry", "460:60", "-fixed-vo", "-loop", "0", f, NULL);
 		}else{
 			execl("/usr/bin/mplayer", "mplayer", "-geometry", "460:60", f, NULL);
 		}
