@@ -140,8 +140,10 @@ char *scan_rcs956()
 		LOGWARNING("%s():rcs956 scan start. cnt=%d\r\n", __func__, cnt);
 		nfind = 0;
 #ifdef __J4PANEL__
+		LOGWARNING("%s():Scanning \"/dev/bus/usb\"\n", __func__);
 		ret = scan_dir("/dev/bus/usb");
 #else
+		LOGWARNING("%s():Scanning \"/proc/bus/usb\"\n", __func__);
 		ret = scan_dir("/proc/bus/usb");
 #endif
 		if (ret == -1) {

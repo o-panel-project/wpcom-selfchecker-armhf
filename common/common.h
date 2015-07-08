@@ -11,7 +11,11 @@
 #include <sys/time.h>
 
 #define SC_TITLE   "New SelfChecker"
+#ifdef __J4PANEL__
+#define SC_VERSION "v2.0.2-j4"
+#else
 #define SC_VERSION "v2.0.2"
+#endif
 
 //
 //	global vars and defs

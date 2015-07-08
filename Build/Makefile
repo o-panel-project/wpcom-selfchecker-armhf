@@ -7,6 +7,7 @@ endif
 export AR
 export CC
 export LD
+export BOARD_TYPE
 
 #TARGET=tp-grid mainpanel log-battery cpprogress
 TARGET= mainpanel tp-grid log-battery cpprogress xlib_lcdcheck demoapp wlantool
