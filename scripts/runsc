@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+#   Second Invocation of New SelfChecker
+#
+#   Change 2011/08/11 vacslab
+#   Change 2012/07/18 vacslab
+#   Change 2013/07/19 wpc
+#   Change 2013/08/06 wpc
+#
+
+go_xserver () {
+  if [ -L /dev/input/melfasts0 ]; then
+    jgestured -i /dev/input/melfasts0 &
+  elif [ -c /dev/hidraw0 ]; then
+    eGestured -l1 -g1 -x1 &
+  else
+    echo "XXXXXXXX  Not found touchscreen. XXXXXXXX"
+  fi
+  # Wait for udev setup.
+  sleep 2
+  Xorg :0 -depth 24 -fbbpp 32 -wr -nocursor -s 0 > /dev/null 2>&1 &
+}
+
+kill_xserver () {
+  killall Xorg
+  if [ -L /dev/input/melfasts0 ]; then
+    killall jgestured
+  elif [ -c /dev/hidraw0 ]; then
+    killall eGestured
+  fi
+}
+
+if mountpoint /mnt1 >&/dev/null ; then
+  logdir=/mnt1/log
+  if [ ! -d $logdir ]; then
+    mkdir -p $logdir
+  fi
+else
+  logdir=/var/volatile/log
+fi
+
+while true ; do
+
+  DISPLAY=:0.0 mainpanel -L $logdir $*
+  e=$?
+  if [ "$e" != "100" ]; then 
+    exit $e
+  fi
+
+  kill_xserver
+  sleep 1
+  go_xserver
+  sleep 1
+
+done

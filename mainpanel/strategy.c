@@ -71,11 +71,11 @@ int strategy_main(GtkWidget *table, GtkWidget *bsub)
 	v1=gtk_vbox_new(FALSE, 10);
 	a1=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
 	
-	lb1=gtk_button_new_with_label("Excute Stragety File 1");
+	lb1=gtk_button_new_with_label("Excute Strategy File 1");
 	g_signal_connect(lb1, "clicked", G_CALLBACK(press_execute), (gpointer)1);
-	lb2=gtk_button_new_with_label("Excute Stragety File 2");
+	lb2=gtk_button_new_with_label("Excute Strategy File 2");
 	g_signal_connect(lb2, "clicked", G_CALLBACK(press_execute), (gpointer)2);
-	lb3=gtk_button_new_with_label("Excute Stragety File 3");
+	lb3=gtk_button_new_with_label("Excute Strategy File 3");
 	g_signal_connect(lb3, "clicked", G_CALLBACK(press_execute), (gpointer)3);
 	
 	gtk_container_add(GTK_CONTAINER(v1), lb1);

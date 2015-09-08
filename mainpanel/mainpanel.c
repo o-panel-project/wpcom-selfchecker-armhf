@@ -53,11 +53,7 @@ struct side_menu_list_st {
 } side_menu_list[] = {
 	{ 1, 1, "Wlan Tool", "Wlan Tool", "0", wlantool_main },
 	{ 1, 1, "---------------", NULL, NULL/*1*/, NULL },	/* separator */
-#ifdef __J4PANEL__
-	{ 0, 1, "Demo", "Demo", "2", demo_main },
-#else
 	{ 1, 1, "Demo", "Demo", "2", demo_main },
-#endif
 	{ 1, 1, "Strategy File", "Strategy File", "3", strategy_main },
 	{ 1, 1, "Date", "Date", "4", date_main },
 	{ 1, 1, "LCD", NULL, NULL, NULL },
@@ -768,6 +764,9 @@ int main(int argc, char *argv[])
 	char *menupath=NULL;//, tmps[SMALL_STR];
 	pthread_t th_bsub;
 	
+	if (sc_IsJ4()) {
+		bl_toggle_charge = 0;
+	}
 	
 	base_path="/mnt1";
 	log_dir="/media/sda1/log";
@@ -877,6 +876,7 @@ int main(int argc, char *argv[])
 		gtk_container_add(GTK_CONTAINER(v1), al_mac);
 		gtk_box_pack_start(GTK_BOX(v1), bb, FALSE, FALSE, 0);
 		sc_table_attach2(GTK_TABLE(table), v1);
+		if (!menu_by_arg)
 		gtk_widget_show_all(window);
 		
 		if(!menupath){

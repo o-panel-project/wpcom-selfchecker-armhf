@@ -60,8 +60,7 @@ static int alsa_setup(int start_up)
 	for(elem=snd_mixer_first_elem(handle); elem; elem = snd_mixer_elem_next(elem)){
 		if(snd_mixer_selem_has_playback_volume(elem)||snd_mixer_selem_has_common_volume(elem)){
 			snd_mixer_selem_id_alloca(&sid);
-#ifdef __J4PANEL__
-			{
+			if (sc_IsJ4()) {
 			snd_mixer_selem_get_id(elem, sid);
 			char *p = snd_mixer_selem_id_get_name(sid);
 			//g_print("Playback Vol = %s\n", p);
@@ -85,14 +84,13 @@ static int alsa_setup(int start_up)
 					return 0;
 				}
 			}
-			}
-#else
+			} else {
 			if(start_up)
 				snd_mixer_selem_get_playback_volume(elem, 0, (long *)&vol);
 			snd_mixer_selem_get_id(elem, sid);
 			if(strcmp(snd_mixer_selem_id_get_name(sid), "DAC1 Digital Fine")==0)
 				return 0;
-#endif
+			}
 		}
 	}
 	g_print("%s():Playback volume not found\n", __func__);
@@ -103,8 +101,7 @@ static int alsa_setup(int start_up)
 //
 //	set ALSA volume
 //
-#ifdef __J4PANEL__
-void sc_alsa_set_volume(int v0, int v1)
+void sc_alsa_set_volume_j4(int v0, int v1)
 {
 	int		r;
 	int		r0, r1;
@@ -166,7 +163,7 @@ void sc_alsa_set_volume(int v0, int v1)
 	}
 	debug_printf(3, " : (%d, %d)\n", r2, r3);
 }
-#else
+
 void
 sc_alsa_set_volume(int v0, int v1)
 {
@@ -174,9 +171,6 @@ int		r, r0, r1;
 long	pvol0, pvol1;
 
 	int x, y;
-
-//	gtk_widget_get_pointer(widget, &x, &y);
-//	printf("pos(x=%d,y=%d) : ", x, y);	
 
 	if((r=snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &pvol0))<0){
 		printf("Mixer get0 error: %s", snd_strerror(r));
@@ -205,7 +199,6 @@ long	pvol0, pvol1;
 	}
 	debug_printf(3, "(%d, %d)\n", r0, r1);
 }
-#endif
 
 void
 audio_set_volume(void)
@@ -213,12 +206,21 @@ audio_set_volume(void)
 
 	switch(play_mode%3){
 	case 0:
+		if (sc_IsJ4())
+		sc_alsa_set_volume_j4(vol, vol);
+		else
 		sc_alsa_set_volume(vol, vol);
 		break;
 	case 1:
+		if (sc_IsJ4())
+		sc_alsa_set_volume_j4(0, vol);
+		else
 		sc_alsa_set_volume(0, vol);
 		break;
 	case 2:
+		if (sc_IsJ4())
+		sc_alsa_set_volume_j4(vol, 0);
+		else
 		sc_alsa_set_volume(vol, 0);
 		break;
 	}
@@ -302,11 +304,12 @@ GtkWidget *put_vol(GtkWidget *c, int *check, int *is_loop)
 	a=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
 
 	/*	20110917VACS	*/
-#ifdef __J4PANEL__
-	int volume_max = AUDIO_VOLUME_MAX > AUDIO_VOLUME2_MAX ? AUDIO_VOLUME2_MAX : AUDIO_VOLUME_MAX;
-#else
 	int volume_max = AUDIO_VOLUME_MAX;
-#endif
+	if (sc_IsJ4())
+		volume_max = AUDIO_VOLUME1_MAX > AUDIO_VOLUME2_MAX ?
+			AUDIO_VOLUME2_MAX : AUDIO_VOLUME1_MAX;
+	else
+		volume_max = AUDIO_VOLUME_MAX;
 	hs=gtk_hscale_new_with_range(0, volume_max, 1);
 
 	gtk_range_set_value(GTK_RANGE(hs), vol);
@@ -336,6 +339,7 @@ int audio_play(int *pid, int file_no)
 {
 	char f[SMALL_STR];
 	int fdnull;
+	char alsaopt[SMALL_STR];
 	
 	audio_set_volume();
 	switch(*pid=fork()){
@@ -348,10 +352,14 @@ int audio_play(int *pid, int file_no)
 		strcpy(f, base_path);
 		strcat(f, "/data/");
 		strcat(f, file_no ? "test_b.wav" : "test_a.wav");
+		if (sc_IsJ4())
+			strcpy(alsaopt, "alsa:device=hw=0.0");
+		else
+			strcpy(alsaopt, "alsa");
 		if(audio_is_loop){
-			execl("/usr/bin/mplayer", "mplayer", "-loop", "0", f, NULL);
+			execl("/usr/bin/mplayer", "mplayer", "-ao", alsaopt, "-loop", "0", f, NULL);
 		}else{
-			execl("/usr/bin/mplayer", "mplayer", f, NULL);
+			execl("/usr/bin/mplayer", "mplayer", "-ao", alsaopt, f, NULL);
 		}
 		_exit(127);
 		break;
@@ -504,6 +512,7 @@ int movie_play(int *pid)
 {
 	int fdnull;
 	char f[SMALL_STR];
+	char alsaopt[SMALL_STR];
 	
 	audio_set_volume();
 	switch(*pid=fork()){
@@ -514,10 +523,14 @@ int movie_play(int *pid)
 		fdnull=open("/dev/null",O_RDWR);
 		dup2(fdnull,0);
 		sprintf(f, "%s/data/sample.mp4", base_path);
+		if (sc_IsJ4())
+			strcpy(alsaopt, "alsa:device=hw=0.0");
+		else
+			strcpy(alsaopt, "alsa");
 		if(movie_is_loop){
-			execl("/usr/bin/mplayer", "mplayer", "-geometry", "460:60", "-fixed-vo", "-loop", "0", f, NULL);
+			execl("/usr/bin/mplayer", "mplayer", "-ao", alsaopt, "-geometry", "460:60", "-fixed-vo", "-loop", "0", f, NULL);
 		}else{
-			execl("/usr/bin/mplayer", "mplayer", "-geometry", "460:60", f, NULL);
+			execl("/usr/bin/mplayer", "mplayer", "-ao", alsaopt, "-geometry", "460:60", f, NULL);
 		}
 		_exit(127);
 		break;

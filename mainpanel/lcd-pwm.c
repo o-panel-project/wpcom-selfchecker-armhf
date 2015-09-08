@@ -20,19 +20,59 @@
 #include "common.h"
 
 static time_t t_fin=0;
-static int brightness=70, loop_run=0;
+static int loop_run=0;
+static int brightness_j3max=100, brightness_j3ini=70, brightness_j3step=10;
+static int brightness_j4max=8, brightness_j4ini=7, brightness_j4step=1;
+static int brightness_max=100, brightness=70, brightness_step=10;
 static GtkWidget *b_start, *b_stop, *b_quit, *slider, *aj;
 
 #define SYSFS_BACKLIGHT_IF_DIR	\
 	"/sys/devices/platform/omapdss/generic-bl/backlight/omap3evm-bklight"
-#define SYSFS_BACKLIGHT_POWER	SYSFS_BACKLIGHT_IF_DIR"/bl_power"
-#define SYSFS_BACKLIGHT_BRIGHT	SYSFS_BACKLIGHT_IF_DIR"/brightness"
+#define SYSFS_BACKLIGHT_IF_DIR_J4	\
+	"/sys/devices/backlight.4/backlight/backlight.4"
 #define SYSFS_DISPLAY_IF_DIR	\
 	"/sys/devices/omapdss/display0"
-#define SYSFS_DISPLAY_ENABLE    SYSFS_DISPLAY_IF_DIR"/enabled"
+#define SYSFS_DISPLAY_IF_DIR_J4	\
+	"/sys/class/graphics/fb0"
+
+#define	SYSFS_BACKLIGHT_POWER_NAME	"bl_power"
+#define	SYSFS_BACKLIGHT_BRIGHT_NAME	"brightness"
+#define	SYSFS_DISPLAY_ENABLE_NAME	"enabled"
+#define	SYSFS_DISPLAY_ENABLE_NAME_J4	"blank"
 
 #define DEV_BL			SYSFS_BACKLIGHT_POWER
 #define DEV_BRIGHTNESS	SYSFS_BACKLIGHT_BRIGHT
+
+static char sysfs_backlight_power[256];
+static char sysfs_backlight_brightness[256];
+static char sysfs_display_enable[256];
+
+static void BackLight_machine_check()
+{
+	if (sc_IsJ4()) {
+		sprintf(sysfs_backlight_power,
+			SYSFS_BACKLIGHT_IF_DIR_J4 "/" SYSFS_BACKLIGHT_POWER_NAME);
+		sprintf(sysfs_backlight_brightness,
+			SYSFS_BACKLIGHT_IF_DIR_J4 "/" SYSFS_BACKLIGHT_BRIGHT_NAME);
+		sprintf(sysfs_display_enable,
+			SYSFS_DISPLAY_IF_DIR_J4 "/" SYSFS_DISPLAY_ENABLE_NAME_J4);
+		brightness_max = brightness_j4max;
+		brightness_step = brightness_j4step;
+		brightness = brightness_j4ini;
+	} else {
+		sprintf(sysfs_backlight_power,
+			SYSFS_BACKLIGHT_IF_DIR "/" SYSFS_BACKLIGHT_POWER_NAME);
+		sprintf(sysfs_backlight_brightness,
+			SYSFS_BACKLIGHT_IF_DIR "/" SYSFS_BACKLIGHT_BRIGHT_NAME);
+		sprintf(sysfs_display_enable,
+			SYSFS_DISPLAY_IF_DIR "/" SYSFS_DISPLAY_ENABLE_NAME);
+		brightness_max = brightness_j3max;
+		brightness_step = brightness_j3step;
+		brightness = brightness_j3ini;
+	}
+	return;
+}
+
 
 static inline int sysfs_backlight_read(const char *f)
 {
@@ -74,14 +114,14 @@ static void lcd_enable(int ena)
 {
 	char tmps[SMALL_STR];
 	sprintf(tmps, "%d\n", ena);
-	sysfs_backlight_write(SYSFS_DISPLAY_ENABLE, (char*)tmps, strlen(tmps));
+	sysfs_backlight_write(sysfs_display_enable, (char*)tmps, strlen(tmps));
 }
 
 static void brightness_set(int n)
 {
 	char tmps[SMALL_STR];
 	sprintf(tmps, "%d\n", n);
-	sysfs_backlight_write(DEV_BRIGHTNESS, (char*)tmps, strlen(tmps));
+	sysfs_backlight_write(sysfs_backlight_brightness, (char*)tmps, strlen(tmps));
 	brightness=n;
 }
 
@@ -89,7 +129,7 @@ static void bl_set(int n)
 {
 	char tmps[SMALL_STR];
 	sprintf(tmps, "%d\n", n);
-	sysfs_backlight_write(DEV_BL, (char*)tmps, strlen(tmps));
+	sysfs_backlight_write(sysfs_backlight_power, (char*)tmps, strlen(tmps));
 }
 
 static int int_get(char *path)
@@ -97,8 +137,8 @@ static int int_get(char *path)
 	return sysfs_backlight_read(path);
 }
 
-#define brightness_get() int_get(DEV_BRIGHTNESS)
-#define bl_get() int_get(DEV_BL)
+#define brightness_get() int_get(sysfs_backlight_brightness)
+#define bl_get() int_get(sysfs_backlight_power)
 
 static gboolean bright_dim_loop(gpointer data)
 {
@@ -106,8 +146,8 @@ static gboolean bright_dim_loop(gpointer data)
 	
 	gtk_adjustment_set_value(GTK_ADJUSTMENT(aj), brightness*1.0);
 	brightness_set(brightness);
-	brightness-=10;
-	if(brightness<0) brightness=100;
+	brightness-=brightness_step;
+	if(brightness<0) brightness=brightness_max;
 	
 	if(t_fin && t_fin<time(NULL)){
 		gtk_main_quit();
@@ -165,8 +205,11 @@ bl_toggle2(GtkWidget *widget, gpointer data)
 static void
 reset_bri(GtkWidget *widget, gpointer data)
 {
-	gtk_adjustment_set_value(GTK_ADJUSTMENT(aj), 70.0);
-	brightness=70;
+	if (sc_IsJ4())
+		brightness=brightness_j4ini;
+	else
+		brightness=brightness_j3ini;
+	gtk_adjustment_set_value(GTK_ADJUSTMENT(aj), (gdouble)brightness);
 }
 
 int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
@@ -177,6 +220,8 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	GtkWidget *a2, *lb1, *a3, *cb;
 	GtkWidget *b0, *t0;
 	
+	BackLight_machine_check();
+
 	lb0=gtk_label_new("Bright-Dim Loop:");
 	b_start=gtk_button_new_with_label("Start");
 	g_signal_connect(b_start, "clicked", G_CALLBACK(loop_start), (gpointer)0);
@@ -195,7 +240,7 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	lb1=gtk_label_new("Brightness %: ");
 
 	brightness=max(brightness_get(),0);
-	aj=(GtkWidget *)gtk_adjustment_new(brightness, 0, 101, 10, 10, 1);
+	aj=(GtkWidget *)gtk_adjustment_new(brightness, 0, brightness_max, brightness_step, brightness_step, 0);
 	slider=gtk_hscale_new((GtkAdjustment *)aj);
 	g_signal_connect(aj, "value-changed", G_CALLBACK(slider_set), (gpointer)0);
 

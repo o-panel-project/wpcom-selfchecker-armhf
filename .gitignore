@@ -1,13 +1,8 @@
 *.o
 depend.inc
-Build/cpprogress
-Build/demoapp-arm
-Build/log-battery
-Build/mainpanel
-Build/tp-grid
-Build/xlib_lcdcheck
-Build/wlantool
-*.j4obj
+
+Build/bin
+
 cpprogress/cpprogress
 prismapp/demoapp/demoapp-arm
 lcd/xlib_lcdcheck
@@ -15,6 +10,7 @@ log-battery/log-battery
 mainpanel/mainpanel
 tp-grid/tp-grid
 wlantool/wlantool
+
 felica-sdk/arch/linux/build/*.a
 felica-sdk/arch/linux/build/*.so
 felica-sdk/arch/linux/build/*.So

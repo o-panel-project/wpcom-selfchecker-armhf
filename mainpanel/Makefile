@@ -1,8 +1,4 @@
-ifeq ($(BOARD_TYPE),j4)
-include ../Build/rules-j4.mk
-else
 include ../Build/rules.mk
-endif
 
 PROGRAM	= mainpanel
 SRCS	= mainpanel.c sdram.c common.c common-gtk.c audio_mov.c wifi.c md5.c \
@@ -30,19 +26,11 @@ FELICA_SDK_LIB0 = \
 	librcs956 \
 	libutl \
 	libfelica_cc_stub_rcs956
-ifeq ($(BOARD_TYPE),j4)
-FELICA_SDK_LIB  = $(FELICA_SDK_LIB0:%=../libs.j4/%.a)
-else
 FELICA_SDK_LIB  = $(FELICA_SDK_LIB0:%=../libs/%.a)
-endif
 LDFLAGS += $(FELICA_SDK_LIB)
 
 NFCEXT_LIB0 = librcs956_typea librcs956_typeb
-ifeq ($(BOARD_TYPE),j4)
-NFCEXT_LIB  = $(NFCEXT_LIB0:%=../libs.j4/%.a)
-else
 NFCEXT_LIB  = $(NFCEXT_LIB0:%=../libs/%.a)
-endif
 LDFLAGS += $(NFCEXT_LIB)
 
 all: depend.inc $(PROGRAM)

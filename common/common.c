@@ -173,17 +173,19 @@ int is_mountpoint(const char *path)
 //
 
 #define CRADLE_ADDR 0x55
-#ifdef __J4PANEL__
-#define I2C_DEVICE "/dev/i2c-1"
-#else
 #define I2C_DEVICE "/dev/i2c-2"
-#endif
 
 int sc_i2c_check_open(int *fd)
 {
+	char devpath[255];
+
 	if(0<*fd) return *fd;
 	
-	*fd=open(I2C_DEVICE, O_RDWR);
+	if (sc_IsJ4())
+		strcpy(devpath, "/dev/i2c-1");
+	else
+		strcpy(devpath, I2C_DEVICE);
+	*fd=open(devpath, O_RDWR);
 	if(*fd<0) return *fd;
 	
 	if(ioctl(*fd, I2C_SLAVE, CRADLE_ADDR)<0){
@@ -302,4 +304,15 @@ int sc_get_board_type()
 	close(fd);
 
 	return type;
+}
+
+int sc_IsJ4()
+{
+	char name[32];
+
+	if (gethostname(name, 32) == 0) {
+		if (strcmp(name, "j4-panel") == 0)
+			return 1;
+	}
+	return 0;
 }

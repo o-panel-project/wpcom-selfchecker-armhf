@@ -10,12 +10,8 @@
 //#include <gtk/gtk.h>
 #include <sys/time.h>
 
-#define SC_TITLE   "New SelfChecker"
-#ifdef __J4PANEL__
-#define SC_VERSION "v2.0.2-j4"
-#else
-#define SC_VERSION "v2.0.2"
-#endif
+#define SC_TITLE   "New SelfChecker (j3/j4)"
+#define SC_VERSION "v3.0.0"
 
 //
 //	global vars and defs
@@ -34,12 +30,9 @@ extern int cr_mount_ok;							/*	20110905VACS	*/
 #define MID_STR	2048							/*	20110826VACS	*/
 #define SMALL_STR 1024
 #define WPCIO_OPEN_RETRY 10
-#ifdef __J4PANEL__
-#define	AUDIO_VOLUME_MAX	127
-#define	AUDIO_VOLUME2_MAX	118
-#else
 #define	AUDIO_VOLUME_MAX	63					/*	20110917VACS	*/
-#endif
+#define	AUDIO_VOLUME1_MAX	127	/* for J4 */
+#define	AUDIO_VOLUME2_MAX	118	/* for J4 */
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
@@ -67,6 +60,7 @@ extern int sc_i2c_write_cradle(unsigned char *buf);
 extern void sc_i2c_set_power(int x);
 extern int wpcio_open(int n, char *tag);
 extern int sc_get_board_type();
+extern int sc_IsJ4();
 
 #ifdef __GTK_H__
 
