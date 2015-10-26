@@ -53,7 +53,8 @@ LDFLAGS += -L../lib
 LIBS += -lprism
 LIBS += -lpthread -lfreetype -lz
 LIBS += -lX11 -lXext -lXi -lxcb -lXdmcp -lXau
-LIBS += -lEGL -lOpenVG -lIMGegl -lpvr2d -lsrv_um
+#LIBS += -lEGL -lOpenVG -lIMGegl -lpvr2d -lsrv_um
+LIBS += -lEGL -lGLES_CM -lIMGegl -lpvr2d -lsrv_um -lusc
 DEPLIBS += ../lib/libprism.a
 LDFLAGS += ${LIBS} -lstdc++
 

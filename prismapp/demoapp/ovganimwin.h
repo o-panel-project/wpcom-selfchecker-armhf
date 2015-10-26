@@ -72,7 +72,7 @@ class ovgAnimWin : public Pm_Panel
 			mZoomPutPoint.Set(0, 0);
 			mZoomRatio = 1.0;
 			mZoomImage.Set(0, 0, mClient.Width() - 1, mClient.Height() - 1);
-			mpEngine->ovg_AnimWin_zoom_reset(mContext);
+			mpEngine->oxx_AnimWin_zoom_reset(mContext);
 		};
 
         pm_bool_t  mSingleTouch;

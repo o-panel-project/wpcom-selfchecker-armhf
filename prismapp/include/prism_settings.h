@@ -71,8 +71,14 @@
 // #define PRODUCT_KEY_HANDLER ProductKeyHandler
 
 
+#if defined(PRISM_FOR_X11)
+extern int PRISM_DEFAULT_YRES;
+extern int PRISM_DEFAULT_XRES;
+#define PRISM_XVISUAL_DEPTH              24
+#else
 #define PRISM_DEFAULT_YRES              600
 #define PRISM_DEFAULT_XRES             1024
+#endif
 #define PRISM_MULT_SW_CANVASES
 #define PRISM_DOUBLE_BUFFER
 #define PRISM_HARDWARE_CURSOR
@@ -96,6 +102,9 @@
 // Color Format Settings
 ///////////////////////////////////////////////////////////////////////////////
 #define PRISM_COLOR_FORMAT  PM_CF_32BPP_ARGB
+#if PRISM_COLOR_FORMAT == PM_CF_16Bpp_RGB
+#define PRISM_565_FORMAT
+#endif
 #define PRISM_NUM_PAL_ENTRIES           248
 #define PRISM_GRAYSCALE_PAL_START       232
 
@@ -103,6 +112,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Standard Color Defines
 ///////////////////////////////////////////////////////////////////////////////
+#if PRISM_COLOR_FORMAT > PM_CF_16BPP_LIMIT
 #define PRISM_DEF_TRANSPARENCY   0x00000000
 #define PRISM_DEF_BLACK           0xff000000
 #define PRISM_DEF_RED             0xffbf0000
@@ -120,6 +130,25 @@
 #define PRISM_DEF_LIGHTMAGENTA    0xffff00ff
 #define PRISM_DEF_LIGHTCYAN       0xff00ffff
 #define PRISM_DEF_WHITE           0xffffffff
+#else
+#define PRISM_DEF_TRANSPARENCY    0x0000
+#define PRISM_DEF_BLACK           0x0000
+#define PRISM_DEF_RED             0xb800
+#define PRISM_DEF_GREEN           0x05e0
+#define PRISM_DEF_BROWN           0xbde0
+#define PRISM_DEF_BLUE            0x0017
+#define PRISM_DEF_MAGENTA         (PRISM_DEF_RED | PRISM_DEF_BLUE)
+#define PRISM_DEF_CYAN            (PRISM_DEF_GREEN | PRISM_DEF_BLUE)
+#define PRISM_DEF_LIGHTGRAY       0xc618
+#define PRISM_DEF_DARKGRAY        0x8410
+#define PRISM_DEF_LIGHTRED        0xf800
+#define PRISM_DEF_LIGHTGREEN      0x07e0
+#define PRISM_DEF_YELLOW          (PRISM_DEF_RED | PRISM_DEF_GREEN)
+#define PRISM_DEF_LIGHTBLUE       0x001f
+#define PRISM_DEF_LIGHTMAGENTA    0xf81f
+#define PRISM_DEF_LIGHTCYAN       0x07ff
+#define PRISM_DEF_WHITE           0xffff
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -239,7 +268,11 @@
 #define PRISM_FREETYPE_SUPPORT
 #if defined(PRISM_FLICK_GESTURE_SUPPORT) && defined(PRISM_FOR_X11)
 # if !defined(__i386__)
-#  define PRISM_OVG_ANIMATION
+//#  define PRISM_OVG_ANIMATION
+#  define PRISM_OGL_ANIMATION
+# if defined PRISM_OVG_ANIMATION && defined PRISM_OGL_ANIMATION
+#  error "PRISM_OVG_ANIMATION and PRISM_OGL_ANIMATION are mutually exclusive"
+# endif
 # endif
 #endif
 

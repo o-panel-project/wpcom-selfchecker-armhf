@@ -34,7 +34,7 @@ ovgAnimWin::ovgAnimWin(const Pm_Region &Size, uint32_t Style) :
 	, mParentAlive(TRUE)
 {
 	mpEngine = (PrismX11PaintEngine*)Pm_Framework::Engine();
-	mContext = mpEngine->ovg_AnimWin_CreateContext(Size);
+	mContext = mpEngine->oxx_AnimWin_CreateContext(Size);
 	mCanvas = mpEngine->CreateCanvas(PM_CANVAS_TYPE_SIMPLE,
 		Size.Width(), Size.Height(), Size.Left, Size.Top, -1, NULL);
 	mScreenHRes = Pm_Framework::Engine()->GetXRes();
@@ -70,7 +70,7 @@ pm_int_t ovgAnimWin::Notify(const pm_event_t &Event)
 ///////////////////////////////////////////////////////////////////////////////
 void ovgAnimWin::FlickPicture(pm_bitmap_t *pNext, int xShift, int yShift)
 {
-	mpEngine->ovg_flick_run(mContext, pNext, xShift, yShift);
+	mpEngine->oxx_flick_run(mContext, pNext, xShift, yShift);
 	ZoomReset();
 }
 
@@ -85,22 +85,22 @@ void ovgAnimWin::AddItem(int show)
 void ovgAnimWin::FlickType(int iType)
 {
 	if (iType == 1)
-		mpEngine->ovg_AnimWin_flickType(mContext, PM_ANIMWIN_FLICK_FLIP);
+		mpEngine->oxx_AnimWin_flickType(mContext, PM_ANIMWIN_FLICK_FLIP);
 	else if (iType == 2)
-		mpEngine->ovg_AnimWin_flickType(mContext, PM_ANIMWIN_FLICK_TURN);
+		mpEngine->oxx_AnimWin_flickType(mContext, PM_ANIMWIN_FLICK_TURN);
 	else
-		mpEngine->ovg_AnimWin_flickType(mContext, PM_ANIMWIN_FLICK_CONT);
+		mpEngine->oxx_AnimWin_flickType(mContext, PM_ANIMWIN_FLICK_CONT);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void ovgAnimWin::AddStatusCurrent()
 {
-	mpEngine->ovg_AnimWin_AddStatus(mContext, PM_SF_CURRENT);
+	mpEngine->oxx_AnimWin_AddStatus(mContext, PM_SF_CURRENT);
 }
 void ovgAnimWin::RemoveStatusCurrent()
 {
-	mpEngine->ovg_AnimWin_RemoveStatus(mContext, PM_SF_CURRENT);
+	mpEngine->oxx_AnimWin_RemoveStatus(mContext, PM_SF_CURRENT);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -265,8 +265,8 @@ void ovgAnimWin::CalcZoomParam(const pm_event_t &Event)
 pm_int_t ovgAnimWin::OnEventShow(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
-	mpEngine->ovg_AnimWin_AddStatus(mContext, PM_SF_VISIBLE);
-	mpEngine->ovg_AnimWin_show(mContext);
+	mpEngine->oxx_AnimWin_AddStatus(mContext, PM_SF_VISIBLE);
+	mpEngine->oxx_AnimWin_show(mContext);
     return Pm_Panel::OnEventShow(Event);
 }
 ///////////////////////////////////////////////////////////////////////////////
@@ -274,22 +274,22 @@ pm_int_t ovgAnimWin::OnEventHide(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
 	if (!mParentAlive) return 0;
-	mpEngine->ovg_AnimWin_RemoveStatus(mContext, PM_SF_VISIBLE);
-	mpEngine->ovg_AnimWin_hide(mContext);
+	mpEngine->oxx_AnimWin_RemoveStatus(mContext, PM_SF_VISIBLE);
+	mpEngine->oxx_AnimWin_hide(mContext);
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
 pm_int_t ovgAnimWin::OnEventFocusIn(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
-	mpEngine->ovg_AnimWin_AddStatus(mContext, PM_SF_CURRENT);
+	mpEngine->oxx_AnimWin_AddStatus(mContext, PM_SF_CURRENT);
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
 pm_int_t ovgAnimWin::OnEventFocusOut(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
-	mpEngine->ovg_AnimWin_RemoveStatus(mContext, PM_SF_CURRENT);
+	mpEngine->oxx_AnimWin_RemoveStatus(mContext, PM_SF_CURRENT);
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
@@ -318,7 +318,7 @@ pm_int_t ovgAnimWin::OnEventPenUp(const pm_event_t &Event)
 				((Event.Param - mPenUpTime) < DOUBLE_CLICK_THRESHOLD)) {
 				printf("%s() - Double click!\n", __FUNCTION__);
 				ZoomReset();
-				mpEngine->ovg_AnimWin_draw_zoom(
+				mpEngine->oxx_AnimWin_draw_zoom(
 							mContext, mZoomPutPoint, mZoomRatio);
 			}
 		}
@@ -372,7 +372,7 @@ pm_int_t ovgAnimWin::OnEventPan(const pm_event_t &Event)
 			__FUNCTION__, mZoomPutPoint.x, mZoomPutPoint.y);
         mStartPan = Event.Point;
        // mSingleTouch = FALSE;
-		mpEngine->ovg_AnimWin_draw_zoom(mContext, mZoomPutPoint, mZoomRatio);
+		mpEngine->oxx_AnimWin_draw_zoom(mContext, mZoomPutPoint, mZoomRatio);
 	//	mpEngine->ovg_AnimWin_draw_zoom(mContext, mZoomPutPoint, 1.0);
 	}
 
@@ -395,7 +395,7 @@ pm_int_t ovgAnimWin::OnEventZoomIn(const pm_event_t &Event)
 		printf("%s(n) - Zoom rect (%d, %d)\n",
 			__FUNCTION__, Event.Payload[0], Event.Payload[1]);
         CalcZoomParam(Event);
-		mpEngine->ovg_AnimWin_draw_zoom(mContext, mZoomPutPoint, mZoomRatio);
+		mpEngine->oxx_AnimWin_draw_zoom(mContext, mZoomPutPoint, mZoomRatio);
         mZoomWidth = Event.Payload[0];
         mZoomHeight = Event.Payload[1];
     }
@@ -419,7 +419,7 @@ pm_int_t ovgAnimWin::OnEventZoomOut(const pm_event_t &Event)
 		printf("%s(n) - Zoom rect (%d, %d)\n",
 			__FUNCTION__, Event.Payload[0], Event.Payload[1]);
         CalcZoomParam(Event);
-		mpEngine->ovg_AnimWin_draw_zoom(mContext, mZoomPutPoint, mZoomRatio);
+		mpEngine->oxx_AnimWin_draw_zoom(mContext, mZoomPutPoint, mZoomRatio);
         mZoomWidth = Event.Payload[0];
         mZoomHeight = Event.Payload[1];
     }
@@ -431,12 +431,12 @@ pm_int_t ovgAnimWin::OnEventZoomOut(const pm_event_t &Event)
 void ovgAnimWin::show()
 {
 	printf("ovgAnimWin_%s() ---\n", __FUNCTION__);
-	mpEngine->ovg_AnimWin_AddStatus(mContext, PM_SF_VISIBLE);
-	mpEngine->ovg_AnimWin_show(mContext);
+	mpEngine->oxx_AnimWin_AddStatus(mContext, PM_SF_VISIBLE);
+	mpEngine->oxx_AnimWin_show(mContext);
 }
 void ovgAnimWin::hide()
 {
 	printf("ovgAnimWin_%s() ---\n", __FUNCTION__);
-	mpEngine->ovg_AnimWin_hide(mContext);
-	mpEngine->ovg_AnimWin_RemoveStatus(mContext, PM_SF_VISIBLE);
+	mpEngine->oxx_AnimWin_hide(mContext);
+	mpEngine->oxx_AnimWin_RemoveStatus(mContext, PM_SF_VISIBLE);
 }
