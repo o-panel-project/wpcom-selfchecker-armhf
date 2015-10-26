@@ -59,5 +59,6 @@
 #define WPC_GET_BOARD_TYPE			0x5719
 	#define WPC_BOARD_TYPE_J			1
 	#define WPC_BOARD_TYPE_J3			3
+	#define WPC_BOARD_TYPE_J4			4
 
 #endif

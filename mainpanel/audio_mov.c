@@ -22,20 +22,55 @@ static int button_no=0;
 static int vol, vol1, vol2, play_mode=0;
 static GtkWidget *cb, *b_stop, *b_quit, *hs;
 static snd_mixer_elem_t *elem;
-static snd_mixer_elem_t *elem1;
-static snd_mixer_elem_t *elem2;
 static snd_mixer_t *handle;
-static snd_mixer_selem_id_t *sid;
 int audio_pid=0, audio_is_loop=0, movie_is_loop=0;
 
 
 //
 //	Search volume element
 //
+snd_mixer_elem_t* get_elem(snd_mixer_t* h, char const* name)
+{
+	snd_mixer_elem_t* se = NULL;
+	snd_mixer_elem_t* var = snd_mixer_first_elem(h);
+	while (var != NULL) {
+		if (strcasecmp(name, snd_mixer_selem_get_name(var)) == 0) {
+			se = var;
+			break;
+		}
+		var = snd_mixer_elem_next(var);
+	}
+	if (se == NULL)
+		printf("Could not find mixer name: %s", name);
+	return se;
+}
+
+static int alsa_setup_j3(int start_up)
+{
+	if ((elem = get_elem(handle, "DAC1 Digital Fine")) == NULL) {
+	   return 8;
+	}
+	return 0;
+}
+
+static int alsa_setup_j4(int start_up)
+{
+	snd_mixer_elem_t* se = NULL;
+	if ((se = get_elem(handle, "PCM")) == NULL) {
+	   return 6;
+	}
+	snd_mixer_selem_set_playback_dB_all(se, 0, 0);	/* 0dB */
+
+	if ((elem = get_elem(handle, "Line DAC")) == NULL) {
+	   return 7;
+	}
+	return 0;
+}
+
 static int alsa_setup(int start_up)
 {
 	int r;
-	int j4vol = 0;
+	int l_v, r_v;
 	
 	if((r=snd_mixer_open(&handle, 0)) < 0) {
 		printf("Mixer open error: %s", snd_strerror(r));
@@ -57,50 +92,31 @@ static int alsa_setup(int start_up)
 		return 4;
 	}
 
-	for(elem=snd_mixer_first_elem(handle); elem; elem = snd_mixer_elem_next(elem)){
-		if(snd_mixer_selem_has_playback_volume(elem)||snd_mixer_selem_has_common_volume(elem)){
-			snd_mixer_selem_id_alloca(&sid);
-			if (sc_IsJ4()) {
-			snd_mixer_selem_get_id(elem, sid);
-			char *p = snd_mixer_selem_id_get_name(sid);
-			//g_print("Playback Vol = %s\n", p);
-			if(start_up)
-				snd_mixer_selem_get_playback_volume(elem, 0, (long *)&vol);
-			if (strcmp(p, "PCM") == 0) {
-				elem1 = elem;
-				vol1 = vol;
-				j4vol++;
-				if (j4vol == 2) {
-					vol = (vol1 + vol2) / 2;
-					return 0;
-				}
-			}
-			if (strcmp(p, "Line DAC") == 0) {
-				elem2 = elem;
-				vol2 = vol;
-				j4vol++;
-				if (j4vol == 2) {
-					vol = (vol1 + vol2) / 2;
-					return 0;
-				}
-			}
-			} else {
-			if(start_up)
-				snd_mixer_selem_get_playback_volume(elem, 0, (long *)&vol);
-			snd_mixer_selem_get_id(elem, sid);
-			if(strcmp(snd_mixer_selem_id_get_name(sid), "DAC1 Digital Fine")==0)
-				return 0;
-			}
-		}
+	if (sc_IsJ4()) {
+		r = alsa_setup_j4(start_up);
+	} else {
+		r = alsa_setup_j3(start_up);
 	}
-	g_print("%s():Playback volume not found\n", __func__);
-	return 5;
+	if (r > 0) {
+		g_print("%s():Playback volume not found\n", __func__);
+	   return r;
+	}
+	if(start_up) {
+		snd_mixer_selem_get_playback_volume(
+				elem, SND_MIXER_SCHN_FRONT_LEFT, &l_v);
+		snd_mixer_selem_get_playback_volume(
+				elem, SND_MIXER_SCHN_FRONT_RIGHT, &r_v);
+		vol = l_v > r_v ? l_v : r_v;
+	}
+
+	return 0;
 }
 
 #if	1	/*	20110917VACS	*/
 //
 //	set ALSA volume
 //
+#if 0
 void sc_alsa_set_volume_j4(int v0, int v1)
 {
 	int		r;
@@ -163,6 +179,7 @@ void sc_alsa_set_volume_j4(int v0, int v1)
 	}
 	debug_printf(3, " : (%d, %d)\n", r2, r3);
 }
+#endif
 
 void
 sc_alsa_set_volume(int v0, int v1)
@@ -203,25 +220,20 @@ long	pvol0, pvol1;
 void
 audio_set_volume(void)
 {
+	debug_printf(3, "%s():button_no=%d, play_mode=%d\n",
+			__func__, button_no, play_mode);
 
 	switch(play_mode%3){
 	case 0:
-		if (sc_IsJ4())
-		sc_alsa_set_volume_j4(vol, vol);
-		else
 		sc_alsa_set_volume(vol, vol);
 		break;
-	case 1:
-		if (sc_IsJ4())
-		sc_alsa_set_volume_j4(0, vol);
-		else
-		sc_alsa_set_volume(0, vol);
-		break;
-	case 2:
-		if (sc_IsJ4())
-		sc_alsa_set_volume_j4(vol, 0);
-		else
+	case 1:	/* Left */
+		debug_printf(3, "%s():Left on, Right off\n", __func__);
 		sc_alsa_set_volume(vol, 0);
+		break;
+	case 2:	/* Right */
+		debug_printf(3, "%s():Left off, Right on\n", __func__);
+		sc_alsa_set_volume(0, vol);
 		break;
 	}
 }
@@ -306,10 +318,7 @@ GtkWidget *put_vol(GtkWidget *c, int *check, int *is_loop)
 	/*	20110917VACS	*/
 	int volume_max = AUDIO_VOLUME_MAX;
 	if (sc_IsJ4())
-		volume_max = AUDIO_VOLUME1_MAX > AUDIO_VOLUME2_MAX ?
-			AUDIO_VOLUME2_MAX : AUDIO_VOLUME1_MAX;
-	else
-		volume_max = AUDIO_VOLUME_MAX;
+		volume_max = AUDIO_VOLUME2_MAX;
 	hs=gtk_hscale_new_with_range(0, volume_max, 1);
 
 	gtk_range_set_value(GTK_RANGE(hs), vol);
@@ -332,13 +341,13 @@ void audio_fin(int check, int pid)
 {
 	if(!pid) return;
 	if(check && gtk_widget_get_sensitive(b_stop)!=TRUE) return;
-	do_kill(pid);
+	do_killpg(pid);
 }
 
 int audio_play(int *pid, int file_no)
 {
 	char f[SMALL_STR];
-	int fdnull;
+	int fdnull, mypid;
 	char alsaopt[SMALL_STR];
 	
 	audio_set_volume();
@@ -347,14 +356,18 @@ int audio_play(int *pid, int file_no)
 		return -1;
 	
 	case 0:
+		mypid = getpid();
+		setpgid(mypid, mypid);
 		fdnull=open("/dev/null", O_RDWR);
 		dup2(fdnull,0);
 		strcpy(f, base_path);
 		strcat(f, "/data/");
 		strcat(f, file_no ? "test_b.wav" : "test_a.wav");
+#if 0	/* noisy */
 		if (sc_IsJ4())
 			strcpy(alsaopt, "alsa:device=hw=0.0");
 		else
+#endif
 			strcpy(alsaopt, "alsa");
 		if(audio_is_loop){
 			execl("/usr/bin/mplayer", "mplayer", "-ao", alsaopt, "-loop", "0", f, NULL);
@@ -510,7 +523,7 @@ fin:
 
 int movie_play(int *pid)
 {
-	int fdnull;
+	int fdnull, mypid;
 	char f[SMALL_STR];
 	char alsaopt[SMALL_STR];
 	
@@ -520,17 +533,15 @@ int movie_play(int *pid)
 		return -1;
 	
 	case 0:
+		mypid = getpid();
+		setpgid(mypid, mypid);
 		fdnull=open("/dev/null",O_RDWR);
 		dup2(fdnull,0);
 		sprintf(f, "%s/data/sample.mp4", base_path);
-		if (sc_IsJ4())
-			strcpy(alsaopt, "alsa:device=hw=0.0");
-		else
-			strcpy(alsaopt, "alsa");
 		if(movie_is_loop){
-			execl("/usr/bin/mplayer", "mplayer", "-ao", alsaopt, "-geometry", "460:60", "-fixed-vo", "-loop", "0", f, NULL);
+			execl("/mnt1/bin/newsc_movie.sh", "newsc_movie.sh", f, "-loop", NULL);
 		}else{
-			execl("/usr/bin/mplayer", "mplayer", "-ao", alsaopt, "-geometry", "460:60", f, NULL);
+			execl("/mnt1/bin/newsc_movie.sh", "newsc_movie.sh", f, NULL);
 		}
 		_exit(127);
 		break;

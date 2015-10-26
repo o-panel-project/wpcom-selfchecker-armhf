@@ -453,7 +453,8 @@ fetch_tpver(char *kver)
 		fetch_egver(egb);
 		strcat(buf, "\n");
 		strcat(buf, egb);
-	} else if (g_board_type == WPC_BOARD_TYPE_J3)
+	} else if (g_board_type == WPC_BOARD_TYPE_J3 ||
+			g_board_type == WPC_BOARD_TYPE_J4)
 		fetch_tpver_melfas(buf);
 	else
 		strcpy(buf, "unknown");

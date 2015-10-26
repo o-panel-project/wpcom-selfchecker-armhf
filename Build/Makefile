@@ -18,6 +18,7 @@ mainpanel:
 	@cp -p ../scripts/appstart bin/
 	@cp -p ../scripts/runsc bin/
 	@cp -p ../ntpdate/ntpdate bin/
+	@cp -p ../mainpanel/newsc_movie.sh bin/
 
 felicalib:
 	make -C ../felica-sdk/arch/linux/build -f Makefile.basic_rcs956_usb_all
