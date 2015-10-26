@@ -228,12 +228,12 @@ audio_set_volume(void)
 		sc_alsa_set_volume(vol, vol);
 		break;
 	case 1:	/* Left */
-		debug_printf(3, "%s():Left on, Right off\n", __func__);
-		sc_alsa_set_volume(vol, 0);
-		break;
-	case 2:	/* Right */
 		debug_printf(3, "%s():Left off, Right on\n", __func__);
 		sc_alsa_set_volume(0, vol);
+		break;
+	case 2:	/* Right */
+		debug_printf(3, "%s():Left on, Right off\n", __func__);
+		sc_alsa_set_volume(vol, 0);
 		break;
 	}
 }
