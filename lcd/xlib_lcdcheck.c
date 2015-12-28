@@ -19,6 +19,10 @@
 #include	"common.h"	/* 20110822VACS */
 #include	"wpcio.h"	/* 20110822VACS	*/
 
+#undef WINDOW_SIZE_X
+#undef WINDOW_SIZE_Y
+int WINDOW_SIZE_X = 1024;
+int WINDOW_SIZE_Y = 600;
 void	lcdDisplay_Pattern(int pattern);
 void	play_dots(void);
 void	play_line_pixel_gap(int gap, int thickness);
@@ -542,6 +546,8 @@ int main(int argc, char *argv[])
 		}
 	}
 	
+	WINDOW_SIZE_X = get_sc_window_width();
+	WINDOW_SIZE_Y = get_sc_window_height();
 	init_display();
 	/*	20110822VACS	*/
 	if(!flg){

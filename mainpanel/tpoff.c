@@ -24,7 +24,7 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	char tmps[SMALL_STR];
 	
 	w=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_widget_set_usize(w, 1024, 600);
+	gtk_widget_set_usize(w, get_sc_window_width(), get_sc_window_height());
 	gtk_window_set_position(GTK_WINDOW(w), GTK_WIN_POS_CENTER_ALWAYS);
 	
 	lb=gtk_label_new("");
@@ -113,7 +113,7 @@ int tpfunc_main(GtkWidget *table, GtkWidget *i)
 	int ival = (int)i;
 	
 	w=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_widget_set_usize(w, 1024, 600);
+	gtk_widget_set_usize(w, get_sc_window_width(), get_sc_window_height());
 	gtk_window_set_position(GTK_WINDOW(w), GTK_WIN_POS_CENTER_ALWAYS);
 	
 	lb=gtk_label_new("Starting full-screen program ...\n"

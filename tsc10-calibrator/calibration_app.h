@@ -36,7 +36,7 @@ extern int errno;
 /*==============================================================
  * constant value 
  *=============================================================*/
-
+#ifdef NOT_USE_THESE_VALUES
 /* ウィンドウサイズ */
 #define WINDOW_SIZE_X	1024		/* pixel */
 #define WINDOW_SIZE_Y	600		/* pixel */
@@ -111,6 +111,7 @@ struct calibration_point_t {
 	int x; 
 	int y;
 };
+#endif
 
 #endif /* __CALIBRATION_APP_H__ */
 

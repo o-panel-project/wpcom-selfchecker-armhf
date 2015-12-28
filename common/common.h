@@ -25,6 +25,8 @@ extern int pid_bat1_charge, pid_bat2_charge;	/*	20110728VACS	*/
 extern int bl_toggle_charge;					/*	20110831VACS	*/
 extern int cr_mount_ok;							/*	20110905VACS	*/
 
+#define DEFAULT_WINDOW_WIDTH	1024
+#define	DEFAULT_WINDOW_HEIGHT	600
 #define I2C_DATA_SIZE 4
 #define I2C_GUARDTIME_USEC	10000
 #define MID_STR	2048							/*	20110826VACS	*/
@@ -61,6 +63,10 @@ extern void sc_i2c_set_power(int x);
 extern int wpcio_open(int n, char *tag);
 extern int sc_get_board_type();
 extern int sc_IsJ4();
+extern void set_sc_window_width(int);
+extern void set_sc_window_height(int);
+extern int get_sc_window_width();
+extern int get_sc_window_height();
 
 #ifdef __GTK_H__
 

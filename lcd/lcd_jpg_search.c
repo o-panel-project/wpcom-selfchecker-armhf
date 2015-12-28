@@ -35,7 +35,7 @@ int show_jpeg_with_imlib(Display *disp, Window win, char *imgfile)
 	cm    = DefaultColormap(disp, DefaultScreen(disp));
    
 	/* create a window */
-	win = XCreateSimpleWindow(disp, DefaultRootWindow(disp), 0, 0, 1024, 600, 0, 0, 0);
+	win = XCreateSimpleWindow(disp, DefaultRootWindow(disp), 0, 0, get_sc_window_width(), get_sc_window_height(), 0, 0, 0);
 
 	/* tell X what events we are interested in */
 	XSelectInput(disp, win, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | ExposureMask);
@@ -75,7 +75,7 @@ int show_jpeg_with_imlib(Display *disp, Window win, char *imgfile)
 		}
         usleep(100000);
         
-        updates = imlib_updates_merge_for_rendering(updates, 1024, 600);
+        updates = imlib_updates_merge_for_rendering(updates, get_sc_window_width(), get_sc_window_height());
 		for (current_update = updates; current_update; current_update = imlib_updates_get_next(current_update)){
 			int up_x, up_y, up_w, up_h;
 			

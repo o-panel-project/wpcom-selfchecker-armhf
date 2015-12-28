@@ -764,6 +764,7 @@ int main(int argc, char *argv[])
 	
 	char *menupath=NULL;//, tmps[SMALL_STR];
 	pthread_t th_bsub;
+	GdkScreen *gscr;
 	
 	if (sc_IsJ4()) {
 		bl_toggle_charge = 0;
@@ -827,8 +828,16 @@ int main(int argc, char *argv[])
 	gdk_threads_enter();
 	
 	gtk_init(&gargc, &argv);
+
+	gscr = gdk_screen_get_default();
+	gint w = gdk_screen_get_width(gscr);
+	gint h = gdk_screen_get_height(gscr);
+	printf("Selfcheck screen size %dx%d\n", w, h);
+	set_sc_window_width(w);
+	set_sc_window_height(h);
+
 	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_widget_set_usize(window, 1024, 600);
+	gtk_widget_set_usize(window, w, h);
 	
 	table = sc_table_new();
 	

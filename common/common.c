@@ -32,6 +32,13 @@ int pid_bat1_charge=0, pid_bat2_charge=0;	/*	20110728VACS	*/
 int bl_toggle_charge=1;						/*	20110831VACS	*/
 int	cr_mount_ok=0;							/*	20110905VACS	*/
 
+static int m_sc_window_height = DEFAULT_WINDOW_HEIGHT;
+static int m_sc_window_width = DEFAULT_WINDOW_WIDTH;
+void set_sc_window_height(int h) {m_sc_window_height = h;}
+void set_sc_window_width(int w) {m_sc_window_width = w;}
+int get_sc_window_height() {return m_sc_window_height;}
+int get_sc_window_width() {return m_sc_window_width;}
+
 void debug_set(int n)
 {
 	debug_level=n;

@@ -26,7 +26,7 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	sprintf(f, "%s/script/strategy-%d", base_path, (int)data);
 	
 	w=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_widget_set_usize(w, 1024, 600);
+	gtk_widget_set_usize(w, get_sc_window_width(), get_sc_window_height());
 	gtk_window_set_position(GTK_WINDOW(w), GTK_WIN_POS_CENTER_ALWAYS);
 	
 	sprintf(tmps, "Executing %s ...", f);

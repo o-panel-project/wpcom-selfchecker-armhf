@@ -28,7 +28,10 @@ GtkWidget  **button_image;
 GdkPixbuf *pix_orange, *pix_green;
 
 static struct timeval tv0;
+static const double nx_weight = (1024.0/36.0);
+static const double ny_weight = (600.0/17.0);
 static int nx=36, ny=17;
+static int nx_arg=0, ny_arg=0;
 
 // click interval for exit in usec
 static long long ival=280000;
@@ -56,6 +59,13 @@ static void click_func(GtkWidget *widget, gpointer data)
 	gtk_image_set_from_pixbuf(GTK_IMAGE(button_image[n]), (flags[n]&1) ? pix_orange : pix_green);
 }
 
+static gboolean button_press_func(
+		GtkWidget *widget, GdkEventButton *event, gpointer data)
+{
+	g_print("Touch (x, y)=(%.1f, %.1f)\n", event->x_root, event->y_root);
+	return FALSE;
+}
+
 void usage()
 {
 	printf("usage : tp-grid <opt>\n");
@@ -77,10 +87,10 @@ int main(int argc, char *argv[])
 		if(c==-1) break;
 		switch(c){
 		case 'x':
-			nx=atoi(optarg);
+			nx_arg=atoi(optarg);
 			break;
 		case 'y':
-			ny=atoi(optarg);
+			ny_arg=atoi(optarg);
 			break;
 		case 't':
 			ival=1000*atoi(optarg);
@@ -95,6 +105,19 @@ int main(int argc, char *argv[])
     
 	gtk_init(&gargc, &argv);
     
+	GdkScreen *gscr = gdk_screen_get_default();
+	gint w = gdk_screen_get_width(gscr);
+	gint h = gdk_screen_get_height(gscr);
+	if (nx_arg > 0)
+		nx = nx_arg;
+	else
+		nx = (int)((double)w / (double)nx_weight + 0.5);
+	if (ny_arg > 0)
+		ny = ny_arg;
+	else
+		ny = (int)((double)h / (double)ny_weight + 0.5);
+	g_print("tp-grid matrix %dx%d\n", nx, ny);
+
 	window=gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_container_set_border_width(GTK_CONTAINER (window), 0);
 	g_signal_connect(G_OBJECT(window), "delete_event", G_CALLBACK (delete_event), NULL);
@@ -103,7 +126,7 @@ int main(int argc, char *argv[])
 	tbl=gtk_table_new(nx,ny,FALSE);
 	gtk_container_add (GTK_CONTAINER (window), tbl);
 	gtk_container_set_border_width (GTK_CONTAINER (tbl), 0);
-	gtk_widget_set_usize(window, 1024, 600);
+	gtk_widget_set_usize(window, w, h);
     
 	flags=(int *)malloc(sizeof(unsigned int)*nx*ny);
 	button_image=(GtkWidget **)malloc(sizeof(GtkWidget *)*nx*ny);
@@ -123,6 +146,7 @@ int main(int argc, char *argv[])
  			button_image[n]=gtk_image_new_from_pixbuf(pix_green);
 			gtk_button_set_image(GTK_BUTTON(button), button_image[n]);
 			gtk_table_attach(GTK_TABLE(tbl), button, i, i+1, j, j+1, GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
+			g_signal_connect(G_OBJECT(button), "button-press-event", G_CALLBACK(button_press_func), 0);
 			g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(click_func), (gpointer)n);
 	    }
 	}

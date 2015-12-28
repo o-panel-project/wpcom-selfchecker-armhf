@@ -10,6 +10,8 @@
 #include <sys/types.h>
 #include <pthread.h>
 
+#include "common.h"
+
 GtkTreeIter iter_battery, iter_audio;
 GtkWidget *tv_sidemenu, *lb_menutop;
 
@@ -155,7 +157,7 @@ int sc_message_yesno(const char *fmt, ...)
 	
 	w=gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_container_add(GTK_CONTAINER(w), a0);
-	gtk_widget_set_usize(w, 1024, 600);
+	gtk_widget_set_usize(w, get_sc_window_width(), get_sc_window_height());
 	gtk_window_set_position(GTK_WINDOW(w), GTK_WIN_POS_CENTER_ALWAYS);
 	gtk_widget_show_all(w);
 	gtk_main();
