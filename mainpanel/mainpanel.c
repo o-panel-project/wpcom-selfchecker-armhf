@@ -97,7 +97,7 @@ void sc_mainpanel(GtkWidget *w, const char *t, GtkWidget *f, GtkWidget *table)
 {
 	gtk_window_set_title(GTK_WINDOW(w), t);
 	gtk_container_set_border_width(GTK_CONTAINER(w), 5);
-	gtk_widget_set_usize(f, 216, -1);
+//	gtk_widget_set_usize(f, 216, -1);
 	
 	sc_table_attach1(GTK_TABLE(table), f);
 	gtk_container_add(GTK_CONTAINER(w), table);
@@ -623,9 +623,16 @@ int notsupport_main(GtkWidget *p, GtkWidget *bsub)
 int demo_main(GtkWidget *table, GtkWidget *bsub)
 {
 	char tmps[SMALL_STR];
+	int scr_w = get_sc_window_width();
+	int scr_h = get_sc_window_height();
+	int pos_x = 0;		/* for DEFAULT_WINDOW_WIDTH */
+	int pos_y = 200;	/* for DEFAULT_WINDOW_HEIGHT */
+	pos_x += (scr_w - DEFAULT_WINDOW_WIDTH) / 2;
+	pos_y += (scr_h - DEFAULT_WINDOW_HEIGHT) / 2;
 
 	/*	script start	*/
-	strcpy(tmps,"/mnt1/bin/newsc_demoapp.sh");
+	sprintf(tmps,"/mnt1/bin/newsc_demoapp.sh %d %d %d %d",
+			pos_x, pos_y, scr_w, scr_h);
 	system(tmps);
 
 	return 0;
@@ -652,7 +659,8 @@ int display_main(GtkWidget *table, GtkWidget *bsub)
 	char tmps[SMALL_STR];
 	int flg;
 
-	sprintf(tmps, "xlib_lcdcheck -j %s/jpg", base_path);
+	sprintf(tmps, "xlib_lcdcheck -j %s/jpg%dx%d",
+			base_path, get_sc_window_width(), get_sc_window_height());
 	if (interval)
 		append_sprintf(tmps, " -I %d", interval);
 	flg = 0;								/*	[LCD Display] test	*/
@@ -667,7 +675,8 @@ int lcdinspect_main(GtkWidget *table, GtkWidget *bsub)
 	char tmps[SMALL_STR];
 	int flg;
 
-	sprintf(tmps, "xlib_lcdcheck -j %s/jpg", base_path);
+	sprintf(tmps, "xlib_lcdcheck -j %s/jpg%dx%d",
+			base_path, get_sc_window_width(), get_sc_window_height());
 	if (interval)
 		append_sprintf(tmps, " -I %d", interval);
 	flg=1;								/*	[LCD Inspect] test	*/
@@ -846,7 +855,9 @@ int main(int argc, char *argv[])
 	
 	lb_top=lb_menutop=gtk_label_new("");
 	fr=gtk_frame_new(NULL);
-	gtk_widget_set_usize(fr, 190, 40);
+	gint frw = (gint)((gdouble)w * 0.186);
+	gint frh = (gint)((gdouble)h * 0.066);
+	gtk_widget_set_usize(fr, frw, frh);
 	gtk_container_add(GTK_CONTAINER(fr), lb_top);
 	gtk_box_pack_start(GTK_BOX(vx), fr, FALSE, FALSE, 0);
 	gtk_container_add(GTK_CONTAINER(vx), v0);
@@ -864,7 +875,8 @@ int main(int argc, char *argv[])
 
 	macstr[0] = '\0';
 	if (get_mac_addr(macaddr) == 0)
-		sprintf(macstr, "MAC Address : <span font_desc=\"monospace bold 20.0\""
+		sprintf(macstr, "MAC Address : <span font_desc=\"monospace bold\""
+				" size=\"x-large\""
 				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
 				macaddr[0], macaddr[1], macaddr[2],
 				macaddr[3], macaddr[4], macaddr[5]);

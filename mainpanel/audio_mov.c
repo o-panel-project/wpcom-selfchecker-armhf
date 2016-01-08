@@ -526,6 +526,7 @@ int movie_play(int *pid)
 	int fdnull, mypid;
 	char f[SMALL_STR];
 	char alsaopt[SMALL_STR];
+	char posxopt[SMALL_STR];
 	
 	audio_set_volume();
 	switch(*pid=fork()){
@@ -537,11 +538,14 @@ int movie_play(int *pid)
 		setpgid(mypid, mypid);
 		fdnull=open("/dev/null",O_RDWR);
 		dup2(fdnull,0);
-		sprintf(f, "%s/data/sample.mp4", base_path);
+		sprintf(f, "-f%s/data/sample.mp4", base_path);
+		gint w = get_sc_window_width();
+		gint posx = (gint)(((gdouble)w * 0.78 - 320.0) / 2.0 + (gdouble)w * 0.22);
+		sprintf(posxopt, "-x%d", posx);
 		if(movie_is_loop){
-			execl("/mnt1/bin/newsc_movie.sh", "newsc_movie.sh", f, "-loop", NULL);
+			execl("/mnt1/bin/newsc_movie.sh", "newsc_movie.sh", f, posxopt, "-y60", "-loop", NULL);
 		}else{
-			execl("/mnt1/bin/newsc_movie.sh", "newsc_movie.sh", f, NULL);
+			execl("/mnt1/bin/newsc_movie.sh", "newsc_movie.sh", f, posxopt, "-y60", NULL);
 		}
 		_exit(127);
 		break;

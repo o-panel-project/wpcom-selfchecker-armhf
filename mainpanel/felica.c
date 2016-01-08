@@ -756,7 +756,9 @@ int felica_main(GtkWidget *table, GtkWidget *bsub)
 	
 	sc = gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sc), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-	gtk_widget_set_usize(sc, 400, 180);
+	gint scw = (gint)((double)get_sc_window_width() * 0.391);
+	gint sch = (gint)((double)get_sc_window_height() * 0.300);
+	gtk_widget_set_usize(sc, scw, sch);
 	tv_result=gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv_result), FALSE);
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(tv_result), FALSE);

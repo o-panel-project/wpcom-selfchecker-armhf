@@ -92,7 +92,16 @@ int main(int argc, char *argv[])
 
 	menuPhoto = (pm_bitmap_t **) new pm_bitmap_t*[ArgImageNum];
 
-	prismmain(argc, argv, 0, NULL);
+	Display *dpy = XOpenDisplay(NULL);
+	if (dpy) {
+		int scr = DefaultScreen(dpy);
+		lcd_width = DisplayWidth(dpy, scr);
+		lcd_height = DisplayHeight(dpy, scr);
+		XCloseDisplay(dpy);
+	}
+	Pm_Region appRect;
+	appRect.Set(0, 0, lcd_width - 1, lcd_height - 1);
+	prismmain(argc, argv, 0, &appRect);
 
 	delete pImageNameList;
 	delete menuPhoto;
@@ -151,7 +160,8 @@ MainPanel::MainPanel() :
     mFlickDir = 0;
 	mpPhotoFrame->show();
 
-	ChildSize.Set(920,540,1019,589);
+	ChildSize.Set(lcd_width -100 -10, lcd_height -50 -10,
+			lcd_width -10, lcd_height -10);
 	mpBtnQuit = new Pm_Text_Btn(ChildSize, 0, IDB_QUIT);
 	mpBtnQuit->AssignText("Quit");
 	Link(mpBtnQuit);

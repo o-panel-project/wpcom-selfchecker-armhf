@@ -156,8 +156,10 @@ init_display(void)
 	lcdCheckBackground = lcdCheckColor(lcdCheckDisplay, "white");
 	lcdCheckForeground = lcdCheckColor(lcdCheckDisplay, "black");
 	lcdCheckScreen = DefaultScreen(lcdCheckDisplay);
-       	screenwidth = DisplayWidth(lcdCheckDisplay, lcdCheckScreen);
-       	screenheight = DisplayHeight(lcdCheckDisplay, lcdCheckScreen);
+	screenwidth = DisplayWidth(lcdCheckDisplay, lcdCheckScreen);
+	screenheight = DisplayHeight(lcdCheckDisplay, lcdCheckScreen);
+	WINDOW_SIZE_X = screenwidth;
+	WINDOW_SIZE_Y = screenheight;
 	lcdCheckHint.width = WINDOW_SIZE_X;
 	lcdCheckHint.height = WINDOW_SIZE_Y;
 	lcdCheckHint.max_width = WINDOW_SIZE_X;
@@ -545,9 +547,6 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
-	
-	WINDOW_SIZE_X = get_sc_window_width();
-	WINDOW_SIZE_Y = get_sc_window_height();
 	init_display();
 	/*	20110822VACS	*/
 	if(!flg){
@@ -913,7 +912,7 @@ int display_click (struct itimerspec *timer)
 		LEAVE();
 		return 1;
 	}
-	if(click_flag==0 && x>=824 && y<=200){
+	if(click_flag==0 && x>=(WINDOW_SIZE_X-824) && y<=200){
 		click_flag = 1;
 		timer_settime(tid, 0, timer, NULL);
 	}

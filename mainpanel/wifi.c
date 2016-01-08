@@ -267,8 +267,9 @@ static void display_ip_addr()
 	macstr[0] = '\0';
 
 	if (get_mac_addr(macaddr) == 0)
-		sprintf(macstr, "MAC Address : <span font_desc=\"monospace bold 20.0\" "
-				"foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
+		sprintf(macstr, "MAC Address : <span font_desc=\"monospace bold\""
+				" size=\"x-large\""
+				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
 			macaddr[0], macaddr[1], macaddr[2],
 			macaddr[3], macaddr[4], macaddr[5]);
 
@@ -695,7 +696,9 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	tv0=gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv0), FALSE);
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(tv0), FALSE);
-	gtk_widget_set_usize(tv0, 430, 150);
+    gint scw = (gint)((double)get_sc_window_width() * 0.488);
+	gint sch = (gint)((double)get_sc_window_height() * 0.240);
+	gtk_widget_set_usize(tv0, scw, sch);
 	lb_lq = gtk_label_new("");
 	lb_rssi = gtk_label_new("");
 	lb_mac = gtk_label_new("");
@@ -736,7 +739,9 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 
 	sc1=gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(sc1), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-	gtk_widget_set_usize(sc1, 430, 120);
+    scw = (gint)((double)get_sc_window_width() * 0.488);
+	sch = (gint)((double)get_sc_window_height() * 0.240);
+	gtk_widget_set_usize(sc1, scw, sch);
 	tv1=gtk_text_view_new();
 	sc_gtk_text_view_insert_ping(NULL, NULL, 0);
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv1), FALSE);

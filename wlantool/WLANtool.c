@@ -34,6 +34,8 @@ void DrawStatusIndicator(Display *d, Window w, GC gc, Rect *rect, char *bgColor)
 
 int g_board_type = WPC_BOARD_TYPE_J;
 int g_noifup = 0;
+int lcd_width = DEFAULT_WINDOW_WIDTH;
+int lcd_height = DEFAULT_WINDOW_HEIGHT;
 
 /*************************************************************************************
 ** Function:     Main Function
@@ -109,8 +111,10 @@ int main(int ac, char *av[])
 	}
 	
 	screen  = DefaultScreen(dpy);
+	lcd_width = DisplayWidth(dpy, screen);
+	lcd_height = DisplayHeight(dpy, screen);
 	w       = XCreateSimpleWindow(dpy, RootWindow(dpy,screen),
-				POSX, POSY, WIDTH, HEIGHT, 3,
+				POSX, POSY, lcd_width, lcd_height, 3,
 				BlackPixel(dpy,screen),
 				WhitePixel(dpy,screen) );
 	gc      = XCreateGC(dpy, w, 0, 0);
@@ -644,8 +648,10 @@ performance_mode:
 	// From QuitButton
 	ret = ReadOneConfig(21, command);
 	if (ret != -1) {
+		if (command[0] != '\0') {
 		printf("exec:%s\n", command);
 		system(command);
+		}
 	}
 	
 	return OK;
@@ -1784,7 +1790,7 @@ int ReadParamFile()
 void DrawPangoXftRenderLayout(XftDraw *draw, XftColor *color, PangoLayout *layout, int x, int y, char *str)
 {
 	pango_layout_set_text(layout, str, strlen(str));  // 表示文字列の指定
-	pango_xft_render_layout(draw, color, layout, x*1024, y*1024);
+	pango_xft_render_layout(draw, color, layout, x*PANGO_SCALE, y*PANGO_SCALE);
 }
 
 

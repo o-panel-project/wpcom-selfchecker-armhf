@@ -55,12 +55,16 @@ int dmesg_main(GtkWidget *table, GtkWidget *bsub)
 	GtkWidget *vbox, *view, *scrolledwindow;
 	GtkWidget *bb;
 	GtkTextBuffer *buffer;
+	PangoFontDescription *font_desc;
 
 	vbox = gtk_vbox_new(FALSE, 10);
 	scrolledwindow = gtk_scrolled_window_new(NULL, NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledwindow),
 			GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
 	view = gtk_text_view_new();
+	font_desc = pango_font_description_from_string("DejaVu Sans Mono bold 10");
+	gtk_widget_modify_font(view, font_desc);
+	pango_font_description_free(font_desc);
 	sc_gtk_text_view_clear(GTK_TEXT_VIEW(view));
 	buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
 	dmesg_view(buffer);
