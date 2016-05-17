@@ -358,15 +358,28 @@ fin:
 
 const static char *mms_ctrl_dev = "/dev/mms_ts";
 #define IOCTL_GET_VERSION   _IOR('W', 0xA5, u_char *)
+#define SYSFS_MMS_TS "/sys/devices/platform/omap/omap_i2c.3/i2c-3/3-0048/"
+#define INFO_FIRMVERSION_NAME    "firmware_version"
 
 static void fetch_tpver_melfas(char *fwver)
 {
+	FILE *fp;
 	int fd;
 	u_char ver[6];
 	int ret;
 
 	fwver[0] = '\0';
 
+	if ((fp = fopen(SYSFS_MMS_TS INFO_FIRMVERSION_NAME, "r")) != NULL) {
+		if (fscanf(fp, "%s\n", fwver) != EOF) {
+			fclose(fp);
+			fprintf(stdout, "Get from sysfs, fwver=%s\n", fwver);
+			return;
+		}
+		fclose(fp);
+	}
+
+	/* sysfs fail, fall through */
 	fd = open(mms_ctrl_dev, O_RDWR);
 	if (fd < 0) {
 		perror("open");
@@ -381,7 +394,7 @@ static void fetch_tpver_melfas(char *fwver)
 	close(fd);
 	sprintf(fwver, "%02x:%02x:%02x:%02x:%02x:%02x",
 			ver[0], ver[1], ver[2], ver[3], ver[4], ver[5]);
-	fprintf(stdout, "%s\n", fwver);
+	fprintf(stdout, "Get from ioctl, fwver=%s\n", fwver);
 }
 
 const static char *ega_ctrl_dev = "/dev/hidraw0";
