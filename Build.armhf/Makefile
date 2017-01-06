@@ -29,19 +29,19 @@ felicalib:
 	@cp -p ../nfc-extension/arch/linux/build/*.a ../libs.armhf/
 
 tp-grid:
-	make -C ../tp-grid
+	make -C ../tp-grid -f Makefile.armhf
 	@cp -p ../tp-grid/tp-grid bin/
 
 cpprogress:
-	make -C ../cpprogress
+	make -C ../cpprogress -f Makefile.armhf
 	@cp -p ../cpprogress/cpprogress bin/
 
 log-battery:
-	make -C ../log-battery
+	make -C ../log-battery -f Makefile.armhf
 	@cp -p ../log-battery/log-battery bin/
 
 xlib_lcdcheck:
-	make -C ../lcd
+	make -C ../lcd -f Makefile.armhf
 	@cp -p ../lcd/xlib_lcdcheck bin/
 
 demoapp:
@@ -55,12 +55,12 @@ wlantool:
 	@cp -p ../wlantool/newsc_wlantool.sh bin/
 
 clean:
-	make -C ../lcd clean
-	make -C ../prismapp/demoapp clean
-	make -C ../mainpanel clean
-	make -C ../tp-grid clean
-	make -C ../cpprogress clean
-	make -C ../log-battery clean
+	make -C ../lcd clean -f Makefile.armhf
+	make -C ../prismapp/demoapp clean -f Makefile.armhf
+	make -C ../mainpanel clean -f Makefile.armhf
+	make -C ../tp-grid clean -f Makefile.armhf
+	make -C ../cpprogress clean -f Makefile.armhf
+	make -C ../log-battery clean -f Makefile.armhf
 	@rm -rf bin
 #	@rm -f $(TARGET) demoapp-arm runsc appstart newsc_demoapp.sh newsc_wlantool.sh
 
