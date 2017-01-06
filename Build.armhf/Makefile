@@ -13,18 +13,20 @@ all: $(TARGET)
 
 mainpanel:
 	-@mkdir bin >/dev/null 2>&1
-	make -C ../mainpanel
+	make -C ../mainpanel -f Makefile.armhf
 	@cp -p ../mainpanel/mainpanel bin/
 	@cp -p ../scripts/appstart bin/
 	@cp -p ../scripts/runsc bin/
-	@cp -p ../ntpdate/ntpdate bin/
+	@cp -p ../ntpdate/ntpdate.armhf bin/ntpdate
 	@cp -p ../mainpanel/newsc_movie.sh bin/
 
 felicalib:
-	(cd ../felica-sdk/arch/linux/build && ./build.armel.sh)
-	(cd ../nfc-extension/arch/linux/build && ./build.armel.sh)
-	@cp -p ../felica-sdk/arch/linux/build/*.a ../libs/
-	@cp -p ../nfc-extension/arch/linux/build/*.a ../libs/
+	(cd ../felica-sdk/arch/linux/build && ./build.armhf.sh)
+	(cd ../nfc-extension/arch/linux/build && ./build.armhf.sh)
+#	make -C ../felica-sdk/arch/linux/build -f Makefile.basic_rcs956_usb_all
+#	make -C ../nfc-extension/arch/linux/build -f Makefile.nfc_rcs956_all
+	@cp -p ../felica-sdk/arch/linux/build/*.a ../libs.armhf/
+	@cp -p ../nfc-extension/arch/linux/build/*.a ../libs.armhf/
 
 tp-grid:
 	make -C ../tp-grid
@@ -43,13 +45,13 @@ xlib_lcdcheck:
 	@cp -p ../lcd/xlib_lcdcheck bin/
 
 demoapp:
-	make -C ../prismapp/demoapp
+	make -C ../prismapp/demoapp -f Makefile.armhf
 	@cp -p ../prismapp/demoapp/demoapp-arm bin/
 	@cp -p ../prismapp/newsc_demoapp.sh bin/
 
 wlantool:
-	make -C ../wlantool
-	@cp -p ../wlantool/wlantool bin/
+	make -C ../wlantool -f Makefile.armhf
+	@cp -p ../wlantool/wlantool.armhf bin/wlantool
 	@cp -p ../wlantool/newsc_wlantool.sh bin/
 
 clean:
