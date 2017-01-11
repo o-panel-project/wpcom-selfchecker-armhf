@@ -46,6 +46,10 @@ extern const guint8 indicator_off_small_inline[];
 static	GtkWidget	*lb_charge_b1, *b_charge_b1_on, *b_charge_b1_off;
 static	GtkWidget	*lb_charge_b2, *b_charge_b2_on, *b_charge_b2_off;
 
+/* 20170111 wpc */
+extern int g_board_type;
+static gboolean bBatteryCradle = FALSE;
+
 static void set_img(GtkWidget *w, int is_on, GdkPixbuf *p_on, GdkPixbuf *p_off)
 {
 	gtk_image_set_from_pixbuf(GTK_IMAGE(w), is_on ? p_on : p_off);
@@ -118,6 +122,8 @@ static void update_image_gen(GdkPixbuf *p_on, GdkPixbuf *p_off,
 		set_img(b1full, bat1_stat & WPC_CHARGING_FULL, p_on, p_off);
 		set_img(b1fault, bat1_stat & WPC_CHARGING_FAULT, p_on, p_off);
 	}
+	if (g_board_type != WPC_BOARD_TYPE_J)
+		return;
 	if(0<=bat_r1&&b2fast){
 		set_img(b2fast, bat2_stat & WPC_CHARGING_FAST, p_on, p_off);
 		set_img(b2full, bat2_stat & WPC_CHARGING_FULL, p_on, p_off);
@@ -125,6 +131,7 @@ static void update_image_gen(GdkPixbuf *p_on, GdkPixbuf *p_off,
 	}
 }
 
+#if 0	/* not use */
 static void get_value_timer()
 {
 	char tmps[SMALL_STR];
@@ -138,6 +145,7 @@ static void get_value_timer()
 		gtk_label_set_text(GTK_LABEL(lb_adc), tmps);
 	}
 }
+#endif
 
 
 gboolean get_value_thread_step(gpointer point)
@@ -150,7 +158,11 @@ gboolean get_value_thread_step(gpointer point)
 	if (0<=bat_r2 && 0<=bat_r3 && 0<=bat_r4 && lb_adc) {
 		sprintf(tmps, "DC level = %dmV\n", bat_v0);
 		append_sprintf(tmps, "BAT1 level = %dmV\n", bat_v1);
+		if (g_board_type == WPC_BOARD_TYPE_J) {
 		append_sprintf(tmps, "BAT2 level = %dmV\n", bat_v2);
+		} else {
+			append_sprintf(tmps, "BatteryCradle level = %dmV\n", bat_v2);
+		}
 		gtk_label_set_text(GTK_LABEL(lb_adc), tmps);
 	}
 	
@@ -205,13 +217,20 @@ static int setup_img()
 	bat1fast=gtk_image_new_from_pixbuf(indicator_off);
 	bat1full=gtk_image_new_from_pixbuf(indicator_off);
 	bat1fault=gtk_image_new_from_pixbuf(indicator_off);
+	if (g_board_type == WPC_BOARD_TYPE_J) {
 	bat2fast=gtk_image_new_from_pixbuf(indicator_off);
 	bat2full=gtk_image_new_from_pixbuf(indicator_off);
 	bat2fault=gtk_image_new_from_pixbuf(indicator_off);
+	} else {
+		bat2fast = NULL;
+		bat2full = NULL;
+		bat2fault = NULL;
+	}
 	
 	return 0;
 }
 
+#if 0	/* not use */
 static void start_timer()
 {
 	struct itimerval itimer;
@@ -236,6 +255,7 @@ static void stop_timer()
 	itimer.it_value.tv_usec = itimer.it_interval.tv_usec = 0;
 	setitimer(ITIMER_REAL, &itimer, NULL);
 }
+#endif
 
 /*	20110729VACS	*/
 static int press_charge_on(GtkWidget *widget, gpointer data)
@@ -448,6 +468,8 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	GtkWidget	*a_bat1, *h_bat1;
 	GtkWidget	*a_bat2, *h_bat2;
 
+	char tmps[SMALL_STR];
+
 	/*	20110730VACS	*/
 	/*	BAT1 charge on, GPIO65	*/
 	if(!press_charge_on(NULL, (gpointer)2))	return 1;
@@ -457,6 +479,15 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	usleep(100000);
 
 	lb_adc=gtk_label_new("");
+	strcpy(tmps, "DC level = 0mV\n");
+	strcat(tmps, "BAT1 level = 0mV\n");
+	if (g_board_type == WPC_BOARD_TYPE_J) {
+		strcat(tmps, "BAT2 level = 0mV\n");
+	} else {
+		strcat(tmps, "BatteryCradle level = 0mV\n");
+	}
+	gtk_label_set_text(GTK_LABEL(lb_adc), tmps);
+
 	a1=gtk_alignment_new(0.5, 0.9, 0.5, 0.5);
 	gtk_container_add(GTK_CONTAINER(a1), lb_adc);
 	
@@ -480,6 +511,7 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_table_attach(GTK_TABLE(tbl), bat1fast, 1, 2, 0, 1, 0, 0, 5, 20);
 	gtk_table_attach(GTK_TABLE(tbl), bat1full, 3, 4, 0, 1, 0, 0, 5, 20);
 	gtk_table_attach(GTK_TABLE(tbl), bat1fault, 5, 6, 0, 1, 0, 0, 5, 20);
+	if (g_board_type == WPC_BOARD_TYPE_J) {
 	gtk_table_attach(GTK_TABLE(tbl), lb20, 0, 1, 1, 2, 0, 0, 5, 20);
 	gtk_table_attach(GTK_TABLE(tbl), lb21, 2, 3, 1, 2, 0, 0, 5, 20);
 	gtk_table_attach(GTK_TABLE(tbl), lb22, 4, 5, 1, 2, 0, 0, 5, 20);
@@ -487,6 +519,7 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_table_attach(GTK_TABLE(tbl), bat2fast, 1, 2, 1, 2, 0, 0, 5, 20);
 	gtk_table_attach(GTK_TABLE(tbl), bat2full, 3, 4, 1, 2, 0, 0, 5, 20);
 	gtk_table_attach(GTK_TABLE(tbl), bat2fault, 5, 6, 1, 2, 0, 0, 5, 20);
+	}
 	gtk_container_add(GTK_CONTAINER(a2), tbl);
 	
 	a3=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
@@ -531,6 +564,7 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(a_bat1), h_bat1);
 
 	/*	battery2	*/
+	if (g_board_type == WPC_BOARD_TYPE_J) {
 	a_bat2=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
 	h_bat2=gtk_hbox_new(FALSE, 10);
 	lb_charge_b2=gtk_label_new(pid_bat2_charge ? LABEL_BAT2_CHARGE_ON : LABEL_BAT2_CHARGE_OFF);
@@ -553,13 +587,16 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(h_bat2), b_charge_b2_on);
 	gtk_container_add(GTK_CONTAINER(h_bat2), b_charge_b2_off);
 	gtk_container_add(GTK_CONTAINER(a_bat2), h_bat2);
+	}
 
 	v0=gtk_vbox_new(FALSE, 10);
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	gtk_container_add(GTK_CONTAINER(v0), a2);
 	gtk_container_add(GTK_CONTAINER(v0), a3);
 	gtk_container_add(GTK_CONTAINER(v0), a_bat1);
+	if (g_board_type == WPC_BOARD_TYPE_J) {
 	gtk_container_add(GTK_CONTAINER(v0), a_bat2);
+	}
 
 	b_quit=gtk_button_new_from_stock("gtk-quit");
 	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click);
@@ -628,16 +665,27 @@ GtkWidget *sc_battery_box_new()
 	imgsub_bat1fast=gtk_image_new_from_pixbuf(batsub_img_off);
 	imgsub_bat1full=gtk_image_new_from_pixbuf(batsub_img_off);
 	imgsub_bat1fault=gtk_image_new_from_pixbuf(batsub_img_off);
+	if (g_board_type == WPC_BOARD_TYPE_J) {
 	imgsub_bat2fast=gtk_image_new_from_pixbuf(batsub_img_off);
 	imgsub_bat2full=gtk_image_new_from_pixbuf(batsub_img_off);
 	imgsub_bat2fault=gtk_image_new_from_pixbuf(batsub_img_off);
+	} else {
+		imgsub_bat2fast = NULL;
+		imgsub_bat2full = NULL;
+		imgsub_bat2fault = NULL;
+	}
 	
 	lb_bat1=gtk_label_new("");
 	gtk_label_set_markup(GTK_LABEL(lb_bat1), "<span size=\"x-small\">Bat1:</span>");
 	lb_batsub1v=gtk_label_new("");
 	
 	lb_bat2=gtk_label_new("");
+	if (g_board_type == WPC_BOARD_TYPE_J) {
 	gtk_label_set_markup(GTK_LABEL(lb_bat2), "<span size=\"x-small\">  Bat2:</span>");
+	} else {
+		gtk_label_set_markup(GTK_LABEL(lb_bat2),
+				"<span size=\"x-small\">  BatteryCradle:</span>");
+	}
 	lb_batsub2v=gtk_label_new("");
 	
 	lb_bat0=gtk_label_new("");
@@ -670,12 +718,14 @@ GtkWidget *sc_battery_box_new()
 	
 	gtk_container_add(GTK_CONTAINER(h), lb_bat2);
 	gtk_container_add(GTK_CONTAINER(h), lb_batsub2v);
+	if (g_board_type == WPC_BOARD_TYPE_J) {
 	gtk_container_add(GTK_CONTAINER(h), imgsub_bat2fast);
 	gtk_container_add(GTK_CONTAINER(h), lb_fast2);
 	gtk_container_add(GTK_CONTAINER(h), imgsub_bat2full);
 	gtk_container_add(GTK_CONTAINER(h), lb_full2);
 	gtk_container_add(GTK_CONTAINER(h), imgsub_bat2fault);
 	gtk_container_add(GTK_CONTAINER(h), lb_fault2);
+	}
 	
 	gtk_container_add(GTK_CONTAINER(h), lb_bat0);
 	return h;
