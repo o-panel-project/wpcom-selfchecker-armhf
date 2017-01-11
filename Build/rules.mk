@@ -1,3 +1,5 @@
+ARCH = armel
+
 CROSS_COMPILE = /opt/arm-dev/arm-2009q3/bin/arm-none-linux-gnueabi-
 SYSROOT = /opt/arm-dev/sysroots/armv7a-none-linux-gnueabi
 
@@ -12,4 +14,4 @@ STRIP_OPT = --remove-section=.comment --remove-section=.note
 LD = $(CROSS_COMPILE)ld
 AR = $(CROSS_COMPILE)ar
 
-PKGCONFIG=../scripts/pkg-config.sh
+PKGCONFIG=../scripts/pkg-config-$(ARCH).sh

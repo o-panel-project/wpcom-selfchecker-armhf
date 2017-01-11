@@ -21,8 +21,8 @@ mainpanel:
 	@cp -p ../mainpanel/newsc_movie.sh bin/
 
 felicalib:
-	(cd ../felica-sdk/arch/linux/build && ./build.armel.sh)
-	(cd ../nfc-extension/arch/linux/build && ./build.armel.sh)
+	(cd ../felica-sdk/arch/linux/build && ./build.$(ARCH).sh)
+	(cd ../nfc-extension/arch/linux/build && ./build.$(ARCH).sh)
 	@cp -p ../felica-sdk/arch/linux/build/*.a ../libs/
 	@cp -p ../nfc-extension/arch/linux/build/*.a ../libs/
 
@@ -63,8 +63,8 @@ clean:
 #	@rm -f $(TARGET) demoapp-arm runsc appstart newsc_demoapp.sh newsc_wlantool.sh
 
 felicaclean:
-	(cd ../felica-sdk/arch/linux/build && ./build.armhf.sh clean)
-	(cd ../nfc-extension/arch/linux/build && ./build.armhf.sh clean)
+	(cd ../felica-sdk/arch/linux/build && ./build.$(ARCH).sh clean)
+	(cd ../nfc-extension/arch/linux/build && ./build.$(ARCH).sh clean)
 
 svnclean :
 	make clean

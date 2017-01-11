@@ -1,4 +1,4 @@
-ARCH=armhf
+ARCH = armhf
 
 CROSS_COMPILE = arm-linux-gnueabihf-
 SYSROOT = /opt/arm-dev/armhf
@@ -15,4 +15,4 @@ LD = $(CROSS_COMPILE)ld
 AR = $(CROSS_COMPILE)ar
 
 LDFLAGS += --sysroot=${SYSROOT}
-PKGCONFIG=../scripts/pkg-config-armhf.sh
+PKGCONFIG=../scripts/pkg-config-$(ARCH).sh
