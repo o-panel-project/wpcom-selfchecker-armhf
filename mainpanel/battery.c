@@ -59,8 +59,8 @@ static int bat_r0=-1, bat_r1=-1, bat_r2=-1, bat_r3=-1, bat_r4=-1;
 #define WPCIO_IOCTL_GUARD 5000
 #define WPCIO_CLOSE_GUARD 10000
 
-static pthread_t but_disp_thread;
-static int but_disp_thread_run = 0;
+static pthread_t bat_disp_thread;
+static int bat_disp_thread_run = 0;
 
 
 static void get_value()
@@ -162,7 +162,7 @@ static void *get_value_thread(void *data)
 {
 //	char tmps[SMALL_STR];
 
-	while (but_disp_thread_run) {
+	while (bat_disp_thread_run) {
 /*
 		gdk_threads_enter();
 		update_image_gen(indicator_on, indicator_off,
@@ -572,8 +572,8 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_widget_show_all(p);
 #endif
 	
-	but_disp_thread_run = 1;
-	pthread_create(&but_disp_thread, NULL, get_value_thread, 0);
+	bat_disp_thread_run = 1;
+	pthread_create(&bat_disp_thread, NULL, get_value_thread, 0);
 	if(testtime){
 		battery_main_interval_mode(v0);
 	}else{
@@ -581,8 +581,8 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 		gtk_main();
 	}
 
-	but_disp_thread_run = 0;
-	pthread_join(but_disp_thread, NULL);
+	bat_disp_thread_run = 0;
+	pthread_join(bat_disp_thread, NULL);
 //	stop_timer();
 	
 	sc_bbox2_remove(bsub);
