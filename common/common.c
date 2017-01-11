@@ -3,7 +3,6 @@
  *
  *					2011.6	written by Omoikane Inc.
  */
-#include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 /* define this to get getpgid() */
@@ -12,13 +11,12 @@
 #include <string.h>
 #include <time.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <pthread.h>
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+
 #include "md5.h"
 #include "common.h"
 #include "wpcio.h"
@@ -173,95 +171,6 @@ int is_mountpoint(const char *path)
 	if(stat(ppath, &st1)!=0) return 0;
 	
 	return (st0.st_dev != st1.st_dev) || (st0.st_dev == st1.st_dev && st0.st_ino == st1.st_ino);
-}
-
-//
-//	i2c subroutines
-//
-
-#define CRADLE_ADDR 0x55
-#define I2C_DEVICE "/dev/i2c-2"
-
-int sc_i2c_check_open(int *fd)
-{
-	char devpath[255];
-
-	if(0<*fd) return *fd;
-	
-	if (sc_IsJ4())
-		strcpy(devpath, "/dev/i2c-1");
-	else
-		strcpy(devpath, I2C_DEVICE);
-	*fd=open(devpath, O_RDWR);
-	if(*fd<0) return *fd;
-	
-	if(ioctl(*fd, I2C_SLAVE, CRADLE_ADDR)<0){
-		debug_printf(3, "Error: Could not set address : %s\n", strerror(errno));
-		return -errno;
-	}
-	return 0;
-}
-
-//
-//	Cyclic selectin of write data
-//
-
-static char *write_data[]={ "aaaa", "bbbb", "1234", "1a2b", "cccc" };
-static int write_data_pointer=0;
-
-static char *sc_i2c_pick_write_data()
-{
-	write_data_pointer++;
-	if(4<write_data_pointer) write_data_pointer=0;
-	return write_data[write_data_pointer];
-}
-
-// i2c read
-// 0 on success, 1 on open error, 2 on ioctl failure
-int sc_i2c_read_cradle(unsigned char *buf)
-{
-	int fd=0, i, r;
-
-	bzero(buf, I2C_DATA_SIZE);
-	
-	if(sc_i2c_check_open(&fd)<0)
-		return 1;
-	
-	for(i=0;i<I2C_DATA_SIZE;i++){
-		usleep(I2C_GUARDTIME_USEC);
-		r=i2c_smbus_read_byte_data(fd, i);
-		if(r<0){
-			close(fd);
-			return 2;
-		}
-		buf[i]=r;
-	}
-	close(fd);
-	return 0;
-}
-
-// i2c write
-// 0 on success, 1 on open error, 2 on ioctl failure
-int sc_i2c_write_cradle(unsigned char *buf)
-{
-	int fd=0, i;
-	char *data;
-	
-	if(sc_i2c_check_open(&fd)<0)
-		return 1;
-	
-	data=sc_i2c_pick_write_data();
-	memcpy(buf, data, I2C_DATA_SIZE);
-	
-	for(i=0;i<I2C_DATA_SIZE;i++){
-		usleep(I2C_GUARDTIME_USEC);
-		if(i2c_smbus_write_byte_data(fd, i, buf[i])<0){
-			close(fd);
-			return 2;
-		}
-	}
-	close(fd);
-	return 0;
 }
 
 int wpcio_open(int n, char *tag)

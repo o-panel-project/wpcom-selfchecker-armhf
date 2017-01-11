@@ -27,8 +27,6 @@ extern int cr_mount_ok;							/*	20110905VACS	*/
 
 #define DEFAULT_WINDOW_WIDTH	1024
 #define	DEFAULT_WINDOW_HEIGHT	600
-#define I2C_DATA_SIZE 4
-#define I2C_GUARDTIME_USEC	10000
 #define MID_STR	2048							/*	20110826VACS	*/
 #define SMALL_STR 1024
 #define WPCIO_OPEN_RETRY 10
@@ -56,9 +54,6 @@ extern int have_proc_pid(int pid);
 extern void battery_check_logger_stop();
 extern int get_md5sum(char *f, unsigned char *digest);
 extern int is_mountpoint(const char *path);
-extern int sc_i2c_check_open(int *fd);
-extern int sc_i2c_read_cradle(unsigned char *buf);
-extern int sc_i2c_write_cradle(unsigned char *buf);
 extern void sc_i2c_set_power(int x);
 extern int wpcio_open(int n, char *tag);
 extern int sc_get_board_type();

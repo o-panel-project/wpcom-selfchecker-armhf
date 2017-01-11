@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #include <glib.h>
 #include <gtk/gtk.h>
-#include <linux/i2c-dev.h>
+#include "sc_i2c.h"
 #include "common.h"
 
 int i2c_main_auto_menu = 0;	/* RH */
@@ -65,6 +65,7 @@ static void read_cradle()
 		update_result(1, r==1 ? "Device Open ERROR" : "Read IOCTL ERROR");
 		return;
 	}
+	gtk_label_set_text(GTK_LABEL(lb_write), "");
 	sprintf(tmps, "<span size='xx-large'>Read : 0x%02x%02x%02x%02x(%c%c%c%c)</span>",
 							rbuf[0], rbuf[1], rbuf[2], rbuf[3], 
 							rbuf[0], rbuf[1], rbuf[2], rbuf[3]);
@@ -116,6 +117,13 @@ int write_verify_cradle()
 		error_count++;
 		update_result(1, "FAIL");
 	}else{
+		sprintf(tmps,
+			"<span size='xx-large'>"
+			"Read : 0x%02x%02x%02x%02x(%c%c%c%c)"
+			"</span>",
+			rbuf[0], rbuf[1], rbuf[2], rbuf[3],
+			rbuf[0], rbuf[1], rbuf[2], rbuf[3]);
+		gtk_label_set_markup(GTK_LABEL(lb_read), tmps);
 		update_result(0, "PASS");
 	}
 	
@@ -130,6 +138,8 @@ static void press_single(GtkWidget *widget, gpointer data)
 	int ret;
 	char *result_dialog_text;
 	
+	error_count = 0;
+	tatal_count = 1;
 	ret = write_verify_cradle();
 	switch (ret)
 	{

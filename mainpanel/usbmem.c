@@ -16,6 +16,7 @@
 #include <gtk/gtk.h>
 #include "common.h"
 #include "wpcio.h"
+#include "sc_i2c.h"
 
 
 /*
