@@ -27,6 +27,10 @@ static int *flags;
 GtkWidget  **button_image;
 GdkPixbuf *pix_orange, *pix_green;
 
+/* 20170111 wpc */
+extern const guint8 p16green_inline[];
+extern const guint8 p16orange_inline[];
+
 static struct timeval tv0;
 static const double nx_weight = (1024.0/36.0);
 static const double ny_weight = (600.0/17.0);
@@ -78,7 +82,7 @@ int main(int argc, char *argv[])
 {
 	int c, i, j, gargc=0, n;
 	GtkWidget *window, *button, *tbl;
-	char *base_path, tmps[SMALL_STR];
+	char *base_path;
 	
 	base_path="/mnt1";
 	
@@ -131,11 +135,9 @@ int main(int argc, char *argv[])
 	flags=(int *)malloc(sizeof(unsigned int)*nx*ny);
 	button_image=(GtkWidget **)malloc(sizeof(GtkWidget *)*nx*ny);
 	
-	sprintf(tmps, "%s/data/16orange.png", base_path);
-	pix_orange=gdk_pixbuf_new_from_file(tmps, NULL);
+	pix_orange = gdk_pixbuf_new_from_inline(-1, p16orange_inline, FALSE, NULL);
 	g_object_ref(pix_orange);
-	sprintf(tmps, "%s/data/16green.png", base_path);
-	pix_green=gdk_pixbuf_new_from_file(tmps, NULL);
+	pix_green = gdk_pixbuf_new_from_inline(-1, p16green_inline, FALSE, NULL);
 	g_object_ref(pix_green);
     
 	for(j=0;j<ny;j++){

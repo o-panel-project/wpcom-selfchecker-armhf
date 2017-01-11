@@ -5,10 +5,11 @@ include ../Build/rules.mk
 endif
 
 PROGRAM	= tp-grid
-SRCS	= tp-grid.c
+SRCS	= tp-grid.c \
+		  16green.c 16orange.c
 OBJS	= ${SRCS:%.c=%.o}
 
-VPATH = ./
+VPATH = ./ ../common/png
 
 CFLAGS += -Wall -O2
 CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include

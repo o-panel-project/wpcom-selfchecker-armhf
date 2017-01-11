@@ -36,6 +36,12 @@ static GtkWidget *bat1fast, *bat1full, *bat1fault;
 static GtkWidget *bat2fast, *bat2full, *bat2fault;
 static GtkWidget *lb_logging, *b_start, *b_stop, *b_quit;
 
+/* 20170110 wpc */
+extern const guint8 indicator_on_inline[];
+extern const guint8 indicator_off_inline[];
+extern const guint8 indicator_on_small_inline[];
+extern const guint8 indicator_off_small_inline[];
+
 /*	20110729VACS	*/
 static	GtkWidget	*lb_charge_b1, *b_charge_b1_on, *b_charge_b1_off;
 static	GtkWidget	*lb_charge_b2, *b_charge_b2_on, *b_charge_b2_off;
@@ -180,15 +186,15 @@ static int setup_img()
 {
 	char tmps[SMALL_STR];
 	
-	sprintf(tmps, "%s/data/indicator-on.png", base_path);
-	indicator_on=gdk_pixbuf_new_from_file(tmps, NULL);
+	indicator_on = gdk_pixbuf_new_from_inline(
+			-1, indicator_on_inline, FALSE, NULL);
 	if(!indicator_on){
 		printf("Could not open %s\n", tmps);
 		return 1;
 	}
 	
-	sprintf(tmps, "%s/data/indicator-off.png", base_path);
-	indicator_off=gdk_pixbuf_new_from_file(tmps, NULL);
+	indicator_off = gdk_pixbuf_new_from_inline(
+			-1, indicator_off_inline, FALSE, NULL);
 	if(!indicator_off){
 		printf("Could not open %s\n", tmps);
 		return 1;
@@ -603,15 +609,15 @@ GtkWidget *sc_battery_box_new()
 	GtkWidget *lb_fast1, *lb_full1, *lb_fault1;
 	GtkWidget *lb_fast2, *lb_full2, *lb_fault2;
 	
-	sprintf(tmps, "%s/data/indicator-on-small.png", base_path);
-	batsub_img_on=gdk_pixbuf_new_from_file(tmps, NULL);
+	batsub_img_on = gdk_pixbuf_new_from_inline(
+			-1, indicator_on_small_inline, FALSE, NULL);
 	if(!batsub_img_on){
 		printf("Could not open %s\n", tmps);
 		return NULL;
 	}
 	
-	sprintf(tmps, "%s/data/indicator-off-small.png", base_path);
-	batsub_img_off=gdk_pixbuf_new_from_file(tmps, NULL);
+	batsub_img_off = gdk_pixbuf_new_from_inline(
+			-1, indicator_off_small_inline, FALSE, NULL);
 	if(!batsub_img_off){
 		printf("Could not open %s\n", tmps);
 		return NULL;

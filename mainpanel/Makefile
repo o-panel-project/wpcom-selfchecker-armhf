@@ -4,10 +4,12 @@ PROGRAM	= mainpanel
 SRCS	= mainpanel.c sdram.c common.c common-gtk.c audio_mov.c wifi.c md5.c \
 		  lcd-pwm.c battery.c strategy.c led.c dipsw.c tpoff.c i2c-cradle.c \
 		  felica.c usbmem.c updown.c date.c rcs956scan.c tctlprof.c \
-		  dmesg.c reset.c wifisub.c
+		  dmesg.c reset.c wifisub.c \
+		  indicator-on.c indicator-off.c \
+		  indicator-on-small.c indicator-off-small.c
 OBJS	= ${SRCS:%.c=%.o}
 
-VPATH = ./ ../common
+VPATH = ./ ../common ../common/png
 
 CFLAGS += -Wall -O2
 CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include

@@ -23,6 +23,10 @@ static int fd_wpcio=-1, run_loop=0;
 static GdkPixbuf *indicator_on, *indicator_off;
 static GtkWidget *img0, *img1, *img2, *img3;
 
+/* 20170110 wpc */
+extern const guint8 indicator_on_inline[];
+extern const guint8 indicator_off_inline[];
+
 static void set_img(GtkWidget *w, int on)
 {
 	gtk_image_set_from_pixbuf(GTK_IMAGE(w), on ? indicator_on : indicator_off);
@@ -50,15 +54,15 @@ static int setup_img()
 {
 	char tmps[SMALL_STR];
 	
-	sprintf(tmps, "%s/data/indicator-on.png", base_path);
-	indicator_on=gdk_pixbuf_new_from_file(tmps, NULL);
+	indicator_on = gdk_pixbuf_new_from_inline(
+			-1, indicator_on_inline, FALSE, NULL);
 	if(!indicator_on){
 		printf("Could not open %s\n", tmps);
 		return 1;
 	}
 	
-	sprintf(tmps, "%s/data/indicator-off.png", base_path);
-	indicator_off=gdk_pixbuf_new_from_file(tmps, NULL);
+	indicator_off = gdk_pixbuf_new_from_inline(
+			-1, indicator_off_inline, FALSE, NULL);
 	if(!indicator_off){
 		printf("Could not open %s\n", tmps);
 		return 1;
