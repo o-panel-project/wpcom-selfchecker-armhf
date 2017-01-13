@@ -34,14 +34,14 @@ int sc_i2c_open(int bus_no, const unsigned char addrs)
 
 int sc_i2c_check_open(int *fd)
 {
-	int bus_no = 2;
+	int bus_no = I2C_BUS2;
 
 	if(0<*fd) return *fd;
 
 	if (sc_IsJ4())
-		bus_no = 1;
+		bus_no = I2C_BUS1;
 
-	*fd = sc_i2c_open(bus_no, CRADLE_ROM_ADDR);
+	*fd = sc_i2c_open(bus_no, I2C_CRADLE_ROM_ADDR);
 	if(*fd<0) return *fd;
 
 	return 0;

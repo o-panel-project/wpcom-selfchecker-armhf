@@ -19,7 +19,7 @@
 #include <gtk/gtk.h>
 #include "common.h"
 #include "wpcio.h"
-#include "battery.h"
+#include "sc_battery.h"
 
 #define LABEL_LOGGING_OFF "Logging : off"
 #define LABEL_LOGGING_ON "Logging : on "
@@ -48,7 +48,6 @@ static	GtkWidget	*lb_charge_b2, *b_charge_b2_on, *b_charge_b2_off;
 
 /* 20170111 wpc */
 extern int g_board_type;
-static gboolean bBatteryCradle = FALSE;
 
 static void set_img(GtkWidget *w, int is_on, GdkPixbuf *p_on, GdkPixbuf *p_off)
 {
@@ -60,8 +59,8 @@ static int bat_v0, bat_v1, bat_v2;
 static int bat_r0=-1, bat_r1=-1, bat_r2=-1, bat_r3=-1, bat_r4=-1;
 
 // guard time for wpcio in usec.
-#define WPCIO_IOCTL_GUARD 5000
-#define WPCIO_CLOSE_GUARD 10000
+//#define WPCIO_IOCTL_GUARD 5000
+//#define WPCIO_CLOSE_GUARD 10000
 
 static pthread_t bat_disp_thread;
 static int bat_disp_thread_run = 0;
@@ -69,6 +68,7 @@ static int bat_disp_thread_run = 0;
 
 static void get_value()
 {
+#if 0
 	int fd, dc, bat1, bat2;
 	
 	fd = wpcio_open(WPCIO_OPEN_RETRY, "battery");
@@ -110,6 +110,24 @@ static void get_value()
 	bat_v0 = dc   * (DC_RL + DC_RH)   / DC_RL;
 	bat_v1 = bat1 * (BAT_RL + BAT_RH) / BAT_RL;
 	bat_v2 = bat2 * (BAT_RL + BAT_RH) / BAT_RL;
+
+#endif
+	sc_get_battery_status("battery", &bat_v0, &bat_v1, &bat1_stat, &bat_v2, &bat2_stat);
+	bat_r0 = bat1_stat;
+	bat_r1 = bat2_stat;
+	bat_r2 = bat_v0;
+	bat_r3 = bat_v1;
+	bat_r4 = bat_v2;
+	if (g_board_type != WPC_BOARD_TYPE_J) {
+		bat_v2 = sc_get_cradle_battery_level();
+		if (bat_v2 == CRADLE_BAT_OPEN_ERROR || bat_v2 == CRADLE_BAT_MODE_ERROR){
+			/* cradle detach? */
+			bat_v2 = -1;
+		} else {
+			if (bat_v2 < 500)	/* battery attach threshold 0.5V */
+				bat_v2 = 0;
+		}
+	}
 }
 
 

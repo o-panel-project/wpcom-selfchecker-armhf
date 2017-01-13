@@ -1,6 +1,8 @@
 #ifndef __WPCIO_H__
 #define __WPCIO_H__
 
+#define	WPCIO_IOCTL_GUARD	5000	/* 5ms */
+#define	WPCIO_CLOSE_GUARD	10000	/* 10ms */
 
 // DIP switch input
 #define WPC_GET_DIPSW				0x5701

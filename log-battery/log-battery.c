@@ -19,21 +19,25 @@
 //#include <gtk/gtk.h>
 #include "common.h"
 #include "wpcio.h"
-#include "battery.h"
+#include "sc_battery.h"
 
 static int fd_log=0;
 static int get_value_counter=0;
 
 static void get_value()
 {
+#if 0
 	int fd_wpcio;
 	int x0, x1, r0, r1, r2, r3, r4;
-	int dc, bat1, bat2, v0, v1, v2;
+	int dc, bat1, bat2, v0, v1, v2, bc0;
+#endif
+	int x0, x1;
+	int v0, v1, v2, bc0;
 	char tmps[2048];
 	
 	get_value_counter++;
 	if(!(get_value_counter&1)) return;
-
+#if 0
 	fd_wpcio=wpcio_open(WPCIO_OPEN_RETRY, "log-battery");
 	if(fd_wpcio<0) return;
 	
@@ -64,15 +68,21 @@ static void get_value()
 	v0=dc * (DC_RL + DC_RH) / DC_RL;
 	v1=bat1 * (BAT_RL + BAT_RH) / BAT_RL;
 	v2=bat2 * (BAT_RL + BAT_RH) / BAT_RL;
-	
-	sprintf(tmps, "DC level = %dmV\n", v0);
-	append_sprintf(tmps, "BAT1 level = %dmV\n", v1);
-	append_sprintf(tmps, "BAT2 level = %dmV\n", v2);
-	
+#endif
+	sc_get_battery_status("log-battery", &v0, &v1, &x0, &v2, &x1);
+	bc0 = sc_get_cradle_battery_level();
+	if (bc0 == CRADLE_BAT_OPEN_ERROR || bc0 == CRADLE_BAT_MODE_ERROR) {
+		/* cradle detach? */
+		bc0 = -1;
+	} else {
+		if (bc0 < 500)	/* battery attach threshold 0.5V */
+		bc0 = 0;
+	}
+
 	sc_time_set(tmps);
-	append_sprintf(tmps, ",%d,%d,%d,%d,%d,%d,%d,%d,%d\n", v0, v1, v2,
+	append_sprintf(tmps, ",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", v0, v1, v2,
 					(0<(x0 & WPC_CHARGING_FAST)), (0<(x0 & WPC_CHARGING_FULL)), (0<(x0 & WPC_CHARGING_FAULT)),
-					(0<(x1 & WPC_CHARGING_FAST)), (0<(x1 & WPC_CHARGING_FULL)), (0<(x1 & WPC_CHARGING_FAULT)));
+					(0<(x1 & WPC_CHARGING_FAST)), (0<(x1 & WPC_CHARGING_FULL)), (0<(x1 & WPC_CHARGING_FAULT)), bc0);
 	write(fd_log, tmps, strlen(tmps));
 	fsync(fd_log);
 }

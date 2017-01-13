@@ -5,7 +5,7 @@ include ../Build/rules.mk
 endif
 
 PROGRAM	= log-battery
-SRCS	= log-battery.c common.c md5.c
+SRCS	= log-battery.c common.c md5.c sc_i2c.c sc_battery.c
 OBJS	= ${SRCS:%.c=%.o}
 
 VPATH = ./ ../common
