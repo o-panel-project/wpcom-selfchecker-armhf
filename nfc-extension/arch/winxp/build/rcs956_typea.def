@@ -1,0 +1,7 @@
+LIBRARY rcs956_typea
+EXPORTS
+ rcs956_typea_polling
+ rcs956_typea_command
+ rcs956_typea_deselect
+ rcs956_typea_select
+ rcs956_typea_release

@@ -1,0 +1,98 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+-include Config.make
+
+include Rule.begin
+include Rule.felica_cc_stub_rcs956
+include Rule.felica_cc
+include Rule.rcs956
+include Rule.rcs956_usb
+include Rule.utl
+
+SRC_DIRS+=	$(SAMPLE_DIR)/basic_rcs956
+CFLAGS+=	-DDEFAULT_PORT_NAME=\"/proc/bus/usb/001/001\"
+TARGETS+= \
+	$(SAMPLE_POLLING_RCS956_USB) \
+	$(SAMPLE_SAMPLE5N_RCS956_USB) \
+	$(SAMPLE_ANYCARD_RCS956_USB) \
+	$(SAMPLE_NOCARD_RCS956_USB) \
+
+#
+# sample_polling_rcs956_usb
+#
+
+SAMPLE_POLLING_RCS956_USB= \
+	sample_polling_rcs956_usb
+SAMPLE_POLLING_RCS956_USB_SRCS= \
+	sample_polling.c \
+	sample_rcs956_usb.c
+SAMPLE_POLLING_RCS956_USB_OBJS= \
+	$(SAMPLE_POLLING_RCS956_USB_SRCS:.c=.o)
+
+$(SAMPLE_POLLING_RCS956_USB):: \
+		$(SAMPLE_POLLING_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(SAMPLE_POLLING_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+#
+# sample_sample5n_rcs956_usb
+#
+
+SAMPLE_SAMPLE5N_RCS956_USB= \
+	sample_sample5n_rcs956_usb
+SAMPLE_SAMPLE5N_RCS956_USB_SRCS= \
+	sample_sample5n.c \
+	sample_rcs956_usb.c
+SAMPLE_SAMPLE5N_RCS956_USB_OBJS= \
+	$(SAMPLE_SAMPLE5N_RCS956_USB_SRCS:.c=.o)
+
+$(SAMPLE_SAMPLE5N_RCS956_USB):: \
+		$(SAMPLE_SAMPLE5N_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(SAMPLE_SAMPLE5N_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+#
+# sample_anycard_rcs956_usb
+#
+
+SAMPLE_ANYCARD_RCS956_USB= \
+	sample_anycard_rcs956_usb
+SAMPLE_ANYCARD_RCS956_USB_SRCS= \
+	sample_anycard.c \
+	sample_rcs956_usb.c
+SAMPLE_ANYCARD_RCS956_USB_OBJS= \
+	$(SAMPLE_ANYCARD_RCS956_USB_SRCS:.c=.o)
+
+$(SAMPLE_ANYCARD_RCS956_USB):: \
+		$(SAMPLE_ANYCARD_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(SAMPLE_ANYCARD_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+#
+# sample_nocard_rcs956_usb
+#
+
+SAMPLE_NOCARD_RCS956_USB= \
+	sample_nocard_rcs956_usb
+SAMPLE_NOCARD_RCS956_USB_SRCS= \
+	sample_nocard.c \
+	sample_rcs956_usb.c
+SAMPLE_NOCARD_RCS956_USB_OBJS= \
+	$(SAMPLE_NOCARD_RCS956_USB_SRCS:.c=.o)
+
+$(SAMPLE_NOCARD_RCS956_USB):: \
+		$(SAMPLE_NOCARD_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(SAMPLE_NOCARD_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+include Rule.end

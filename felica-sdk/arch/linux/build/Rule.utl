@@ -1,0 +1,53 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+# ----------------
+# Library
+# ----------------
+
+#
+# utl
+#
+
+UTL_LIB= \
+	utl
+UTL_SRC_DIRS= \
+	$(COMMON_DIR)/utl \
+	$(ARCH_DIR)/utl
+UTL_SRCS= \
+	utl_sleep.c \
+	utl_string.c \
+	utl_snprintf.c \
+	utl_timeout.c \
+	utl_time.c
+
+UTL_LIB_A= \
+	lib$(UTL_LIB).a
+UTL_LIB_SO= \
+	lib$(UTL_LIB).so
+UTL_LIBS= \
+	$(UTL_LIB_A) \
+	$(UTL_LIB_SO)
+UTL_OBJS= \
+	$(UTL_SRCS:.c=.o)
+UTL_SOBJS= \
+	$(UTL_SRCS:.c=.So)
+
+SRC_DIRS+=	$(UTL_SRC_DIRS)
+LIB_TARGETS+=	$(UTL_LIBS)
+EXE_LDADD+=	-l$(UTL_LIB)
+
+# ----------------
+# Rule
+# ----------------
+
+$(UTL_LIB_A)::	$(UTL_OBJS)
+	$(AR) r $@ \
+		$(UTL_OBJS)
+
+$(UTL_LIB_SO)::	$(UTL_SOBJS)
+	$(CC) -shared -Wl,-x -o $@ \
+		$(LDFLAGS) \
+		$(UTL_SOBJS) \
+		$(UTL_LDADD)

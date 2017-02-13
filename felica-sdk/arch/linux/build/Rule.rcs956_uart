@@ -1,0 +1,48 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+# ----------------
+# Library
+# ----------------
+
+#
+# rcs956_uart
+#
+
+RCS956_UART_LIB= \
+	rcs956_uart
+RCS956_UART_SRC_DIRS= \
+	$(COMMON_DIR)/device/rcs956
+RCS956_UART_SRCS= \
+	rcs956_uart.c
+
+RCS956_UART_LIB_A= \
+	lib$(RCS956_UART_LIB).a
+RCS956_UART_LIB_SO= \
+	lib$(RCS956_UART_LIB).so
+RCS956_UART_LIBS= \
+	$(RCS956_UART_LIB_A) \
+	$(RCS956_UART_LIB_SO)
+RCS956_UART_OBJS= \
+	$(RCS956_UART_SRCS:.c=.o)
+RCS956_UART_SOBJS= \
+	$(RCS956_UART_SRCS:.c=.So)
+
+SRC_DIRS+=	$(RCS956_UART_SRC_DIRS)
+LIB_TARGETS+=	$(RCS956_UART_LIBS)
+EXE_LDADD+=	-l$(RCS956_UART_LIB)
+
+# ----------------
+# Rule
+# ----------------
+
+$(RCS956_UART_LIB_A)::	$(RCS956_UART_OBJS)
+	$(AR) r $@ \
+		$(RCS956_UART_OBJS)
+
+$(RCS956_UART_LIB_SO)::	$(RCS956_UART_SOBJS)
+	$(CC) -shared -Wl,-x -o $@ \
+		$(LDFLAGS) \
+		$(RCS956_UART_SOBJS) \
+		$(RCS956_UART_LDADD)

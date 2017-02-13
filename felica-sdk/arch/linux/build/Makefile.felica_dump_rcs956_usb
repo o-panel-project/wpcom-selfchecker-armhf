@@ -1,0 +1,37 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+-include Config.make
+
+include Rule.begin
+include Rule.felica_cc_stub_rcs956
+include Rule.felica_cc
+include Rule.rcs956
+include Rule.rcs956_usb
+include Rule.utl
+
+#
+# felica_dump_rcs956_usb
+#
+
+SRC_DIRS+=	$(TEST_DIR)/felica_dump
+TARGETS+=	$(FELICA_DUMP_RCS956_USB)
+CFLAGS+=	-I$(TEST_DIR)/common
+
+FELICA_DUMP_RCS956_USB= \
+	felica_dump_rcs956_usb
+FELICA_DUMP_RCS956_USB_SRCS= \
+	felica_dump_common.c \
+	felica_dump_rcs956_usb.c
+FELICA_DUMP_RCS956_USB_OBJS= \
+	$(FELICA_DUMP_RCS956_USB_SRCS:.c=.o)
+
+$(FELICA_DUMP_RCS956_USB):: \
+		$(FELICA_DUMP_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(FELICA_DUMP_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+include Rule.end

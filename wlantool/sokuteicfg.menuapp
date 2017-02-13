@@ -1,0 +1,23 @@
+192.168.173.2
+result.dat
+/tmp/testfile1.csv
+/tmp/testfile2.csv
+/tmp/testfile3.csv
+/tmp/tempfile.dat
+/tmp/ftptemp.dat
+/dummy.dat
+iwconfig wlan0
+
+iwconfig wlan0
+ifconfig wlan0
+iwlist wlan0 channel
+iwlist wlan0 scanning
+ifconfig wlan0
+wget
+-q -O
+/opt/bin/addin/ping -q -f -s 1400 -c 1000
+/opt/bin/addin/ping -q -c 1 -s 1400
+/sbin/ifup -f -i /config/network/wlan0.interfaces wlan0
+/sbin/ifdown wlan0
+exit_button_on
+

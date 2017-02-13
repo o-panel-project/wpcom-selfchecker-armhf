@@ -1,0 +1,36 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+-include Config.make
+
+include Rule.begin
+include Rule.rcs956_typeb
+include Rule.rcs956
+include Rule.rcs956_usb
+include Rule.utl
+
+#
+# polling_typeb_rcs956_usb
+#
+
+SRC_DIRS+=	$(TEST_DIR)/polling
+TARGETS+=	$(POLLING_TYPEB_RCS956_USB)
+CFLAGS+=	-I$(TEST_DIR)/common
+
+POLLING_TYPEB_RCS956_USB= \
+	polling_typeb_rcs956_usb
+POLLING_TYPEB_RCS956_USB_SRCS= \
+	polling_rcs956_typeb_common.c \
+	polling_rcs956_usb.c
+POLLING_TYPEB_RCS956_USB_OBJS= \
+	$(POLLING_TYPEB_RCS956_USB_SRCS:.c=.o)
+
+$(POLLING_TYPEB_RCS956_USB):: \
+		$(POLLING_TYPEB_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(POLLING_TYPEB_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+include Rule.end

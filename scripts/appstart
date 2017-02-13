@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# selfchek launcher.
+
+umount /opt > /dev/null 2>&1
+mount -t ext3 -o data=ordered /dev/mmcblk0p4 /mnt1 > /dev/null 2>&1
+if [ -x /mnt1/selfcheck ]; then
+  echo "Found selfcheck in userfs."
+  /mnt1/selfcheck &
+fi
+

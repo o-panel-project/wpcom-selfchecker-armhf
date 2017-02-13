@@ -1,0 +1,33 @@
+#
+# Copyright 2005,2006,2007,2008 Sony Corporation
+#
+
+-include Config.make
+
+include Rule.begin
+include Rule.rcs956
+include Rule.rcs956_usb
+include Rule.utl
+
+#
+# diag_rcs956_usb
+#
+
+SRC_DIRS+=	$(SAMPLE_DIR)/diag_rcs956
+TARGETS+=	$(DIAG_RCS956_USB)
+
+DIAG_RCS956_USB= \
+	diag_rcs956_usb
+DIAG_RCS956_USB_SRCS= \
+	diag_rcs956_usb.c diag_rcs956.c diag_rcs956_main.c
+DIAG_RCS956_USB_OBJS= \
+	$(DIAG_RCS956_USB_SRCS:.c=.o)
+
+$(DIAG_RCS956_USB):: \
+		$(DIAG_RCS956_USB_OBJS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ \
+		$(DIAG_RCS956_USB_OBJS) \
+		$(EXE_LDADD)
+
+include Rule.end

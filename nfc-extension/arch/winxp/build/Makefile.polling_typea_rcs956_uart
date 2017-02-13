@@ -1,0 +1,35 @@
+#
+# Copyright 2005,2006,2007,2008,2009 Sony Corporation
+#
+
+!include Config.make
+
+!include Rule.begin
+!include Rule.rcs956_typea
+!include Rule.rcs956_uart
+!include Rule.rcs956
+!include Rule.icsdrv_uart
+!include Rule.utl
+
+TARGETS= \
+	$(POLLING_TYPEA_RCS956_UART_EXES) \
+
+CFLAGS=		$(CFLAGS) /I$(TEST_DIR)/common
+
+#
+# polling_typea_rcs956_uart
+#
+
+POLLING_TYPEA_RCS956_UART_EXES= \
+	polling_typea_rcs956_uart.exe
+POLLING_TYPEA_RCS956_UART_SRCS= \
+	$(TEST_DIR)/polling/polling_rcs956_typea_common.c \
+	$(TEST_DIR)/polling/polling_rcs956_uart.c
+
+polling_typea_rcs956_uart.exe: \
+		$(POLLING_TYPEA_RCS956_UART_SRCS) \
+		$(LIB_TARGETS)
+	$(CC) $(CFLAGS) /Fe$@ $** $(LDADD)
+	if exist $@.manifest mt -manifest $@.manifest -outputresource:$@
+
+!include Rule.end
