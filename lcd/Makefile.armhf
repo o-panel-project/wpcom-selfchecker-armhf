@@ -7,12 +7,14 @@ OBJS	= ${SRCS:%.c=%.o}
 VPATH = ./ ../common
 
 CFLAGS += -Wall -O2
-CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include
+#CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include/arm-linux-gnueabihf -I${CROSSDEVDIR}/usr/include -I${CROSSDEVDIR}/usr/include/linux -I${CROSSDEVDIR}/usr/lib/gcc/arm-linux-gnueabihf/4.9/include
+CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include/arm-linux-gnueabihf -I${SYSROOT}/usr/include
 CFLAGS += $(shell $(PKGCONFIG) --cflags x11 imlib2)
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
-LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib
-LDFLAGS += $(shell $(PKGCONFIG) --libs x11 imlib2) -lrt
+#LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib 
+LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib/arm-linux-gnueabihf -Wl,--rpath-link,$(SYSROOT)/usr/lib -Wl,--rpath-link,$(SYSROOT)/lib/arm-linux-gnueabihf
+LDFLAGS += $(shell $(PKGCONFIG) --libs x11 imlib2) -lrt  -lpthread -lcrypt
 
 all: depend.inc $(PROGRAM)
 

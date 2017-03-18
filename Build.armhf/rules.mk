@@ -1,6 +1,7 @@
 ARCH=armhf
 
-CROSS_COMPILE = arm-linux-gnueabihf-
+#CROSS_COMPILE = arm-linux-gnueabihf-
+CROSS_COMPILE = /opt/gcc-linaro-4.9-2015.05-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
 SYSROOT = /opt/arm-dev/armhf
 
 CC = $(CROSS_COMPILE)gcc

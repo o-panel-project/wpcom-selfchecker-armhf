@@ -17,8 +17,8 @@ CFLAGS += -I../felica-sdk/common/include \
 CFLAGS += $(shell $(PKGCONFIG) --cflags gtk+-2.0)
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
-LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib
-LDFLAGS += $(shell $(PKGCONFIG) --libs gtk+-2.0 alsa x11 gthread-2.0)
+LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib/arm-linux-gnueabihf -Wl,--rpath-link,$(SYSROOT)/lib/arm-linux-gnueabihf
+LDFLAGS += $(shell $(PKGCONFIG) --libs gtk+-2.0 alsa x11 gthread-2.0) -lpcre
 
 FELICA_SDK_LIB0 = \
 	libfelica_cc \
