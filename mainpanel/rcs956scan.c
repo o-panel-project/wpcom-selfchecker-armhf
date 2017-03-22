@@ -26,7 +26,7 @@
 #define LOGINFO(args...)    debug_printf(5,args)
 #define LOGDEBUG(args...)   debug_printf(5,args)
 
-static int m_iIsJ4 = 0;
+static int m_iIsJ4 = 1; // use the sys as same the J4 
 static int nfind;
 static char *pfind[5];	/* max 5 device */
 static int compare_str(const void *a, const void *b)
@@ -148,7 +148,7 @@ char *scan_rcs956()
 	ts.tv_sec	= 0;
 	ts.tv_nsec	= 200000000;
 
-	m_iIsJ4 = sc_IsJ4();
+//	m_iIsJ4 = sc_IsJ4(); //m_iIsJ4 =1,use the sys as same the J4
 
 	for (cnt = 1; cnt <= 15; cnt++ ) {	// 3sec
 		LOGWARNING("%s():rcs956 scan start. cnt=%d\r\n", __func__, cnt);
