@@ -23,13 +23,17 @@ static time_t t_fin=0;
 static int loop_run=0;
 static int brightness_j3max=100, brightness_j3ini=70, brightness_j3step=10;
 static int brightness_j4max=8, brightness_j4ini=7, brightness_j4step=1;
-static int brightness_max=100, brightness=70, brightness_step=10;
+static int brightness_max=100, brightness=70, brightness_step=10;   //actual min=0 max=1000 ,so need multiply by 10 at last ,see brightness_set func . 
 static GtkWidget *b_start, *b_stop, *b_quit, *slider, *aj;
 
 #define SYSFS_BACKLIGHT_IF_DIR	\
 	"/sys/devices/platform/omapdss/generic-bl/backlight/omap3evm-bklight"
 #define SYSFS_BACKLIGHT_IF_DIR_J4	\
 	"/sys/devices/backlight.4/backlight/backlight.4"
+
+#define SYSFS_BACKLIGHT_IF_DIR_O	\
+	"/sys/class/backlight/backlight.2/"
+
 #define SYSFS_DISPLAY_IF_DIR	\
 	"/sys/devices/omapdss/display0"
 #define SYSFS_DISPLAY_IF_DIR_J4	\
@@ -70,6 +74,14 @@ static void BackLight_machine_check()
 		brightness_step = brightness_j3step;
 		brightness = brightness_j3ini;
 	}
+	/* use o-panel  path
+	 */
+	sprintf(sysfs_backlight_power,
+		SYSFS_BACKLIGHT_IF_DIR_O "/" SYSFS_BACKLIGHT_POWER_NAME); // sysfs_backlight_power  is no use 
+	sprintf(sysfs_backlight_brightness,
+		SYSFS_BACKLIGHT_IF_DIR_O "/" SYSFS_BACKLIGHT_BRIGHT_NAME);
+	sprintf(sysfs_display_enable,
+		SYSFS_BACKLIGHT_IF_DIR_O "/" SYSFS_BACKLIGHT_POWER_NAME); // use path /sys/class/backlight/backlight.2/bl_power,  sysfs_display_enable control the backlight power
 	return;
 }
 
@@ -120,7 +132,12 @@ static void lcd_enable(int ena)
 static void brightness_set(int n)
 {
 	char tmps[SMALL_STR];
-	sprintf(tmps, "%d\n", n);
+	/*
+	if(n<8)                       //backlight can't set too low ,Otherwise cann't see anything 
+		n=8;
+		*/
+	sprintf(tmps, "%d\n", n*10);  //actual min=0 max=1000 ,so need multiply by 10 at last
+	//printf("brightness =%s\n",tmps);
 	sysfs_backlight_write(sysfs_backlight_brightness, (char*)tmps, strlen(tmps));
 	brightness=n;
 }
@@ -164,6 +181,8 @@ static void loop_start(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(slider, FALSE);
 	gtk_widget_set_sensitive(b_quit, FALSE);
 	gtk_widget_set_sensitive(b_stop, TRUE);
+	if(brightness > 100)
+		brightness=100; 
 	g_timeout_add(500, bright_dim_loop, 0);
 }
 
@@ -192,7 +211,7 @@ static void bl_toggle(GtkWidget *widget, gpointer data)
 static	void
 bl_toggle2(GtkWidget *widget, gpointer data)
 {
-	bl_toggle_charge ? lcd_enable(0) : lcd_enable(1);
+	bl_toggle_charge ? lcd_enable(1) : lcd_enable(0);  
 	if(bl_toggle_charge)		bl_toggle_charge=0;
 	else if(!bl_toggle_charge)	bl_toggle_charge=1;
 
@@ -209,6 +228,8 @@ reset_bri(GtkWidget *widget, gpointer data)
 		brightness=brightness_j4ini;
 	else
 		brightness=brightness_j3ini;
+
+	brightness= 70;// The default brightness
 	gtk_adjustment_set_value(GTK_ADJUSTMENT(aj), (gdouble)brightness);
 }
 
