@@ -192,6 +192,7 @@ int sc_i2c_check_open(int *fd)
 		strcpy(devpath, "/dev/i2c-1");
 	else
 		strcpy(devpath, I2C_DEVICE);
+	strcpy(devpath,  "/dev/i2c-3");
 	*fd=open(devpath, O_RDWR);
 	if(*fd<0) return *fd;
 	
