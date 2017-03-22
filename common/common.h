@@ -32,7 +32,7 @@ extern int cr_mount_ok;							/*	20110905VACS	*/
 #define MID_STR	2048							/*	20110826VACS	*/
 #define SMALL_STR 1024
 #define WPCIO_OPEN_RETRY 10
-#define	AUDIO_VOLUME_MAX	63					/*	20110917VACS	*/
+#define	AUDIO_VOLUME_MAX	51					/*	20110917VACS	*/
 #define	AUDIO_VOLUME1_MAX	127	/* for J4 */
 #define	AUDIO_VOLUME2_MAX	118	/* for J4 */
 
