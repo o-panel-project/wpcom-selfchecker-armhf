@@ -77,10 +77,10 @@ struct side_menu_list_st {
 	{ 0, 2, "Bus3:LCD/TP", "i2c3(LCD/TP)", "13:2", NULL },
 	{ 1, 1, "WiFi", "WiFi", "14", wifi_main },
 	{ 1, 1, "HSUSB2", NULL, NULL, NULL },
-	{ 1, 2, "1:Cradle", "HUSB2-1:Cradle", "15:0", usbmem_cradle_main },
+	{ 0, 2, "1:Cradle", "HUSB2-1:Cradle", "15:0", usbmem_cradle_main },
 	{ 1, 2, "2:Memory", "HUSB2-2:Memory", "15:1", usbmem_hub2mem_main },
 	{ 1, 2, "3:FeliCa", "HUSB2-3:FeliCa", "15:2", felica_main },
-	{ 1, 2, "4:ExWiFi", "HUSB2-4:ExWiFi", "15:3", usbmem_exwifi_main },
+	{ 0, 2, "4:ExWiFi", "HUSB2-4:ExWiFi", "15:3", usbmem_exwifi_main },
 	{ 1, 1, "Movie Play", "Movie Play", "16", movie_main },
 	{ 1, 1, "LCD Inspect", "LCD Inspect", "17", lcdinspect_main },
 	{ 1, 1, "Version", "Version", "18", version_main },
@@ -728,7 +728,7 @@ bat_charge_on()
 	}
 
 	/*	BAT1 charge on	*/
-	err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 65);
+	err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 18);
 	if(err<0){
 		printf("BAT1 charge on error, code = %d\n", err);
 	}
@@ -739,11 +739,7 @@ bat_charge_on()
 		return;
 	}
 
-	/*	BAT2 charge on	*/
-	err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 54);
-	if(err<0){
-		printf("BAT2 charge on error, code = %d\n", err);
-	}
+
 	usleep(100000);
 	close(fd);
 }

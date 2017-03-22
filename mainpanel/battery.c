@@ -82,11 +82,13 @@ static void get_value()
 	if (bat_r2 < 0) {
 		printf("Could not get adc value(0), error code = %d\n", bat_r2);
 	}
+	//printf("bat dc_val=%d\n",dc);
 	
 	bat_r3 = ioctl(fd, WPC_GET_BAT1_LEVEL, &bat1);
 	if (bat_r3 < 0) {
 		printf("Could not get adc value(1), error code = %d\n", bat_r3);
 	}
+	//printf("bat bat1_val=%d\n",bat1);
 	
 	bat_r4 = ioctl(fd, WPC_GET_BAT2_LEVEL, &bat2);
 	if (bat_r4 < 0) {
@@ -97,8 +99,8 @@ static void get_value()
 	
 	usleep(WPCIO_CLOSE_GUARD);
 	
-	bat_v0 = dc   * (DC_RL + DC_RH)   / DC_RL;
-	bat_v1 = bat1 * (BAT_RL + BAT_RH) / BAT_RL;
+	bat_v0 = dc  * 3 * 1000 * (DC_RL + DC_RH)   / DC_RL  / 1024;
+	bat_v1 = bat1 * 3 * 1000 * (BAT_RL + BAT_RH) / BAT_RL / 1024;
 	bat_v2 = bat2 * (BAT_RL + BAT_RH) / BAT_RL;
 }
 
@@ -250,8 +252,8 @@ int bat_no;
 
 	switch(bat_no){
 	case 0:
-		/*	BAT1 charge on, GPIO65	*/
-		err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 65);
+		/*	BAT1 charge on, GPIOA18	*/
+		err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 18);
 		break;
 	case 1:
 		/*	BAT2 charge on, GPIO54	*/
@@ -269,7 +271,7 @@ int bat_no;
 
 		switch(bat_no){
 			case 0:
-				/*	BAT1 charge on, GPIO65	*/
+				/*	BAT1 charge on, GPIOA18	*/
 				pid_bat1_charge = 1;
 
 				if((int)data == 0 || (int)data == 1){
@@ -315,8 +317,8 @@ int bat_no;
 
 	switch(bat_no){
 	case 0:
-		/*	BAT1 charge off, GPIO65	*/
-		err = ioctl(fd, WPC_SET_GPIO_OUTPUT_LOW, 65);
+		/*	BAT1 charge off, GPIOA18*/
+		err = ioctl(fd, WPC_SET_GPIO_OUTPUT_LOW, 18);
 		break;
 	case 1:
 		/*	BAT1 charge off, GPIO54	*/
@@ -334,7 +336,7 @@ int bat_no;
 
 		switch(bat_no){
 			case 0:
-				/*	BAT1 charge off, GPIO65	*/
+				/*	BAT1 charge off, GPIOA18*/
 				pid_bat1_charge = 0;
 
 				if((int)data == 0 || (int)data == 1){
