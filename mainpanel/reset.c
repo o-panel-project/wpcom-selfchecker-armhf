@@ -36,7 +36,7 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	printf("reset: timer expired.\n");
 	sync();sync();sync();
 	printf("reset: fs synching.\n");
-	r = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_HIGH, 58);
+	r = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_HIGH, 116);
 	if (r < 0) {
 		printf("GPIO-58 output high failed.\n");
 		close(fd_wpcio);
