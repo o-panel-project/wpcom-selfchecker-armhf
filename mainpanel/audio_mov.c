@@ -41,7 +41,7 @@ snd_mixer_elem_t* get_elem(snd_mixer_t* h, char const* name)
 		var = snd_mixer_elem_next(var);
 	}
 	if (se == NULL)
-		printf("Could not find mixer name: %s", name);
+		printf("Could not find mixer name: %s\n", name);
 	return se;
 }
 
