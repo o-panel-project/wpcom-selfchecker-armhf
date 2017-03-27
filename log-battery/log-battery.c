@@ -42,11 +42,13 @@ static void get_value()
 		printf("Could not get battery 1 charging status, error code = %d\n", r0);
 	}
 	
+/*
 	r1=ioctl(fd_wpcio, WPC_GET_BAT2_CHARGING_STAT, &x1);
 	if(r1<0){
 		printf("Could not get battery 2 charging status, error code = %d\n", r1);
 	}
 	
+*/
 	r2=ioctl(fd_wpcio, WPC_GET_DC_LEVEL, &dc);
 	if(r2<0){
 		printf("Could not get adc value(0), error code = %d\n", r2);
@@ -55,14 +57,19 @@ static void get_value()
 	if(r3<0){
 		printf("Could not get adc value(1), error code = %d\n", r3);
 	}
+/*
 	r4=ioctl(fd_wpcio, WPC_GET_BAT2_LEVEL, &bat2);
 	if(r4<0){
 		printf("Could not get adc value(2), error code = %d\n", r4);
 	}
+*/
 	close(fd_wpcio);
 	
-	v0=dc * (DC_RL + DC_RH) / DC_RL;
-	v1=bat1 * (BAT_RL + BAT_RH) / BAT_RL;
+        //v0=dc * (DC_RL + DC_RH) / DC_RL;
+        //v1=bat1 * (BAT_RL + BAT_RH) / BAT_RL;
+        v0= dc  * 3 * 1000 * (DC_RL + DC_RH)   / DC_RL  / 1024;
+        v1= bat1 * 3 * 1000 * (BAT_RL + BAT_RH) / BAT_RL / 1024;
+
 	v2=bat2 * (BAT_RL + BAT_RH) / BAT_RL;
 	
 	sprintf(tmps, "DC level = %dmV\n", v0);
