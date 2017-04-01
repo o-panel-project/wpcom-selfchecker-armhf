@@ -36,8 +36,6 @@ OBJS = ${SRCS:%.c=%.o} ${CPPSRCS:%.cpp=%.o}
 VPATH = ${SRCDIR}
 CFLAGS += -I.
 CFLAGS += -I${CROSSDEVDIR}/usr/include
-#CFLAGS += -I${CROSSDEVDIR}/usr/include/arm-linux-gnueabihf -I${CROSSDEVDIR}/usr/include -I${CROSSDEVDIR}/usr/include/linux -I${CROSSDEVDIR}/usr/lib/gcc/arm-linux-gnueabihf/4.9/include 
-
 LDFLAGS += -L${CROSSDEVDIR}/usr/lib
 LDFLAGS += --sysroot=${CROSSDEVDIR}
 

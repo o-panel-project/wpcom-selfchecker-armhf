@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 	}
 	Pm_Region appRect;
 	appRect.Set(0, 0, lcd_width - 1, lcd_height - 1);
-	prismmain(argc, argv, 0, &appRect);
+	prismmain(argc, argv, 0, NULL);//&appRect);
 
 	delete pImageNameList;
 	delete menuPhoto;
