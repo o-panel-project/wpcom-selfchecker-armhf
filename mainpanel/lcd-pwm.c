@@ -261,7 +261,8 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	lb1=gtk_label_new("Brightness %: ");
 
 	brightness=max(brightness_get(),0);
-	aj=(GtkWidget *)gtk_adjustment_new(brightness, 0, brightness_max, brightness_step, brightness_step, 0);
+	//actual min=0 max=1000 ,so need multiply by 10 at last
+	aj=(GtkWidget *)gtk_adjustment_new(brightness/10, 0, brightness_max, brightness_step, brightness_step, 0);
 	slider=gtk_hscale_new((GtkAdjustment *)aj);
 	g_signal_connect(aj, "value-changed", G_CALLBACK(slider_set), (gpointer)0);
 
