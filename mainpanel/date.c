@@ -70,7 +70,7 @@ static char *exec_ntpdate(void)
 	struct timespec tp;
 	struct tm *cur_tm;
 	
-	ret = system("ntpdate ntp.nict.jp");
+	ret = system("ntpdate-debian ntp.nict.jp");
 	if (ret == 0) {
 		fp = popen("date", "r");
 		if (fp == NULL) {
