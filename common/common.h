@@ -10,7 +10,7 @@
 //#include <gtk/gtk.h>
 #include <sys/time.h>
 
-#define SC_TITLE   "New SelfChecker (j3～)"
+#define SC_TITLE   "New SelfChecker (O-Panel～)"
 #define SC_VERSION "v3.5.1"
 
 //
