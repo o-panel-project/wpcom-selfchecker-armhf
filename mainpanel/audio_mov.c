@@ -23,8 +23,10 @@ static int vol, vol1, vol2, play_mode=0;
 static GtkWidget *cb, *b_stop, *b_quit, *hs;
 static snd_mixer_elem_t *elem;
 static snd_mixer_elem_t *elem_l;
+static snd_mixer_elem_t *elem_r;
 static snd_mixer_t *handle;
 static snd_mixer_t *handle_l;
+static snd_mixer_t *handle_r;
 int audio_pid=0, audio_is_loop=0, movie_is_loop=0;
 
 
@@ -49,15 +51,33 @@ snd_mixer_elem_t* get_elem(snd_mixer_t* h, char const* name)
 
 static int alsa_setup_j3(int start_up)
 {
-	if ((elem = get_elem(handle, "DAC FR Gain")) == NULL) {
+	if ((elem = get_elem(handle, "DAC1 Digital Fine")) == NULL) {
 	   return 8;
 	}
-	if ((elem_l = get_elem(handle_l, "DAC FL Gain")) == NULL) {
-	   return 8;
-	}
+
+
 	return 0;
 }
 
+static int alsa_setup_opanel(int start_up)
+{
+	if ((elem = get_elem(handle, "DAC PA")) == NULL) {
+	   return 8;
+	}
+
+
+	if ((elem_l = get_elem(handle_l, "DAC FL Gain")) == NULL) {
+	   return 8;
+	}
+	if ((elem_r = get_elem(handle_r, "DAC FR Gain")) == NULL) {
+	   return 8;
+	}
+
+
+
+
+	return 0;
+}
 static int alsa_setup_j4(int start_up)
 {
 	snd_mixer_elem_t* se = NULL;
@@ -74,15 +94,19 @@ static int alsa_setup_j4(int start_up)
 
 static int alsa_setup(int start_up)
 {
-	int r,r_l;
+	int r;
 	int l_v, r_v;
 	
 	if((r=snd_mixer_open(&handle, 0)) < 0) {
 		printf("Mixer open error: %s", snd_strerror(r));
 		return 1;
 	}
-	if((r_l=snd_mixer_open(&handle_l, 0)) < 0) {
-		printf("Mixer open error: %s", snd_strerror(r_l));
+	if((r=snd_mixer_open(&handle_l, 0)) < 0) {
+		printf("Mixer open error: %s", snd_strerror(r));
+		return 1;
+	}
+	if((r=snd_mixer_open(&handle_r, 0)) < 0) {
+		printf("Mixer open error: %s", snd_strerror(r));
 		return 1;
 	}
 	if((r=snd_mixer_attach(handle, "default"))< 0){
@@ -90,9 +114,14 @@ static int alsa_setup(int start_up)
 		snd_mixer_close(handle);
 		return 2;
 	}
-	if((r_l=snd_mixer_attach(handle_l, "default"))< 0){
-		printf("Mixer attach error: %s, %s", "default", snd_strerror(r_l));
+	if((r=snd_mixer_attach(handle_l, "default"))< 0){
+		printf("Mixer attach error: %s, %s", "default", snd_strerror(r));
 		snd_mixer_close(handle_l);
+		return 2;
+	}
+	if((r=snd_mixer_attach(handle_r, "default"))< 0){
+		printf("Mixer attach error: %s, %s", "default", snd_strerror(r));
+		snd_mixer_close(handle_r);
 		return 2;
 	}
 	if((r=snd_mixer_selem_register(handle, NULL, NULL)) < 0){
@@ -100,34 +129,49 @@ static int alsa_setup(int start_up)
 		snd_mixer_close(handle);
 		return 3;
 	}
-	if((r_l=snd_mixer_selem_register(handle_l, NULL, NULL)) < 0){
-		printf("Mixer register error: %s", snd_strerror(r_l));
+	if((r=snd_mixer_selem_register(handle_l, NULL, NULL)) < 0){
+		printf("Mixer register error: %s", snd_strerror(r));
 		snd_mixer_close(handle_l);
 		return 3;
 	}
+	if((r=snd_mixer_selem_register(handle_r, NULL, NULL)) < 0){
+		printf("Mixer register error: %s", snd_strerror(r));
+		snd_mixer_close(handle_r);
+		return 3;
+	}
+
 	if((r=snd_mixer_load(handle))<0){
 		printf("Mixer load error: %s", snd_strerror(r));
 		snd_mixer_close(handle);
 		return 4;
 	}
-	if((r_l=snd_mixer_load(handle_l))<0){
-		printf("Mixer load error: %s", snd_strerror(r_l));
+	if((r=snd_mixer_load(handle_l))<0){
+		printf("Mixer load error: %s", snd_strerror(r));
 		snd_mixer_close(handle_l);
 		return 4;
 	}
+	if((r=snd_mixer_load(handle_r))<0){
+		printf("Mixer load error: %s", snd_strerror(r));
+		snd_mixer_close(handle_r);
+		return 4;
+	}
 
+/*
 	if (sc_IsJ4()) {
 		r = alsa_setup_j4(start_up);
 	} else {
 		r = alsa_setup_j3(start_up);
 	}
+*/
+	r = alsa_setup_opanel(start_up);
+
 	if (r > 0) {
 		g_print("%s():Playback volume not found\n", __func__);
 	   return r;
 	}
 	if(start_up) {
 		snd_mixer_selem_get_playback_volume(
-				elem_l, SND_MIXER_SCHN_FRONT_LEFT, &l_v);
+				elem, SND_MIXER_SCHN_FRONT_LEFT, &l_v);
 		snd_mixer_selem_get_playback_volume(
 				elem, SND_MIXER_SCHN_FRONT_RIGHT, &r_v);
 		vol = l_v > r_v ? l_v : r_v;
@@ -213,12 +257,14 @@ long	pvol0, pvol1;
 
 	int x, y;
 
-	if((r=snd_mixer_selem_get_playback_volume(elem_l, SND_MIXER_SCHN_FRONT_LEFT, &pvol0))<0){
+	if((r=snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &pvol0))<0){
 		printf("Mixer get0 error: %s", snd_strerror(r));
 	}
 	if((r=snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_RIGHT, &pvol1))<0){
 		printf("Mixer get1 error: %s", snd_strerror(r));
 	}
+
+	
 	debug_printf(3, "from (%d, %d) -> ", pvol0, pvol1);
 	fflush(0);
 
@@ -229,12 +275,11 @@ long	pvol0, pvol1;
 		alsa_setup(0);
 		gtk_range_set_value(GTK_RANGE(hs), vol);
 	}
-	v0=v0*5;
-	v1=v1*5;
+
 
 	debug_printf(3, "set to %d, %d (elem:0x%x) -> ", v0, v1, elem);
 	fflush(0);
-	if((r0=snd_mixer_selem_set_playback_volume(elem_l, SND_MIXER_SCHN_FRONT_LEFT, v0))<0){
+	if((r0=snd_mixer_selem_set_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, v0))<0){
 		printf("Mixer set0 error: %s", snd_strerror(r0));
 	}
 	if((r1=snd_mixer_selem_set_playback_volume(elem, SND_MIXER_SCHN_FRONT_RIGHT, v1))<0){
@@ -242,6 +287,20 @@ long	pvol0, pvol1;
 	}
 	debug_printf(3, "(%d, %d)\n", r0, r1);
 }
+void 
+sc_alsa_set_dac_fl_fr_gain(int v0, int v1)
+{
+int		r0, r1;
+
+	if((r0=snd_mixer_selem_set_playback_volume(elem_l, SND_MIXER_SCHN_FRONT_LEFT, v0))<0){
+		printf("Mixer set0 error: %s", snd_strerror(r0));
+	}
+	if((r1=snd_mixer_selem_set_playback_volume(elem_r, SND_MIXER_SCHN_FRONT_RIGHT, v1))<0){
+		printf("Mixer set1 error: %s", snd_strerror(r1));
+	}
+}
+
+
 
 void
 audio_set_volume(void)
@@ -252,14 +311,18 @@ audio_set_volume(void)
 	switch(play_mode%3){
 	case 0:
 		sc_alsa_set_volume(vol, vol);
+		sc_alsa_set_dac_fl_fr_gain(205, 205);
 		break;
 	case 1:	/* Left */
 		debug_printf(3, "%s():Left off, Right on\n", __func__);
-		sc_alsa_set_volume(0, vol);
+		sc_alsa_set_volume(vol, vol);
+		sc_alsa_set_dac_fl_fr_gain(205, 0);
 		break;
 	case 2:	/* Right */
 		debug_printf(3, "%s():Left on, Right off\n", __func__);
-		sc_alsa_set_volume(vol, 0);
+		sc_alsa_set_volume(vol, vol);
+		sc_alsa_set_dac_fl_fr_gain(0, 205);
+		break;
 		break;
 	}
 }
@@ -501,12 +564,14 @@ int audio_main(GtkWidget *p, GtkWidget *bsub)
 		
 		case 1:  // quit
 			if(!audio_is_loop) audio_fin(0, audio_pid);
+			sc_alsa_set_dac_fl_fr_gain(205, 205);
 			goto fin;
 		
 		case 2:  // stop
 			audio_fin(0, audio_pid);
 			store=GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tv_sidemenu)));
 			gtk_tree_store_set(store, &iter_audio, COLUMN_LABEL, "Audio", COLUMN_NAME_COLOR, NULL, -1);
+			sc_alsa_set_dac_fl_fr_gain(205, 205);
 			break;
 		
 		case 10: // play A/B, stereo-L-R
