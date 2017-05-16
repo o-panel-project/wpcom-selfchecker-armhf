@@ -18,6 +18,7 @@
 #include <sys/ioctl.h>
 #include <gtk/gtk.h>
 #include "common.h"
+#include "wpcio.h"
 
 static time_t t_fin=0;
 static int loop_run=0;
@@ -25,6 +26,8 @@ static int brightness_j3max=100, brightness_j3ini=70, brightness_j3step=10;
 static int brightness_j4max=8, brightness_j4ini=7, brightness_j4step=1;
 static int brightness_max=100, brightness=70, brightness_step=10;   //actual min=0 max=1000 ,so need multiply by 10 at last ,see brightness_set func . 
 static GtkWidget *b_start, *b_stop, *b_quit, *slider, *aj;
+
+static int fd_wpcio;
 
 #define SYSFS_BACKLIGHT_IF_DIR	\
 	"/sys/devices/platform/omapdss/generic-bl/backlight/omap3evm-bklight"
@@ -211,7 +214,22 @@ static void bl_toggle(GtkWidget *widget, gpointer data)
 static	void
 bl_toggle2(GtkWidget *widget, gpointer data)
 {
-	bl_toggle_charge ? lcd_enable(1) : lcd_enable(0);  
+	int err ;
+//	bl_toggle_charge ? lcd_enable(1) : lcd_enable(0);  
+	if(bl_toggle_charge)	{
+		system("cat /sys/devices/b0220000.dsi/test_dsi"); //must do reset DSI signal 
+		usleep(100);
+		lcd_enable(1);
+	
+	}
+	else{
+		lcd_enable(0);
+		usleep(100);
+		err = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_LOW, 23);
+                if (err < 0) {
+                	printf("LCD BL on/off, error pin= 23\n");
+                }
+	}
 	if(bl_toggle_charge)		bl_toggle_charge=0;
 	else if(!bl_toggle_charge)	bl_toggle_charge=1;
 
@@ -236,6 +254,14 @@ reset_bri(GtkWidget *widget, gpointer data)
 int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 {
 	int button_no;
+        if ((fd_wpcio = open("/dev/wpcio", O_RDWR)) < 0) {
+                printf("Cannot open /dev/wpcio\n");
+                return -1;
+        }
+
+
+
+
 	GtkWidget *v0, *bb;
 	GtkWidget *a1, *h0, *lb0;
 	GtkWidget *a2, *lb1, *a3, *cb;
@@ -316,5 +342,6 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_main();
 	sc_bbox2_remove(bsub);
 	gtk_widget_destroy(v0);
+	close(fd_wpcio);
 	return 0;
 }
