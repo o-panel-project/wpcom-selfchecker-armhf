@@ -358,7 +358,7 @@ fin:
 
 const static char *mms_ctrl_dev = "/dev/mms_ts";
 #define IOCTL_GET_VERSION   _IOR('W', 0xA5, u_char *)
-#define SYSFS_MMS_TS "/sys/devices/platform/omap/omap_i2c.3/i2c-3/3-0048/"
+#define SYSFS_MMS_TS "/sys/devices/b0174000.i2c/i2c-1/1-0038/"
 #define INFO_FIRMVERSION_NAME    "firmware_version"
 
 static void fetch_tpver_melfas(char *fwver)
@@ -462,10 +462,11 @@ fetch_tpver(char *kver)
 
 	sleep(2);
 	if (g_board_type == WPC_BOARD_TYPE_J) {
-		fetch_tpver_egalax(buf);
-		fetch_egver(egb);
+		//fetch_tpver_egalax(buf);
+		//fetch_egver(egb);
+		fetch_tpver_melfas(buf);
 		strcat(buf, "\n");
-		strcat(buf, egb);
+		//strcat(buf, egb);
 	} else if (g_board_type == WPC_BOARD_TYPE_J3 ||
 			g_board_type == WPC_BOARD_TYPE_J4)
 		fetch_tpver_melfas(buf);
