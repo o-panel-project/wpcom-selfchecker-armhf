@@ -67,6 +67,9 @@ int main(int ac, char *av[])
 	signal(SIGTERM, (void *)int_handler);
 	
 	g_board_type = sc_get_board_type();
+	if (g_board_type == WPC_BOARD_TYPE_O)
+	printf("wlantool execute on o-PANEL\n");
+	else
 	printf("wlantool execute on j%d-PANEL\n", g_board_type);
 
 	/* default settings */

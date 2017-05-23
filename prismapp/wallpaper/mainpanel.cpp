@@ -6,40 +6,40 @@
 #include "prism_includes.h"
 #include "mainpanel.h"
 
-#define NUM_MAX_PHOTOS 10
-#define FLICK_STEP_X 32 
-#define FLICK_STEP_X_HI 32 
-#define FLICK_STEP_X_LO 32
-#define FLICK_STEP_Y 25
-#define PHOTO_TIMER 1
+//#define NUM_MAX_PHOTOS 10
+//#define FLICK_STEP_X 32 
+//#define FLICK_STEP_X_HI 32 
+//#define FLICK_STEP_X_LO 32
+//#define FLICK_STEP_Y 25
+//#define PHOTO_TIMER 1
 
 static int lcd_width = 1024;
 static int lcd_height = 600;
-static int win_width = 1024;
-static int win_height = 600;
-static int win_x = 0;
-static int win_y = 0;
+//static int win_width = 1024;
+//static int win_height = 600;
+//static int win_x = 0;
+//static int win_y = 0;
 
-pm_int_t ArgImageNum;
+//pm_int_t ArgImageNum;
 //char *ArgImageName[NUM_MAX_PHOTOS];
 char *pWallpaper = NULL;
-char **pImageNameList = NULL;
-char *pImageFolder = NULL;
+//char **pImageNameList = NULL;
+//char *pImageFolder = NULL;
 
-pm_bitmap_t **menuPhoto;
+//pm_bitmap_t **menuPhoto;
 pm_bitmap_t *pWallpaperBitmap = NULL;
 
 ///////////////////////////////////////////////////////////////////////////////
 pm_event_table_entry MainPanelEvents[] = {
 
-    {PM_EVENT_TIMEOUT, PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
-	{PM_EVENT_ZOOM_IN, PM_EVENT_HANDLER(&MainPanel::OnEventZoomIn)},
-	{PM_EVENT_ZOOM_OUT,PM_EVENT_HANDLER(&MainPanel::OnEventZoomOut)},
+//	{PM_EVENT_TIMEOUT, PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
+//	{PM_EVENT_ZOOM_IN, PM_EVENT_HANDLER(&MainPanel::OnEventZoomIn)},
+//	{PM_EVENT_ZOOM_OUT,PM_EVENT_HANDLER(&MainPanel::OnEventZoomOut)},
 
-	{PM_EVENT_ST_PAN_UP,    PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
-	{PM_EVENT_ST_PAN_DOWN,  PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
-	{PM_EVENT_ST_PAN_LEFT,  PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
-	{PM_EVENT_ST_PAN_RIGHT, PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
+//	{PM_EVENT_ST_PAN_UP,    PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
+//	{PM_EVENT_ST_PAN_DOWN,  PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
+//	{PM_EVENT_ST_PAN_LEFT,  PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
+//	{PM_EVENT_ST_PAN_RIGHT, PM_EVENT_HANDLER(&MainPanel::OnEventFlick)},
 
 	{PM_CEN(MainPanel::IDB_QUIT, PM_EVENT_CLICK),
 							PM_EVENT_HANDLER(&MainPanel::OnEventQuit)},
@@ -47,12 +47,12 @@ pm_event_table_entry MainPanelEvents[] = {
     {0, NULL}   /* array terminator */
 };
 
-static pm_int_t ListingImage(char *);
+//static pm_int_t ListingImage(char *);
 extern int prismmain(int, char**, key_t, const Pm_Region *);
 
 int main(int argc, char *argv[])
 {
-	pm_int_t i, skip = 0;
+//	pm_int_t i, skip = 0;
 	int opt;
 
 	while ((opt = getopt(argc, argv, "b:d:i:x:y:z:")) != -1) {
@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
 		case 'b':
 			pWallpaper = strdup(optarg);
 			break;
+#if 0
 		case 'i':
 			pImageFolder = strdup(optarg);
 			break;
@@ -73,11 +74,13 @@ int main(int argc, char *argv[])
 		case 'z':
 			printf("%s option %c ignored.\n", argv[0], (char)opt);
 			break;
+#endif
 		default:
-			printf("Usage: %s -b bg -i jpegdir\n", argv[0]);
+			printf("Usage: %s -b bg\n", argv[0]);
 			return 0;
 		}
 	}
+#if 0
 	if (pImageFolder == NULL)
 		pImageFolder = strdup(".");
 
@@ -91,6 +94,7 @@ int main(int argc, char *argv[])
 	printf("%d jpeg file found.\n", ArgImageNum);
 
 	menuPhoto = (pm_bitmap_t **) new pm_bitmap_t*[ArgImageNum];
+#endif
 
 	Display *dpy = XOpenDisplay(NULL);
 	if (dpy) {
@@ -103,9 +107,9 @@ int main(int argc, char *argv[])
 	appRect.Set(0, 0, lcd_width - 1, lcd_height - 1);
 	prismmain(argc, argv, 0, NULL);//&appRect);
 
-	delete pImageNameList;
-	delete menuPhoto;
-	free(pImageFolder);
+//	delete pImageNameList;
+//	delete menuPhoto;
+//	free(pImageFolder);
 	if (pWallpaper) free(pWallpaper);
 
 	return 0;
@@ -130,14 +134,16 @@ MainPanel::MainPanel() :
     Pm_Panel(PM_BORDER_NONE)
 {
     Pm_Region ChildSize;
-	pm_int_t i;
+//	pm_int_t i;
 
 	if (pWallpaper)
 		pWallpaperBitmap = DecodeImage(pWallpaper);
+#if 0
 	for (i = 0; i < ArgImageNum; i++)
 		menuPhoto[i] = DecodeImage(pImageNameList[i]);
 	win_width = menuPhoto[0]->Width;
 	win_height = menuPhoto[0]->Height;
+#endif
 
     mSize.Set(0, 0, lcd_width - 1, lcd_height - 1);
     InitializeClientRegion();
@@ -146,6 +152,7 @@ MainPanel::MainPanel() :
 	if (pWallpaperBitmap)
 		SetWallpaper(pWallpaperBitmap);
 
+#if 0
 	printf("Animation window %dx%d+%d+%d.\n",
 			win_width, win_height, win_x, win_y);
     ChildSize.Set(win_x, win_y, win_x + win_width - 1, win_y + win_height - 1);
@@ -159,6 +166,7 @@ MainPanel::MainPanel() :
     mPhotoIndex = 0;
     mFlickDir = 0;
 	mpPhotoFrame->show();
+#endif
 
 	ChildSize.Set(lcd_width -100 -10, lcd_height -50 -10,
 			lcd_width -10, lcd_height -10);
@@ -198,16 +206,17 @@ pm_int_t MainPanel::Notify(const pm_event_t &Event)
 ///////////////////////////////////////////////////////////////////////////////
 pm_int_t MainPanel::OnEventQuit(const pm_event_t &Event)
 {
-	mpPhotoFrame->AppQuit();
+//	mpPhotoFrame->AppQuit();
 	return -PM_EVENT_TERMINATE;
 }
-
+#if 0
 ///////////////////////////////////////////////////////////////////////////////
 pm_int_t MainPanel::OnEventFlick(const pm_event_t &Event)
 {
 	static int FlickTypeLR = 0;
 	static int FlickTypeUD = 0;
 
+#if 0
 	switch (Event.Type) {
 	case PM_EVENT_ST_PAN_LEFT:
 		mpPhotoFrame->FlickType(FlickTypeLR);
@@ -232,6 +241,7 @@ pm_int_t MainPanel::OnEventFlick(const pm_event_t &Event)
 	default:
 		break;
 	}
+#endif
 
 	return 0;
 }
@@ -273,12 +283,14 @@ pm_int_t MainPanel::OnEventFlickDown(const pm_event_t &Event)
 ///////////////////////////////////////////////////////////////////////////////
 void MainPanel::FlickPicture(int xShift, int yShift)
 {
+#if 0
 	mPhotoIndex++;
 	if (mPhotoIndex >= ArgImageNum) {
     	mPhotoIndex = 0;
 	}
 	mpPhotoFrame->SetWallpaper(menuPhoto[mPhotoIndex]);
     mpPhotoFrame->FlickPicture(menuPhoto[mPhotoIndex], xShift, yShift);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -294,7 +306,7 @@ pm_int_t MainPanel::OnEventZoomOut(const pm_event_t &Event)
     printf("MainPanel::%s() -----\n", __func__);
     return 0;
 }
-
+#endif
 /*
  * -Utilities-
  */
@@ -309,6 +321,7 @@ pm_bitmap_t *MainPanel::DecodeImage(char *pPathname)
     if (!ImageFile.IsOpen())
     {
         // unable to open source image
+        printf("MainPanel::%s() %s open failed.\n", __func__, pPathname);
         return NULL;
     }
 	Pm_Graphic_Reader *pReader = new Pm_Jpg_Reader(0);
@@ -316,6 +329,7 @@ pm_bitmap_t *MainPanel::DecodeImage(char *pPathname)
     if (!pReader->ReadImage(&ImageFile))
     {
 		delete pReader;
+        printf("MainPanel::%s() %s read failed.\n", __func__, pPathname);
         return NULL;
     }
 	pReader->SetSystemPalette(NULL, TRUE_ALPHA_COLORS);
@@ -328,7 +342,7 @@ pm_bitmap_t *MainPanel::DecodeImage(char *pPathname)
 	printf("Decode %s done.\n", pPathname);
 	return p;
 }
-
+#if 0
 ///////////////////////////////////////////////////////////////////////////////
 static pm_int_t ListingImage(char *pPathname)
 {
@@ -366,3 +380,4 @@ static pm_int_t ListingImage(char *pPathname)
 	closedir(dir_ptr);
 	return count;
 }
+#endif

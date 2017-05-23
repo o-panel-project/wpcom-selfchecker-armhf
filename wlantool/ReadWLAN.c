@@ -1000,7 +1000,9 @@ int	file_analysis( int mode, int ch )
 				if (g_board_type == WPC_BOARD_TYPE_J) {
 					strtok( parseToken[i+4], "=" );
 					tmp3 = strtok( NULL, "=" );
-				} else if (g_board_type == WPC_BOARD_TYPE_J3) {
+				} else if ((g_board_type == WPC_BOARD_TYPE_J3) ||
+							(g_board_type == WPC_BOARD_TYPE_J35) ||
+							(g_board_type == WPC_BOARD_TYPE_O)) {
 					strtok( parseToken[i+4], ":" );
 					tmp3 = strtok( NULL, ":" );
 				} else

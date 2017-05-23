@@ -13,6 +13,9 @@
 #define SC_TITLE   "New SelfChecker (j3～)"
 #define SC_VERSION "v3.6.0"
 
+#define	WPC_BOARD_TYPE_J35	35
+#define	WPC_BOARD_TYPE_O	5
+
 //
 //	global vars and defs
 //

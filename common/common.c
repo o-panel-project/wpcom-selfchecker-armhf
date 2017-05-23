@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <stdlib.h>
 
 #include "md5.h"
 #include "common.h"
@@ -201,6 +202,42 @@ void sc_i2c_set_power(int x)
 	close(fd);
 }
 
+char *cmdline_search(const char *str)
+{
+	int fd;
+	char cmdline[BUFSIZ];
+	ssize_t len;
+	char *p, *q;
+
+	fd = open("/proc/cmdline", O_RDONLY);
+	if (fd < 0) {
+		perror("open");
+		return NULL;
+	}
+	len = read(fd, cmdline, BUFSIZ);
+	if (len <= 0) {
+		perror("read");
+		close(fd);
+		return NULL;
+	}
+	close(fd);
+	if ((p = strstr(cmdline, str)) != NULL) {
+		if ((q = strchr(p, 0x20)) != NULL) {
+			//printf("cut trailer space\n");
+			*q = '\0';
+			p = strdup(p);
+			return p;
+		}
+		if ((q = strchr(p, 0x0a)) != NULL) {
+			//printf("cut trailer linefeed\n");
+			*q = '\0';
+			p = strdup(p);
+			return p;
+		}
+	}
+	return NULL;
+}
+#if 0
 int sc_get_board_type()
 {
 	int fd;
@@ -221,7 +258,7 @@ int sc_get_board_type()
 
 	return type;
 }
-
+#endif
 int sc_IsJ4()
 {
 	char name[32];
@@ -231,4 +268,55 @@ int sc_IsJ4()
 			return 1;
 	}
 	return 0;
+}
+#if 0
+int sc_IsOPANEL()
+{
+	char *p, *q;
+	int ret = 0;
+	p = cmdline_search("wpc_board_type=");
+	if (!p) {
+		//printf("not found\n");
+		goto out;
+	}
+	q = strchr(p, '=');
+	//printf("found [%s]\n", q+1);
+	if (*(q+1) == 'o') {
+		ret = 1;
+	}
+out:
+	free(p);
+	return ret;
+}
+#endif
+int sc_get_board_type()
+{
+	char *p, *q;
+	int type = WPC_BOARD_TYPE_J;
+	p = cmdline_search("wpc_board_type=");
+	if (!p) {
+		//printf("not found\n");
+		goto out;
+	}
+	q = strchr(p, '=');
+	if (strcmp((q+1), "j3") == 0) {
+		type = WPC_BOARD_TYPE_J3;
+		goto out;
+	}
+	if (strcmp((q+1), "j3.5") == 0) {
+		type = WPC_BOARD_TYPE_J35;
+		goto out;
+	}
+	if (*(q+1) == 'o') {
+		type = WPC_BOARD_TYPE_O;
+		goto out;
+	}
+	if (sc_IsJ4()) {
+		type = WPC_BOARD_TYPE_J4;
+		goto out;
+	}
+
+out:
+	free(p);
+	return type;
 }
