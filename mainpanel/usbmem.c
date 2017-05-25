@@ -942,7 +942,8 @@ int usbmem_exwifi_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(h2), b_stop);
 	b_mount=gtk_toggle_button_new_with_label(MOUNT_BUTTON_MOUNT);
 	gtk_container_add(GTK_CONTAINER(h2), b_mount);
-	g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_hub4_func), 0);
+	g_signal_connect(b_mount, "toggled", G_CALLBACK(press_mount_hub4), 0);
+	//g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_hub4_func), 0);
 	gtk_widget_set_sensitive(b_mount, FALSE);
 	
 	gtk_container_add(GTK_CONTAINER(a2), h2);
@@ -1218,7 +1219,8 @@ static int usbmem_usbmem_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(h2), b_stop);
 	b_mount = gtk_toggle_button_new_with_label(MOUNT_BUTTON_MOUNT);
 	gtk_container_add(GTK_CONTAINER(h2), b_mount);
-	g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_usbmem_func), 0);
+	g_signal_connect(b_mount, "toggled", G_CALLBACK(press_mount_usbmem), 0);
+	//g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_usbmem_func), 0);
 	gtk_widget_set_sensitive(b_mount, FALSE);
 
 	gtk_container_add(GTK_CONTAINER(a2), h2);
@@ -1586,7 +1588,8 @@ int usbmem_cradle_main(GtkWidget *table, GtkWidget *bsub)
 	
 	b_mount=gtk_toggle_button_new_with_label(MOUNT_BUTTON_MOUNT);
 	gtk_container_add(GTK_CONTAINER(h2), b_mount);
-	g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_cradle_func), (gpointer)0);
+	g_signal_connect(b_mount, "toggled", G_CALLBACK(press_mount_cradle), (gpointer)0);
+	//g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_cradle_func), (gpointer)0);
 	gtk_widget_set_sensitive(b_mount, TRUE);	/*	20110905VACS	*/
 
 	gtk_container_add(GTK_CONTAINER(a2), h2);

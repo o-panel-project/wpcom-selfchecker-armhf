@@ -213,20 +213,20 @@ int led_main(GtkWidget *table, GtkWidget *bsub)
 	v0=gtk_vbox_new(FALSE, 10);
 	
 	button_g = gtk_toggle_button_new_with_label("LED Green");
-	//g_signal_connect(G_OBJECT(button_g), "toggled", G_CALLBACK(press_led), &color_g);
-	g_signal_connect(G_OBJECT(button_g), "button-release-event", G_CALLBACK(press_led_func), &color_g);
+	g_signal_connect(G_OBJECT(button_g), "toggled", G_CALLBACK(press_led), &color_g);
+	//g_signal_connect(G_OBJECT(button_g), "button-release-event", G_CALLBACK(press_led_func), &color_g);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_g), FALSE);
 	off_led(color_g);
 	
 	button_r = gtk_toggle_button_new_with_label("LED Red");
-	//g_signal_connect(G_OBJECT(button_r), "toggled", G_CALLBACK(press_led), &color_r);
-	g_signal_connect(G_OBJECT(button_r), "button-release-event", G_CALLBACK(press_led_func), &color_r);
+	g_signal_connect(G_OBJECT(button_r), "toggled", G_CALLBACK(press_led), &color_r);
+	//g_signal_connect(G_OBJECT(button_r), "button-release-event", G_CALLBACK(press_led_func), &color_r);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_r), FALSE);
 	off_led(color_r);
 
 	button_o = gtk_toggle_button_new_with_label("LED Orange");
-	//g_signal_connect(G_OBJECT(button_o), "toggled", G_CALLBACK(press_led), &color_o);
-	g_signal_connect(G_OBJECT(button_o), "button-release-event", G_CALLBACK(press_led_func), &color_o);
+	g_signal_connect(G_OBJECT(button_o), "toggled", G_CALLBACK(press_led), &color_o);
+	//g_signal_connect(G_OBJECT(button_o), "button-release-event", G_CALLBACK(press_led_func), &color_o);
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button_o), FALSE);
 	off_led(color_o);
 

@@ -276,9 +276,11 @@ int i2c_cradle_main(GtkWidget *table, GtkWidget *bsub)
 	g_signal_connect(b_single, "clicked", G_CALLBACK(press_single), (gpointer)0);
 	g_signal_connect(b_single, "button-release-event", G_CALLBACK(press_single_func), (gpointer)0);
 	gtk_container_add(GTK_CONTAINER(h0), b_cycle_wv);
-	g_signal_connect(b_cycle_wv, "button-release-event", G_CALLBACK(press_cycle_wv_func), (gpointer)0);
+	g_signal_connect(b_cycle_wv, "toggled", G_CALLBACK(press_cycle_wv), (gpointer)0);
+	//g_signal_connect(b_cycle_wv, "button-release-event", G_CALLBACK(press_cycle_wv_func), (gpointer)0);
 	gtk_container_add(GTK_CONTAINER(h0), b_cycle_read);
-	g_signal_connect(b_cycle_read, "button-release-event", G_CALLBACK(press_cycle_read_func), (gpointer)0);
+	g_signal_connect(b_cycle_read, "toggled", G_CALLBACK(press_cycle_read), (gpointer)0);
+	//g_signal_connect(b_cycle_read, "button-release-event", G_CALLBACK(press_cycle_read_func), (gpointer)0);
 	gtk_container_add(GTK_CONTAINER(a1), v1);
 	
 	v0=gtk_vbox_new(FALSE, 10);

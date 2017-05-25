@@ -805,8 +805,8 @@ int felica_main(GtkWidget *table, GtkWidget *bsub)
 	a3=gtk_alignment_new(0.5, 0.5, 0.2, 0.5);
 	cb=gtk_check_button_new_with_label("Turn on FeliCa Unit");
 	felica_set_power(0);
-	//g_signal_connect(cb, "toggled", G_CALLBACK(felica_toggle), (gpointer)0);
-	g_signal_connect(cb, "button-release-event", G_CALLBACK(felica_toggle_func), (gpointer)0);
+	g_signal_connect(cb, "toggled", G_CALLBACK(felica_toggle), (gpointer)0);
+	//g_signal_connect(cb, "button-release-event", G_CALLBACK(felica_toggle_func), (gpointer)0);
 	
 	gtk_container_add(GTK_CONTAINER(a3), cb);
 	gtk_container_add(GTK_CONTAINER(v0), a3);

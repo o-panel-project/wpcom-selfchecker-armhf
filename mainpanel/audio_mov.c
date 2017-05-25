@@ -394,8 +394,8 @@ GtkWidget *put_vol(GtkWidget *c, int *check, int *is_loop)
 	g_signal_connect(hs, "value-changed", G_CALLBACK(vol_got), (gpointer)0);
 	
 	cb=gtk_check_button_new_with_label("Loop Play");
-	//g_signal_connect(cb, "toggled", G_CALLBACK(loop_got), (gpointer)is_loop);
-	g_signal_connect(cb, "button-release-event", G_CALLBACK(loop_got_func), (gpointer)is_loop);
+	g_signal_connect(cb, "toggled", G_CALLBACK(loop_got), (gpointer)is_loop);
+	//g_signal_connect(cb, "button-release-event", G_CALLBACK(loop_got_func), (gpointer)is_loop);
 	
 	h0=gtk_hbox_new(FALSE, 10);
 	
