@@ -72,7 +72,7 @@ int dmesg_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(vbox), scrolledwindow);
 
 	bb = sc_bbox2(&button_no, bsub,
-			gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+			gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(vbox), bb, FALSE, FALSE, 0);
 
 	sc_table_attach2(GTK_TABLE(table), vbox);

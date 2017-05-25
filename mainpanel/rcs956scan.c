@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "common.h"
+#include "wpcio.h"
 
 #include "ics_types.h"
 #include "utl.h"
@@ -144,11 +145,20 @@ char *scan_rcs956()
 	int ret, cnt, i;
 	struct timespec ts;
 	char *str;
+	int machine_type;
 
 	ts.tv_sec	= 0;
 	ts.tv_nsec	= 200000000;
 
-	m_iIsJ4 = sc_IsJ4();
+	machine_type = sc_get_board_type();
+	switch (machine_type) {
+	case WPC_BOARD_TYPE_J4:
+	case WPC_BOARD_TYPE_O:
+		m_iIsJ4 = 1;
+		break;
+	default:
+		break;
+	}
 
 	for (cnt = 1; cnt <= 15; cnt++ ) {	// 3sec
 		LOGWARNING("%s():rcs956 scan start. cnt=%d\r\n", __func__, cnt);

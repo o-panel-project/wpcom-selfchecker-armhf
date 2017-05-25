@@ -14,6 +14,7 @@
 
 #include "sc_i2c.h"
 #include "common.h"
+#include "wpcio.h"
 
 int sc_i2c_open(int bus_no, const unsigned char addrs)
 {
@@ -35,10 +36,16 @@ int sc_i2c_open(int bus_no, const unsigned char addrs)
 int sc_i2c_check_open(int *fd)
 {
 	int bus_no = I2C_BUS2;
+	int machine_type;
 
 	if(0<*fd) return *fd;
 
-	if (sc_IsJ4())
+	machine_type = sc_get_board_type();
+//	if (sc_IsJ4())
+//		bus_no = I2C_BUS1;
+	if (machine_type == WPC_BOARD_TYPE_O)
+		bus_no = I2C_BUS3;
+	else if (machine_type == WPC_BOARD_TYPE_J4)
 		bus_no = I2C_BUS1;
 
 	*fd = sc_i2c_open(bus_no, I2C_CRADLE_ROM_ADDR);

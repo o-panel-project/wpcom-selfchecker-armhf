@@ -21,6 +21,7 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include "wpcio.h"
+#include "common.h"
 
 #if 1
 #define PING_COUNT 1000

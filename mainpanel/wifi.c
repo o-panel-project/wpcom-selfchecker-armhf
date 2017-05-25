@@ -416,6 +416,12 @@ static void press_start_ping(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(b_ping_start, FALSE);
 	gtk_widget_set_sensitive(b_ping_stop, TRUE);
 }
+static gboolean press_start_ping_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_start_ping(widget, data);
+	return FALSE;
+}
 
 static void press_stop_ping(GtkWidget *widget, gpointer data)
 {
@@ -428,6 +434,12 @@ static void press_stop_ping(GtkWidget *widget, gpointer data)
 	pid_ping=0;
 	gtk_widget_set_sensitive(b_ping_start, TRUE);
 }
+static gboolean press_stop_ping_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_stop_ping(widget, data);
+	return FALSE;
+}
 
 static void press_browser(GtkWidget *widget, gpointer data)
 {
@@ -437,6 +449,12 @@ static void press_browser(GtkWidget *widget, gpointer data)
 	sc_gtk_update();
 	system(tmps);
 	gtk_widget_set_sensitive(v_main, TRUE);
+}
+static gboolean press_browser_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_browser(widget, data);
+	return FALSE;
 }
 
 static void wifi_config_changed(GtkComboBox *combo, gpointer data)
@@ -511,6 +529,12 @@ void press_download(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(p,TRUE);
 	return;
 }
+static gboolean press_download_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_download(widget, data);
+	return FALSE;
+}
 
 void press_upload(GtkWidget *widget, gpointer data)
 {
@@ -573,6 +597,12 @@ void press_upload(GtkWidget *widget, gpointer data)
 	
 	gtk_widget_set_sensitive(p, TRUE);
 }
+static gboolean press_upload_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_upload(widget, data);
+	return FALSE;
+}
 
 static void wifi_set_config()
 {
@@ -631,6 +661,12 @@ void press_configure(GtkWidget *widget, gpointer data)
 	system(tmps);
 	error_check((GtkTextView *)log_check_ping.w);
 }
+static gboolean press_configure_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_configure(widget, data);
+	return FALSE;
+}
 
 
 //
@@ -660,7 +696,7 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	tbl=gtk_table_new(2, 2, FALSE);
 	gtk_container_add(GTK_CONTAINER(a0), tbl);
 	gtk_container_add(GTK_CONTAINER(v_main), a0);
-	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v_main), bb, FALSE, FALSE, 0);
 	
 	// top-left part
@@ -680,8 +716,8 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	g_signal_connect(G_OBJECT(combo), "changed",
 			G_CALLBACK(wifi_config_changed), NULL);
 	b_go = gtk_button_new_with_label("Configure");
-	g_signal_connect(G_OBJECT(b_go), "clicked",
-			G_CALLBACK(press_configure), (gpointer)0);
+	g_signal_connect(G_OBJECT(b_go), "button-release-event",
+			G_CALLBACK(press_configure_func), (gpointer)0);
 
 	gtk_container_add(GTK_CONTAINER(v00), cb_lbl);
 	gtk_container_add(GTK_CONTAINER(v00), combo);
@@ -717,11 +753,11 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	a10=gtk_alignment_new(0.5, 0.5, 0.0, 0.0);
 
 	b10=gtk_button_new_with_label("Download File");
-	g_signal_connect(b10, "clicked", G_CALLBACK(press_download), (gpointer)table);
+	g_signal_connect(b10, "button-release-event", G_CALLBACK(press_download_func), (gpointer)table);
 	b11=gtk_button_new_with_label("Upload File");
-	g_signal_connect(b11, "clicked", G_CALLBACK(press_upload), (gpointer)table);
+	g_signal_connect(b11, "button-release-event", G_CALLBACK(press_upload_func), (gpointer)table);
 	b12=gtk_button_new_with_label("Invoke Browser");
-	g_signal_connect(b12, "clicked", G_CALLBACK(press_browser), (gpointer)0);
+	g_signal_connect(b12, "button-release-event", G_CALLBACK(press_browser_func), (gpointer)0);
 
 	gtk_container_add(GTK_CONTAINER(v10), b10);
 	gtk_container_add(GTK_CONTAINER(v10), b11);
@@ -747,9 +783,9 @@ int wifi_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(tv1), FALSE);
 	h2=gtk_hbox_new(FALSE, 10);
 	b_ping_start=gtk_button_new_with_label("Start Ping");
-	g_signal_connect(b_ping_start, "clicked", G_CALLBACK(press_start_ping), (gpointer)0);
+	g_signal_connect(b_ping_start, "button-release-event", G_CALLBACK(press_start_ping_func), (gpointer)0);
 	b_ping_stop=gtk_button_new_with_label("Stop Ping");
-	g_signal_connect(b_ping_stop, "clicked", G_CALLBACK(press_stop_ping), (gpointer)0);
+	g_signal_connect(b_ping_stop, "button-release-event", G_CALLBACK(press_stop_ping_func), (gpointer)0);
 	gtk_widget_set_sensitive(b_ping_stop, FALSE);
 
 	gtk_container_add(GTK_CONTAINER(sc1), tv1);

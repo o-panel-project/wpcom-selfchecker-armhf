@@ -59,6 +59,12 @@ static void btn_date_ok_clicked(GtkWidget *button, gpointer user_data)
 	
 	clock_settime(CLOCK_REALTIME, &tp);
 }
+static gboolean btn_date_ok_clicked_func(
+		GtkWidget *button, GdkEvent *event, gpointer user_data)
+{
+	btn_date_ok_clicked(button, user_data);
+	return FALSE;
+}
 
 
 char ntpdate_end_msg[256];
@@ -104,7 +110,12 @@ static void btn_date_net_set_clicked(GtkWidget *button, gpointer user_data)
 {
 	sc_wait_dialog("Please wait for a minute ...\n", "OK", exec_ntpdate);
 }
-
+static gboolean btn_date_net_set_clicked_func(
+		GtkWidget *button, GdkEvent *event, gpointer user_data)
+{
+	btn_date_net_set_clicked(button, user_data);
+	return FALSE;
+}
 
 static void btn_date_default_clicked(GtkWidget *button, gpointer user_data)
 {
@@ -121,7 +132,12 @@ static void btn_date_default_clicked(GtkWidget *button, gpointer user_data)
 	set_updown_value(&ud_month,  cur_tm->tm_mon+1);
 	set_updown_value(&ud_year,   cur_tm->tm_year+1900);
 }
-
+static gboolean btn_date_default_clicked_func(
+		GtkWidget *button, GdkEvent *event, gpointer user_data)
+{
+	btn_date_default_clicked(button, user_data);
+	return FALSE;
+}
 
 static void btn_serialid_ok_clicked(GtkWidget *button, gpointer user_data)
 {
@@ -144,6 +160,12 @@ printf("[%s][%s][%d]\n",__FILE__,__FUNCTION__,__LINE__);
 		);
 	set_serial_id(buf);
 }
+static gboolean btn_serialid_ok_clicked_func(
+		GtkWidget *button, GdkEvent *event, gpointer user_data)
+{
+	btn_serialid_ok_clicked(button, user_data);
+	return FALSE;
+}
 
 
 static void btn_serialid_default_clicked(GtkWidget *button, gpointer user_data)
@@ -162,6 +184,12 @@ printf("[%s][%s][%d]\n",__FILE__,__FUNCTION__,__LINE__);
 	set_updown_value(&ud_serial8, defaultid[9]-'0');
 	set_updown_value(&ud_serial9, defaultid[10]-'0');
 	set_updown_value(&ud_serial10, defaultid[11]-'0');
+}
+static gboolean btn_serialid_default_clicked_func(
+		GtkWidget *button, GdkEvent *event, gpointer user_data)
+{
+	btn_serialid_default_clicked(button, user_data);
+	return FALSE;
 }
 
 #define SERIAL_ID_FILE "/mnt1/var/serialid"
@@ -270,17 +298,17 @@ int date_main(GtkWidget *table, GtkWidget *bsub)
 	
 	// デフォルトボタン
 	btn_date_default_set = gtk_button_new_with_label("Get System Date");
-	g_signal_connect(G_OBJECT(btn_date_default_set), "clicked", G_CALLBACK(btn_date_default_clicked), NULL);
+	g_signal_connect(G_OBJECT(btn_date_default_set), "button-release-event", G_CALLBACK(btn_date_default_clicked_func), NULL);
 	gtk_box_pack_start(GTK_BOX(hbox_date_btn), btn_date_default_set, TRUE, TRUE, 0);
 	
 	// ntpdateボタン
 	btn_date_net_set = gtk_button_new_with_label("Online Setup");
-	g_signal_connect(G_OBJECT(btn_date_net_set), "clicked", G_CALLBACK(btn_date_net_set_clicked), NULL);
+	g_signal_connect(G_OBJECT(btn_date_net_set), "button-release-event", G_CALLBACK(btn_date_net_set_clicked_func), NULL);
 	gtk_box_pack_start(GTK_BOX(hbox_date_btn), btn_date_net_set, TRUE, TRUE, 0);
 	
 	// 設定ボタン
 	btn_date_ok = gtk_button_new_with_label("  Set Date  ");
-	g_signal_connect(G_OBJECT(btn_date_ok), "clicked", G_CALLBACK(btn_date_ok_clicked), NULL);
+	g_signal_connect(G_OBJECT(btn_date_ok), "button-release-event", G_CALLBACK(btn_date_ok_clicked_func), NULL);
 	gtk_box_pack_start(GTK_BOX(hbox_date_btn), btn_date_ok, TRUE, TRUE, 0);
 	
 	vbox_date_all = gtk_vbox_new(FALSE, 1);
@@ -343,12 +371,12 @@ int date_main(GtkWidget *table, GtkWidget *bsub)
 	
 	// デフォルトボタン
 	btn_serialid_default_set = gtk_button_new_with_label("Default Serial ID");
-	g_signal_connect(G_OBJECT(btn_serialid_default_set), "clicked", G_CALLBACK(btn_serialid_default_clicked), NULL);
+	g_signal_connect(G_OBJECT(btn_serialid_default_set), "button-release-event", G_CALLBACK(btn_serialid_default_clicked_func), NULL);
 	gtk_box_pack_start(GTK_BOX(hbox_serialid_btn), btn_serialid_default_set, TRUE, TRUE, 0);
 	
 	// 設定ボタン
 	btn_serialid_ok = gtk_button_new_with_label("Set Serial ID");
-	g_signal_connect(G_OBJECT(btn_serialid_ok), "clicked", G_CALLBACK(btn_serialid_ok_clicked), NULL);
+	g_signal_connect(G_OBJECT(btn_serialid_ok), "button-release-event", G_CALLBACK(btn_serialid_ok_clicked_func), NULL);
 	gtk_box_pack_start(GTK_BOX(hbox_serialid_btn), btn_serialid_ok, TRUE, TRUE, 0);
 	
 	vbox_serialid_all = gtk_vbox_new(FALSE, 1);
@@ -362,7 +390,7 @@ int date_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(frame_serialid), a_serialid);
 	
 	// バッテリー
-	bb = sc_bbox2(&st_exit, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+	bb = sc_bbox2(&st_exit, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 	
 	// 全体のボックス
 	v1 = gtk_vbox_new(FALSE, 5);

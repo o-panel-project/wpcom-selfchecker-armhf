@@ -10,7 +10,8 @@
 //#include <gtk/gtk.h>
 #include <sys/time.h>
 
-#define SC_TITLE   "New SelfChecker (j3～)"
+#define SC_TITLE   "New SelfChecker (j3/j35/o)"
+#define SC_TITLE_2 "SelfChecker(j3/j35/o)"
 #define SC_VERSION "v3.6.0"
 
 #define	WPC_BOARD_TYPE_J35	35
@@ -36,6 +37,7 @@ extern int cr_mount_ok;							/*	20110905VACS	*/
 #define	AUDIO_VOLUME_MAX	63					/*	20110917VACS	*/
 #define	AUDIO_VOLUME1_MAX	127	/* for J4 */
 #define	AUDIO_VOLUME2_MAX	118	/* for J4 */
+#define	AUDIO_VOLUME_MAX_O	255					/*	20110917VACS	*/
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
@@ -81,9 +83,11 @@ enum{
 extern void sc_gtk_update();
 extern void sc_gtk_update_n(int n);
 extern void sc_bbox1_click(GtkWidget *widget, gpointer data);
+extern gboolean sc_bbox1_click_func(GtkWidget *widget, GdkEvent *ev, gpointer data);
 extern void sc_bbox1_click_noquit(GtkWidget *widget, gpointer data);
+extern gboolean sc_bbox1_click_noquit_func(GtkWidget *widget, GdkEvent *ev, gpointer data);
 extern GtkWidget *sc_bbox1(int *st, GtkWidget *b, void (*callback)(GtkWidget *, gpointer));
-extern GtkWidget *sc_bbox2(int *st, GtkWidget *bsub, GtkWidget *b_quit, void (*callback)(GtkWidget *, gpointer));
+extern GtkWidget *sc_bbox2(int *st, GtkWidget *bsub, GtkWidget *b_quit, gboolean (*callback)(GtkWidget *, GdkEvent *,gpointer));
 extern void sc_bbox2_remove(GtkWidget *bsub);
 extern void sc_message(GtkMessageType type, GtkButtonsType buttons, const char *fmt, ...);
 extern void sc_gtk_text_view_insert(GtkTextView *tv, char *buf, int n);

@@ -18,18 +18,25 @@
 #include <sys/ioctl.h>
 #include <gtk/gtk.h>
 #include "common.h"
+#include "wpcio.h"
 
 static time_t t_fin=0;
 static int loop_run=0;
 static int brightness_j3max=100, brightness_j3ini=70, brightness_j3step=10;
 static int brightness_j4max=8, brightness_j4ini=7, brightness_j4step=1;
+static int brightness_omax=1000, brightness_oini=700, brightness_ostep=100;
 static int brightness_max=100, brightness=70, brightness_step=10;
 static GtkWidget *b_start, *b_stop, *b_quit, *slider, *aj;
+
+static int machine_type = WPC_BOARD_TYPE_J;
+static int fd_wpcio;
 
 #define SYSFS_BACKLIGHT_IF_DIR	\
 	"/sys/devices/platform/omapdss/generic-bl/backlight/omap3evm-bklight"
 #define SYSFS_BACKLIGHT_IF_DIR_J4	\
 	"/sys/devices/backlight.4/backlight/backlight.4"
+#define SYSFS_BACKLIGHT_IF_DIR_O	\
+	"/sys/class/backlight/backlight.2"
 #define SYSFS_DISPLAY_IF_DIR	\
 	"/sys/devices/omapdss/display0"
 #define SYSFS_DISPLAY_IF_DIR_J4	\
@@ -49,7 +56,17 @@ static char sysfs_display_enable[256];
 
 static void BackLight_machine_check()
 {
-	if (sc_IsJ4()) {
+	if (machine_type == WPC_BOARD_TYPE_O) {
+		sprintf(sysfs_backlight_power,
+			SYSFS_BACKLIGHT_IF_DIR_O "/" SYSFS_BACKLIGHT_POWER_NAME);
+		sprintf(sysfs_backlight_brightness,
+			SYSFS_BACKLIGHT_IF_DIR_O "/" SYSFS_BACKLIGHT_BRIGHT_NAME);
+		sprintf(sysfs_display_enable,
+			SYSFS_BACKLIGHT_IF_DIR_O "/" SYSFS_BACKLIGHT_POWER_NAME); 
+		brightness_max = brightness_omax;
+		brightness_step = brightness_ostep;
+		brightness = brightness_oini;
+	} else if (machine_type == WPC_BOARD_TYPE_J4) {
 		sprintf(sysfs_backlight_power,
 			SYSFS_BACKLIGHT_IF_DIR_J4 "/" SYSFS_BACKLIGHT_POWER_NAME);
 		sprintf(sysfs_backlight_brightness,
@@ -166,6 +183,12 @@ static void loop_start(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(b_stop, TRUE);
 	g_timeout_add(500, bright_dim_loop, 0);
 }
+static gboolean loop_start_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	loop_start(widget, data);
+	return FALSE;
+}
 
 static void loop_stop(GtkWidget *widget, gpointer data)
 {
@@ -176,6 +199,12 @@ static void loop_stop(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(b_stop, FALSE);
 //	gtk_adjustment_set_value(GTK_ADJUSTMENT(aj), 70.0);
 //	brightness=70;
+}
+static gboolean loop_stop_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	loop_stop(widget, data);
+	return FALSE;
 }
 
 static void slider_set(GtkWidget *widget, gpointer data)
@@ -200,16 +229,62 @@ bl_toggle2(GtkWidget *widget, gpointer data)
 			"\n\n\n\nBack Light Power Off\n\n\n\n" :
 			"\n\n\n\nBack Light Power On\n\n\n\n");
 }
+static gboolean bl_toggle2_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	bl_toggle2(widget, data);
+	return FALSE;
+}
+
+static void
+bl_toggle_o(GtkWidget *widget, gpointer data)
+{
+	if (bl_toggle_charge) {
+		printf("Do lcd disable\n");
+		//must do reset DSI signal 
+		system("cat /sys/devices/b0220000.dsi/test_dsi");
+		usleep(100);
+		lcd_enable(1);
+	} else {
+		printf("Do lcd enable\n");
+		lcd_enable(0);
+		usleep(100);
+		//err = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_LOW, 23);
+		//if (err < 0) {
+		//	printf("LCD BL on/off, error pin= 23\n");
+		//}
+	}
+	if(bl_toggle_charge)        bl_toggle_charge=0;
+	else if(!bl_toggle_charge)  bl_toggle_charge=1;
+
+	gtk_button_set_label(GTK_BUTTON(widget), bl_toggle_charge ?
+			"\n\n\n\nBack Light Power Off\n\n\n\n" :
+			"\n\n\n\nBack Light Power On\n\n\n\n");
+}
+static gboolean bl_toggle_o_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	bl_toggle_o(widget, data);
+	return FALSE;
+}
 
 //	20121002VACS
 static void
 reset_bri(GtkWidget *widget, gpointer data)
 {
-	if (sc_IsJ4())
+	if (machine_type == WPC_BOARD_TYPE_O)
+		brightness=brightness_oini;
+	else if (machine_type == WPC_BOARD_TYPE_J4)
 		brightness=brightness_j4ini;
 	else
 		brightness=brightness_j3ini;
 	gtk_adjustment_set_value(GTK_ADJUSTMENT(aj), (gdouble)brightness);
+}
+static gboolean reset_bri_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	reset_bri(widget, data);
+	return FALSE;
 }
 
 int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
@@ -220,15 +295,20 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	GtkWidget *a2, *lb1, *a3, *cb;
 	GtkWidget *b0, *t0;
 	
+	machine_type = sc_get_board_type();
 	BackLight_machine_check();
+	if ((fd_wpcio = open("/dev/wpcio", O_RDWR)) < 0) {
+		printf("Cannot open /dev/wpcio\n");
+		return -1;
+	}
 
 	lb0=gtk_label_new("Bright-Dim Loop:");
 	b_start=gtk_button_new_with_label("Start");
-	g_signal_connect(b_start, "clicked", G_CALLBACK(loop_start), (gpointer)0);
+	g_signal_connect(b_start, "button-release-event", G_CALLBACK(loop_start_func), (gpointer)0);
 	
 	b_stop=gtk_button_new_with_label("Stop");
 	gtk_widget_set_sensitive(b_stop, FALSE);
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(loop_stop), (gpointer)0);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(loop_stop_func), (gpointer)0);
 	
 	h0=gtk_hbox_new(FALSE, 10);
 	gtk_container_add(GTK_CONTAINER(h0), lb0);
@@ -237,7 +317,7 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	a1=gtk_alignment_new(0.5, 0.8, 0.5, 0.13);
 	gtk_container_add(GTK_CONTAINER(a1), h0);
 	
-	lb1=gtk_label_new("Brightness %: ");
+	lb1=gtk_label_new("Brightness : ");
 
 	brightness=max(brightness_get(),0);
 	aj=(GtkWidget *)gtk_adjustment_new(brightness, 0, brightness_max, brightness_step, brightness_step, 0);
@@ -245,7 +325,7 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	g_signal_connect(aj, "value-changed", G_CALLBACK(slider_set), (gpointer)0);
 
 	b0=gtk_button_new_with_label("Reset");
-	g_signal_connect(b0, "clicked", G_CALLBACK(reset_bri), (gpointer)0);
+	g_signal_connect(b0, "button-release-event", G_CALLBACK(reset_bri_func), (gpointer)0);
 
 	t0=gtk_table_new(2, 2, FALSE);
 
@@ -261,7 +341,10 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	cb=gtk_button_new_with_label(bl_toggle_charge ?
 			"\n\n\n\nBack Light Power Off\n\n\n\n" :
 			"\n\n\n\nBack Light Power On\n\n\n\n");
-	g_signal_connect(cb, "clicked", G_CALLBACK(bl_toggle2), (gpointer)0);
+	if (machine_type == WPC_BOARD_TYPE_O)
+		g_signal_connect(cb, "button-release-event", G_CALLBACK(bl_toggle_o_func), (gpointer)0);
+	else
+	g_signal_connect(cb, "button-release-event", G_CALLBACK(bl_toggle2_func), (gpointer)0);
 #else
 	a3=gtk_alignment_new(0.5, 0.5, 0.2, 0.5);
 	cb=gtk_check_button_new_with_label("Back Light Power");
@@ -276,7 +359,7 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(v0), a3);
 	
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click);
+	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29
@@ -294,5 +377,6 @@ int lcd_pwm_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_main();
 	sc_bbox2_remove(bsub);
 	gtk_widget_destroy(v0);
+	close(fd_wpcio);
 	return 0;
 }

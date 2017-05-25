@@ -112,14 +112,19 @@ static void get_value()
 	bat_v2 = bat2 * (BAT_RL + BAT_RH) / BAT_RL;
 
 #endif
-	sc_get_battery_status("battery", &bat_v0, &bat_v1, &bat1_stat, &bat_v2, &bat2_stat);
+	if (g_board_type == WPC_BOARD_TYPE_O)
+		sc_get_battery_status_o(
+				"battery", &bat_v0, &bat_v1, &bat1_stat, &bat_v2, &bat2_stat);
+	else
+		sc_get_battery_status(
+				"battery", &bat_v0, &bat_v1, &bat1_stat, &bat_v2, &bat2_stat);
 	bat_r0 = bat1_stat;
 	bat_r1 = bat2_stat;
 	bat_r2 = bat_v0;
 	bat_r3 = bat_v1;
 	bat_r4 = bat_v2;
 	if (g_board_type != WPC_BOARD_TYPE_J) {
-		bat_v2 = sc_get_cradle_battery_level();
+		bat_v2 = sc_get_cradle_battery_level(g_board_type);
 		if (bat_v2 == CRADLE_BAT_OPEN_ERROR || bat_v2 == CRADLE_BAT_MODE_ERROR){
 			/* cradle detach? */
 			bat_v2 = -1;
@@ -294,6 +299,10 @@ int bat_no;
 
 	switch(bat_no){
 	case 0:
+		if (g_board_type == WPC_BOARD_TYPE_O)
+			/*	BAT1 charge on, GPIOA18	*/
+			err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 18);
+		else
 		/*	BAT1 charge on, GPIO65	*/
 		err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 65);
 		break;
@@ -339,6 +348,12 @@ int bat_no;
 	close(fd);
 	return err;
 }
+static gboolean press_charge_on_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_charge_on(widget, data);
+	return FALSE;
+}
 
 /*	20110729VACS	*/
 static int press_charge_off(GtkWidget *widget, gpointer data)
@@ -359,6 +374,10 @@ int bat_no;
 
 	switch(bat_no){
 	case 0:
+		if (g_board_type == WPC_BOARD_TYPE_O)
+			/*	BAT1 charge off, GPIOA18	*/
+			err = ioctl(fd, WPC_SET_GPIO_OUTPUT_LOW, 18);
+		else
 		/*	BAT1 charge off, GPIO65	*/
 		err = ioctl(fd, WPC_SET_GPIO_OUTPUT_LOW, 65);
 		break;
@@ -404,6 +423,12 @@ int bat_no;
 	close(fd);
 	return err;
 }
+static gboolean press_charge_off_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_charge_off(widget, data);
+	return FALSE;
+}
 
 static int press_start(GtkWidget *widget, gpointer data)
 {
@@ -445,6 +470,12 @@ static int press_start(GtkWidget *widget, gpointer data)
 //	start_timer();
 	return 1;
 }
+static gboolean press_start_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_start(widget, data);
+	return FALSE;
+}
 
 static void press_stop(GtkWidget *widget, gpointer data)
 {
@@ -458,6 +489,12 @@ static void press_stop(GtkWidget *widget, gpointer data)
 	
 	store=GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tv_sidemenu)));
 	gtk_tree_store_set(store, &iter_battery, COLUMN_LABEL, "Battery Level", COLUMN_NAME_COLOR, NULL, -1);
+}
+static gboolean press_stop_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_stop(widget, data);
+	return FALSE;
 }
 
 static void battery_main_interval_mode(GtkWidget *v0)
@@ -544,11 +581,11 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	h3=gtk_hbox_new(FALSE, 10);
 	lb_logging=gtk_label_new(pid_battery_logger ? LABEL_LOGGING_ON : LABEL_LOGGING_OFF);
 	b_start=gtk_button_new_with_label("Start");
-	g_signal_connect(b_start, "clicked", G_CALLBACK(press_start), (gpointer)0);
+	g_signal_connect(b_start, "button-release-event", G_CALLBACK(press_start_func), (gpointer)0);
 	if(pid_battery_logger) gtk_widget_set_sensitive(b_start, FALSE);
 	
 	b_stop=gtk_button_new_with_label("Stop");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(press_stop), (gpointer)0);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(press_stop_func), (gpointer)0);
 	if(!pid_battery_logger) gtk_widget_set_sensitive(b_stop, FALSE);
 	gtk_container_add(GTK_CONTAINER(h3), lb_logging);
 	gtk_container_add(GTK_CONTAINER(h3), b_start);
@@ -562,7 +599,7 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	h_bat1=gtk_hbox_new(FALSE, 10);
 	lb_charge_b1=gtk_label_new(pid_bat1_charge ? LABEL_BAT1_CHARGE_ON : LABEL_BAT1_CHARGE_OFF);
 	b_charge_b1_on=gtk_button_new_with_label("Charge on");
-	g_signal_connect(b_charge_b1_on, "clicked", G_CALLBACK(press_charge_on), (gpointer)0);
+	g_signal_connect(b_charge_b1_on, "button-release-event", G_CALLBACK(press_charge_on_func), (gpointer)0);
 	if(pid_bat1_charge){
 		gtk_widget_set_sensitive(b_charge_b1_on, FALSE);
 	}	else	{
@@ -570,7 +607,7 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	}
 
 	b_charge_b1_off=gtk_button_new_with_label("Charge off");
-	g_signal_connect(b_charge_b1_off, "clicked", G_CALLBACK(press_charge_off), (gpointer)0);
+	g_signal_connect(b_charge_b1_off, "button-release-event", G_CALLBACK(press_charge_off_func), (gpointer)0);
 	if(!pid_bat1_charge){
 		gtk_widget_set_sensitive(b_charge_b1_off, FALSE);
 	}	else	{
@@ -587,7 +624,7 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	h_bat2=gtk_hbox_new(FALSE, 10);
 	lb_charge_b2=gtk_label_new(pid_bat2_charge ? LABEL_BAT2_CHARGE_ON : LABEL_BAT2_CHARGE_OFF);
 	b_charge_b2_on=gtk_button_new_with_label("Charge on");
-	g_signal_connect(b_charge_b2_on, "clicked", G_CALLBACK(press_charge_on), (gpointer)1);
+	g_signal_connect(b_charge_b2_on, "button-release-event", G_CALLBACK(press_charge_on_func), (gpointer)1);
 	if(pid_bat2_charge){
 		gtk_widget_set_sensitive(b_charge_b2_on, FALSE);
 	}	else	{
@@ -595,7 +632,7 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	}
 
 	b_charge_b2_off=gtk_button_new_with_label("Charge off");
-	g_signal_connect(b_charge_b2_off, "clicked", G_CALLBACK(press_charge_off), (gpointer)1);
+	g_signal_connect(b_charge_b2_off, "button-release-event", G_CALLBACK(press_charge_off_func), (gpointer)1);
 	if(!pid_bat2_charge){
 		gtk_widget_set_sensitive(b_charge_b2_off, FALSE);
 	}	else	{
@@ -617,7 +654,7 @@ int battery_main(GtkWidget *table, GtkWidget *bsub)
 	}
 
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click);
+	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 #if 1  // vacs,2012/2/29
 	sc_table_attach2(GTK_TABLE(table), v0);
@@ -764,6 +801,7 @@ gboolean battery_sub_update_step(gpointer point)
 					imgsub_bat1fast, imgsub_bat1full, imgsub_bat1fault,
 					imgsub_bat2fast, imgsub_bat2full, imgsub_bat2fault);
 	
+	//printf("battery_sub_update_step %d,%d,%d\n",bat_r2,bat_r3,bat_r4);
 	if (0<=bat_r2 && 0<=bat_r3 && 0<=bat_r4) {
 		sprintf(tmps, "<span size=\"x-small\">  DC:%dmV</span>", bat_v0);
 		gtk_label_set_markup(GTK_LABEL(lb_bat0), tmps);
@@ -787,6 +825,7 @@ void *battery_sub_update(void *data)
 
 		tag=g_idle_add_full(G_PRIORITY_HIGH, battery_sub_update_step, NULL, NULL);
 		usleep(1000*1000);
+	//	usleep(1000*1000*10);
 		/*g_source_remove(tag);*/
 		/* if function returns FALSE, tag is automatically removed */
 	}	

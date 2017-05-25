@@ -2,6 +2,7 @@
 
 #define	I2C_BUS1	1
 #define	I2C_BUS2	2
+#define	I2C_BUS3	3
 #define I2C_DEVICE_BASE	"/dev/i2c-"
 #define I2C_CRADLE_ADC_ADDR	0x48
 #define	I2C_CRADLE_ROM_ADDR	0x55

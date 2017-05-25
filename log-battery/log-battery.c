@@ -23,6 +23,7 @@
 
 static int fd_log=0;
 static int get_value_counter=0;
+static int machine_type = WPC_BOARD_TYPE_J3;
 
 static void get_value()
 {
@@ -45,12 +46,12 @@ static void get_value()
 	if(r0<0){
 		printf("Could not get battery 1 charging status, error code = %d\n", r0);
 	}
-	
+/*
 	r1=ioctl(fd_wpcio, WPC_GET_BAT2_CHARGING_STAT, &x1);
 	if(r1<0){
 		printf("Could not get battery 2 charging status, error code = %d\n", r1);
 	}
-	
+*/
 	r2=ioctl(fd_wpcio, WPC_GET_DC_LEVEL, &dc);
 	if(r2<0){
 		printf("Could not get adc value(0), error code = %d\n", r2);
@@ -59,18 +60,23 @@ static void get_value()
 	if(r3<0){
 		printf("Could not get adc value(1), error code = %d\n", r3);
 	}
+/*
 	r4=ioctl(fd_wpcio, WPC_GET_BAT2_LEVEL, &bat2);
 	if(r4<0){
 		printf("Could not get adc value(2), error code = %d\n", r4);
 	}
+*/
 	close(fd_wpcio);
 	
 	v0=dc * (DC_RL + DC_RH) / DC_RL;
 	v1=bat1 * (BAT_RL + BAT_RH) / BAT_RL;
 	v2=bat2 * (BAT_RL + BAT_RH) / BAT_RL;
 #endif
+	if (machine_type == WPC_BOARD_TYPE_O)
+		sc_get_battery_status_o("log-battery", &v0, &v1, &x0, &v2, &x1);
+	else
 	sc_get_battery_status("log-battery", &v0, &v1, &x0, &v2, &x1);
-	bc0 = sc_get_cradle_battery_level();
+	bc0 = sc_get_cradle_battery_level(machine_type);
 	if (bc0 == CRADLE_BAT_OPEN_ERROR || bc0 == CRADLE_BAT_MODE_ERROR) {
 		/* cradle detach? */
 		bc0 = -1;
@@ -105,6 +111,7 @@ static void start_timer()
 
 int main(int argc, char *argv[])
 {
+	machine_type = sc_get_board_type();
 	fd_log=open(argv[1], O_WRONLY|O_CREAT|O_TRUNC, 0644);
 	if(fd_log<0){
 		printf("Could not open log file : %s.", argv[1]);

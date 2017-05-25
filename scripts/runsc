@@ -6,10 +6,13 @@
 #   Change 2012/07/18 vacslab
 #   Change 2013/07/19 wpc
 #   Change 2013/08/06 wpc
+#   Change 2017/05/23 wpc
 #
 
 go_xserver () {
-  if [ -L /dev/input/melfasts0 ]; then
+  if [ -L /dev/input/ctp_ft5x06 ]; then
+    jgestured -i /dev/input/ctp_ft5x06 &
+  elif [ -L /dev/input/melfasts0 ]; then
     jgestured -i /dev/input/melfasts0 &
   elif [ -c /dev/hidraw0 ]; then
     eGestured -l1 -g1 -x1 &
@@ -18,25 +21,27 @@ go_xserver () {
   fi
   # Wait for udev setup.
   sleep 2
-  Xorg :0 -depth 24 -fbbpp 32 -wr -nocursor -s 0 > /dev/null 2>&1 &
+  Xorg :0 -noreset -depth 24 -fbbpp 32 -wr -nocursor -s 0 > /dev/null 2>&1 &
 }
 
 kill_xserver () {
   killall Xorg
-  if [ -L /dev/input/melfasts0 ]; then
+  if [ -L /dev/input/ctp_ft5x06 ]; then
+    killall jgestured
+  elif [ -L /dev/input/melfasts0 ]; then
     killall jgestured
   elif [ -c /dev/hidraw0 ]; then
     killall eGestured
   fi
 }
 
-if mountpoint /mnt1 >&/dev/null ; then
+if mountpoint /mnt1 > /dev/null 2>&1 ; then
   logdir=/mnt1/log
   if [ ! -d $logdir ]; then
     mkdir -p $logdir
   fi
 else
-  logdir=/var/volatile/log
+  logdir=/var/log
 fi
 
 while true ; do

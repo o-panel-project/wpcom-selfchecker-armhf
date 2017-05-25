@@ -63,10 +63,11 @@ static void click_func(GtkWidget *widget, gpointer data)
 	gtk_image_set_from_pixbuf(GTK_IMAGE(button_image[n]), (flags[n]&1) ? pix_orange : pix_green);
 }
 
-static gboolean button_press_func(
+static gboolean button_release_func(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	g_print("Touch (x, y)=(%.1f, %.1f)\n", event->x_root, event->y_root);
+	click_func(widget, data);
 	return FALSE;
 }
 
@@ -148,8 +149,7 @@ int main(int argc, char *argv[])
  			button_image[n]=gtk_image_new_from_pixbuf(pix_green);
 			gtk_button_set_image(GTK_BUTTON(button), button_image[n]);
 			gtk_table_attach(GTK_TABLE(tbl), button, i, i+1, j, j+1, GTK_FILL | GTK_EXPAND | GTK_SHRINK, GTK_FILL | GTK_EXPAND | GTK_SHRINK, 0, 0);
-			g_signal_connect(G_OBJECT(button), "button-press-event", G_CALLBACK(button_press_func), 0);
-			g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK(click_func), (gpointer)n);
+			g_signal_connect(G_OBJECT(button), "button-release-event", G_CALLBACK(button_release_func), (gpointer)n);
 	    }
 	}
     gtk_widget_show_all(window);

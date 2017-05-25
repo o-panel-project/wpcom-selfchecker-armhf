@@ -15,6 +15,7 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	int i, fd_wpcio, r;
 	GtkWidget *w, *lb;
 	char tmps[SMALL_STR];
+	int gpio;
 
 	w = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_usize(w, get_sc_window_width(), get_sc_window_height());
@@ -36,15 +37,25 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	printf("reset: timer expired.\n");
 	sync();sync();sync();
 	printf("reset: fs synching.\n");
-	r = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_HIGH, 58);
+	if (sc_get_board_type() == WPC_BOARD_TYPE_O)
+		gpio = 116;
+	else
+		gpio = 58;
+	r = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_HIGH, gpio);
 	if (r < 0) {
-		printf("GPIO-58 output high failed.\n");
+		printf("GPIO-%d output high failed.\n", gpio);
 		close(fd_wpcio);
 		return;
 	}
 	/* not reached */
 	close(fd_wpcio);
 	exit(100);
+}
+static gboolean press_execute_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_execute(widget, data);
+	return FALSE;
 }
 
 int reset_main(GtkWidget *table, GtkWidget *bsub)
@@ -69,7 +80,7 @@ int reset_main(GtkWidget *table, GtkWidget *bsub)
 
 	a1 = gtk_alignment_new(0.5, 0.5, 0.3, 0.2);
 	b0 = gtk_button_new_with_label("Execute");
-	g_signal_connect(b0, "clicked", G_CALLBACK(press_execute), (gpointer)0);
+	g_signal_connect(b0, "button-release-event", G_CALLBACK(press_execute_func), (gpointer)0);
 	gtk_container_add(GTK_CONTAINER(a1), b0);
 
 	v0 = gtk_vbox_new(FALSE, 10);
@@ -77,7 +88,7 @@ int reset_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 
 	bb = sc_bbox2(&button_no, bsub,
-			gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+			gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 
 	sc_table_attach2(GTK_TABLE(table), v0);

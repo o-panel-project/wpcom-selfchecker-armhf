@@ -156,6 +156,12 @@ static void press_single(GtkWidget *widget, gpointer data)
 	
 	//sc_message_dialog(result_dialog_text, "OK", TRUE);
 }
+static gboolean press_single_func(
+		GtkWidget *widget, GdkEvent *event,gpointer data)
+{
+	press_single(widget, data);
+	return FALSE;
+}
 
 //
 //	dispacher by timer
@@ -193,6 +199,16 @@ static void press_cycle_wv(GtkWidget *widget, gpointer data)
 		test_type=0;
 	}
 }
+static gboolean press_cycle_wv_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	gboolean state;
+	state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+	gtk_toggle_button_set_active(
+			GTK_TOGGLE_BUTTON(widget), state ? FALSE : TRUE); /* toggled */
+	press_cycle_wv(widget, data);
+	return FALSE;
+}
 
 static void press_cycle_read(GtkWidget *widget, gpointer data)
 {
@@ -209,6 +225,16 @@ static void press_cycle_read(GtkWidget *widget, gpointer data)
 		gtk_widget_set_sensitive(b_quit, TRUE);
 		test_type=0;
 	}
+}
+static gboolean press_cycle_read_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	gboolean state;
+	state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+	gtk_toggle_button_set_active(
+			GTK_TOGGLE_BUTTON(widget), state ? FALSE : TRUE); /* toggled */
+	press_cycle_read(widget, data);
+	return FALSE;
 }
 
 int i2c_cradle_main(GtkWidget *table, GtkWidget *bsub)
@@ -248,17 +274,18 @@ int i2c_cradle_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(h0), b_single);
 	
 	g_signal_connect(b_single, "clicked", G_CALLBACK(press_single), (gpointer)0);
+	g_signal_connect(b_single, "button-release-event", G_CALLBACK(press_single_func), (gpointer)0);
 	gtk_container_add(GTK_CONTAINER(h0), b_cycle_wv);
-	g_signal_connect(b_cycle_wv, "clicked", G_CALLBACK(press_cycle_wv), (gpointer)0);
+	g_signal_connect(b_cycle_wv, "button-release-event", G_CALLBACK(press_cycle_wv_func), (gpointer)0);
 	gtk_container_add(GTK_CONTAINER(h0), b_cycle_read);
-	g_signal_connect(b_cycle_read, "clicked", G_CALLBACK(press_cycle_read), (gpointer)0);
+	g_signal_connect(b_cycle_read, "button-release-event", G_CALLBACK(press_cycle_read_func), (gpointer)0);
 	gtk_container_add(GTK_CONTAINER(a1), v1);
 	
 	v0=gtk_vbox_new(FALSE, 10);
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click);
+	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29

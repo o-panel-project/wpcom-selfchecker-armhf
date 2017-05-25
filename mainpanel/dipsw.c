@@ -117,7 +117,7 @@ int dipsw_main(GtkWidget *table, GtkWidget *bsub)
 	v0=gtk_vbox_new(FALSE, 10);
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	
-	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29

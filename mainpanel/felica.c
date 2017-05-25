@@ -691,6 +691,12 @@ static void press_start(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(b_quit, FALSE);
 	debug_printf(5, "[RCS956 START] polling start out\n");
 }
+static gboolean press_start_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_start(widget, data);
+	return FALSE;
+}
 
 static void press_stop(GtkWidget *widget, gpointer data)
 {
@@ -702,6 +708,12 @@ static void press_stop(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(cb, TRUE);
 	gtk_widget_set_sensitive(b_start, TRUE);
 	gtk_widget_set_sensitive(b_quit, TRUE);
+}
+static gboolean press_stop_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_stop(widget, data);
+	return FALSE;
 }
 
 static void felica_set_power(int x)
@@ -724,6 +736,16 @@ static void felica_toggle(GtkWidget *widget, gpointer data)
 	is_on=(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))==TRUE);
 	gtk_widget_set_sensitive(b_start, is_on ? TRUE : FALSE);
 	felica_set_power(is_on);
+}
+static gboolean felica_toggle_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	int is_on;
+	is_on=(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))==TRUE);
+	gtk_toggle_button_set_active(
+			GTK_TOGGLE_BUTTON(widget), is_on ? FALSE : TRUE);
+	felica_toggle(widget, data);
+	return FALSE;
 }
 
 
@@ -770,10 +792,10 @@ int felica_main(GtkWidget *table, GtkWidget *bsub)
 	h2=gtk_hbox_new(FALSE, 10);
 	a2=gtk_alignment_new(0.5, 0.5, 0, 0);
 	b_start=gtk_button_new_with_label("Start Polling");
-	g_signal_connect(b_start, "clicked", G_CALLBACK(press_start), (gpointer)0);
+	g_signal_connect(b_start, "button-release-event", G_CALLBACK(press_start_func), (gpointer)0);
 	gtk_widget_set_sensitive(b_start, FALSE);
 	b_stop=gtk_button_new_with_label("Stop Polling");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(press_stop), (gpointer)0);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(press_stop_func), (gpointer)0);
 	gtk_widget_set_sensitive(b_stop, FALSE);
 	gtk_container_add(GTK_CONTAINER(h2), b_start);
 	gtk_container_add(GTK_CONTAINER(h2), b_stop);
@@ -783,13 +805,14 @@ int felica_main(GtkWidget *table, GtkWidget *bsub)
 	a3=gtk_alignment_new(0.5, 0.5, 0.2, 0.5);
 	cb=gtk_check_button_new_with_label("Turn on FeliCa Unit");
 	felica_set_power(0);
-	g_signal_connect(cb, "toggled", G_CALLBACK(felica_toggle), (gpointer)0);
+	//g_signal_connect(cb, "toggled", G_CALLBACK(felica_toggle), (gpointer)0);
+	g_signal_connect(cb, "button-release-event", G_CALLBACK(felica_toggle_func), (gpointer)0);
 	
 	gtk_container_add(GTK_CONTAINER(a3), cb);
 	gtk_container_add(GTK_CONTAINER(v0), a3);
 	
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click);
+	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29

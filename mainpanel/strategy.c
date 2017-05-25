@@ -40,6 +40,12 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	system(f);
 	gtk_widget_destroy(w);
 }
+static gboolean press_execute_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_execute(widget, data);
+	return FALSE;
+}
 
 static int check_exclude_battery()
 {
@@ -72,11 +78,11 @@ int strategy_main(GtkWidget *table, GtkWidget *bsub)
 	a1=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
 	
 	lb1=gtk_button_new_with_label("Excute Strategy File 1");
-	g_signal_connect(lb1, "clicked", G_CALLBACK(press_execute), (gpointer)1);
+	g_signal_connect(lb1, "button-release-event", G_CALLBACK(press_execute_func), (gpointer)1);
 	lb2=gtk_button_new_with_label("Excute Strategy File 2");
-	g_signal_connect(lb2, "clicked", G_CALLBACK(press_execute), (gpointer)2);
+	g_signal_connect(lb2, "button-release-event", G_CALLBACK(press_execute_func), (gpointer)2);
 	lb3=gtk_button_new_with_label("Excute Strategy File 3");
-	g_signal_connect(lb3, "clicked", G_CALLBACK(press_execute), (gpointer)3);
+	g_signal_connect(lb3, "button-release-event", G_CALLBACK(press_execute_func), (gpointer)3);
 	
 	gtk_container_add(GTK_CONTAINER(v1), lb1);
 	gtk_container_add(GTK_CONTAINER(v1), lb2);
@@ -86,7 +92,7 @@ int strategy_main(GtkWidget *table, GtkWidget *bsub)
 	v0=gtk_vbox_new(FALSE, 10);
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	
-	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29

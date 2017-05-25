@@ -38,10 +38,22 @@ void sc_bbox1_click(GtkWidget *widget, gpointer data)
 	if(data) *((int *)data)=1;
 	gtk_main_quit();
 }
+gboolean sc_bbox1_click_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	sc_bbox1_click(widget, data);
+	return FALSE;
+}
 
 void sc_bbox1_click_noquit(GtkWidget *widget, gpointer data)
 {
 	if(data) *((int *)data)=1;
+}
+gboolean sc_bbox1_click_noquit_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	sc_bbox1_click_noquit(widget, data);
+	return FALSE;
 }
 
 GtkWidget *sc_bbox1(int *st, GtkWidget *b, void (*callback)(GtkWidget *, gpointer))
@@ -65,7 +77,8 @@ GtkWidget *sc_bbox1(int *st, GtkWidget *b, void (*callback)(GtkWidget *, gpointe
 
 static GtkWidget *sc_bbox2_cur_hbox=NULL;
 
-GtkWidget *sc_bbox2(int *st, GtkWidget *bsub, GtkWidget *b_quit, void (*callback)(GtkWidget *, gpointer))
+//GtkWidget *sc_bbox2(int *st, GtkWidget *bsub, GtkWidget *b_quit, void (*callback)(GtkWidget *, gpointer))
+GtkWidget *sc_bbox2(int *st, GtkWidget *bsub, GtkWidget *b_quit, gboolean (*callback)(GtkWidget *, GdkEvent *, gpointer))
 {
 	GtkWidget *f, *bb, *h;
 
@@ -83,7 +96,7 @@ GtkWidget *sc_bbox2(int *st, GtkWidget *bsub, GtkWidget *b_quit, void (*callback
 	gtk_container_add(GTK_CONTAINER(f), h);
     
     if(st)*st=0;
-	g_signal_connect(G_OBJECT(b_quit), "clicked", G_CALLBACK(callback), (gpointer)st);
+	g_signal_connect(G_OBJECT(b_quit), "button-release-event", G_CALLBACK(callback), (gpointer)st);
 	gtk_widget_set_usize(f, 160*0, 72);
 	return f;
 }
@@ -116,6 +129,12 @@ void sc_message_select_press(GtkWidget *widget, gpointer data)
 	sc_message_select_stat=(int)data;
 	gtk_main_quit();
 }
+gboolean sc_message_select_press_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	sc_message_select_press(widget, data);
+	return FALSE;
+}
 
 int sc_message_yesno(const char *fmt, ...)
 {
@@ -138,9 +157,9 @@ int sc_message_yesno(const char *fmt, ...)
 	b1=gtk_button_new_from_stock(GTK_STOCK_NO);
 	h1=gtk_hbox_new(FALSE, 40);
 	gtk_container_add(GTK_CONTAINER(h1), b0);
-	g_signal_connect(b0, "clicked", G_CALLBACK(sc_message_select_press), (gpointer)1);
+	g_signal_connect(b0, "button-release-event", G_CALLBACK(sc_message_select_press_func), (gpointer)1);
 	gtk_container_add(GTK_CONTAINER(h1), b1);
-	g_signal_connect(b1, "clicked", G_CALLBACK(sc_message_select_press), (gpointer)2);
+	g_signal_connect(b1, "button-release-event", G_CALLBACK(sc_message_select_press_func), (gpointer)2);
 	sc_message_select_stat=0;
 	
 	v0=gtk_vbox_new(FALSE, 10);
@@ -279,6 +298,12 @@ static void btn_msg_dlg_close(GtkWidget *button, gpointer user_data)
 	GtkWidget *window = (GtkWidget*)user_data;
 	gtk_widget_destroy(window);
 }
+static gboolean btn_msg_dlg_close_func(
+		GtkWidget *button, GdkEvent *event, gpointer user_data)
+{
+	btn_msg_dlg_close(button, user_data);
+	return FALSE;
+}
 
 
 /**
@@ -319,7 +344,7 @@ void sc_message_dialog(char *msg, char *btnlabel, gboolean ismarkup)
 	
 	// ボタン
 	btn_close = gtk_button_new_with_label(btnlabel);
-	g_signal_connect(G_OBJECT(btn_close), "clicked", G_CALLBACK(btn_msg_dlg_close), window);
+	g_signal_connect(G_OBJECT(btn_close), "button-release-event", G_CALLBACK(btn_msg_dlg_close_func), window);
 	gtk_table_attach_defaults(GTK_TABLE(table), btn_close, 21, 29, 5, 9);
 	
 	gtk_widget_show_all(window);
@@ -329,10 +354,16 @@ void sc_message_dialog(char *msg, char *btnlabel, gboolean ismarkup)
 /**
  *	待ちダイアログクローズイベント
  */
-static void btn_wate_dlg_close(GtkWidget *button, gpointer user_data)
+static void btn_wait_dlg_close(GtkWidget *button, gpointer user_data)
 {
 	GtkWidget *window = (GtkWidget*)user_data;
 	gtk_widget_destroy(window);
+}
+static gboolean btn_wait_dlg_close_func(
+		GtkWidget *button, GdkEvent *event, gpointer user_data)
+{
+	btn_wait_dlg_close(button, user_data);
+	return FALSE;
 }
 
 
@@ -400,7 +431,7 @@ void sc_wait_dialog(char *msg, char *btnlabel, char *(*event)(void))
 	// ボタン
 	wait_dlg_btn_close = gtk_button_new_from_stock (GTK_STOCK_OK);
 	gtk_button_set_label(GTK_BUTTON(wait_dlg_btn_close), btnlabel);
-	g_signal_connect(G_OBJECT(wait_dlg_btn_close), "clicked", G_CALLBACK(btn_wate_dlg_close), window);
+	g_signal_connect(G_OBJECT(wait_dlg_btn_close), "button-release-event", G_CALLBACK(btn_wait_dlg_close_func), window);
 	gtk_table_attach_defaults(GTK_TABLE(table), wait_dlg_btn_close, 21, 29, 5, 9);
 	gtk_widget_set_sensitive(wait_dlg_btn_close, FALSE);
 	

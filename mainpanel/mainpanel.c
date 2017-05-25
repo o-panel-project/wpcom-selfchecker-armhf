@@ -359,6 +359,7 @@ fin:
 const static char *mms_ctrl_dev = "/dev/mms_ts";
 #define IOCTL_GET_VERSION   _IOR('W', 0xA5, u_char *)
 #define SYSFS_MMS_TS "/sys/devices/platform/omap/omap_i2c.3/i2c-3/3-0048/"
+#define SYSFS_FT5X06_TS "/sys/bus/i2c/drivers/ft5x06/1-0038/"
 #define INFO_FIRMVERSION_NAME    "firmware_version"
 
 static void fetch_tpver_melfas(char *fwver)
@@ -450,6 +451,23 @@ static void fetch_tpver_egalax(char *fwver)
 }
 
 void fetch_egver(char *);
+
+static void fetch_tpver_ft5x06(char *fwver)
+{
+	FILE *fp;
+
+	fwver[0] = '\0';
+
+	if ((fp = fopen(SYSFS_FT5X06_TS INFO_FIRMVERSION_NAME, "r")) != NULL) {
+		if (fscanf(fp, "%s\n", fwver) != EOF) {
+			fclose(fp);
+			fprintf(stdout, "Get from sysfs, fwver=%s\n", fwver);
+			return;
+		}
+		fclose(fp);
+	}
+}
+
 //	20121002VACS
 //
 //	tpfirmware version fetcher
@@ -468,9 +486,11 @@ fetch_tpver(char *kver)
 		strcat(buf, egb);
 	} else if (g_board_type == WPC_BOARD_TYPE_J3 ||
 			g_board_type == WPC_BOARD_TYPE_J35 ||
-			g_board_type == WPC_BOARD_TYPE_J4)
+			g_board_type == WPC_BOARD_TYPE_J4) {
 		fetch_tpver_melfas(buf);
-	else
+	} else if (g_board_type == WPC_BOARD_TYPE_O) {
+		fetch_tpver_ft5x06(buf);
+	} else
 		strcpy(buf, "unknown");
 	sprintf(kver, "TP FW Version:%s", buf);
 	return;
@@ -590,7 +610,7 @@ struct	utsname	u;
 	gtk_label_set_markup(GTK_LABEL(lb), tmps);
 	gtk_container_add(GTK_CONTAINER(a1), lb);
 	gtk_container_add(GTK_CONTAINER(v0), a1);
-	bb=sc_bbox2(NULL, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+	bb=sc_bbox2(NULL, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 	sc_table_attach2(GTK_TABLE(table), v0);
@@ -729,6 +749,9 @@ bat_charge_on()
 	}
 
 	/*	BAT1 charge on	*/
+	if (g_board_type == WPC_BOARD_TYPE_O)
+		err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 18);	/* GPIOA18 */
+	else
 	err = ioctl(fd, WPC_SET_GPIO_OUTPUT_HIGH, 65);
 	if(err<0){
 		printf("BAT1 charge on error, code = %d\n", err);
@@ -789,7 +812,9 @@ int main(int argc, char *argv[])
 	pthread_t th_bsub;
 	GdkScreen *gscr;
 	
-	if (sc_IsJ4()) {
+	g_board_type = sc_get_board_type();
+	bl_toggle_charge = 1;
+	if (g_board_type == WPC_BOARD_TYPE_J4) {
 		bl_toggle_charge = 0;
 	}
 	
@@ -836,7 +861,6 @@ int main(int argc, char *argv[])
 		ignore_count=0;
 	}
 
-	g_board_type = sc_get_board_type();
 	bat_charge_on();
 
 	if (Base_path_device(base_path) == 179) {	/* RH */
@@ -896,13 +920,13 @@ int main(int argc, char *argv[])
 				macaddr[3], macaddr[4], macaddr[5]);
 
 	while(1){
-		gtk_label_set_text(GTK_LABEL(lb_top), SC_TITLE);
+		gtk_label_set_text(GTK_LABEL(lb_top), SC_TITLE_2);
 		lb=gtk_label_new(sc_version_str);
 		a=gtk_alignment_new(0.5, 0.9, 0.0, 0.0);
 		lb_mac = gtk_label_new("");
 		gtk_label_set_markup(GTK_LABEL(lb_mac), macstr);
 		al_mac = gtk_alignment_new(0.5, 0.2, 0.0, 0.0);
-		bb=sc_bbox2(&st_exit, batsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+		bb=sc_bbox2(&st_exit, batsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 		v1=gtk_vbox_new(FALSE, 10);
 		
 		gtk_widget_set_sensitive(tr, TRUE);

@@ -324,6 +324,12 @@ static void press_stop(GtkWidget *widget, gpointer data)
 
 	loop_testing=0;		/*	20110927VACS	*/
 }
+static gboolean press_stop_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_stop(widget, data);
+	return FALSE;
+}
 
 int usbmem_check_timeup()
 {
@@ -529,6 +535,12 @@ static void press_loop(GtkWidget *widget, gpointer data)
 
 	if(test_mode==1)	loop_testing=1;				/*	20111004VACS	*/
 }
+static gboolean press_loop_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_loop(widget, data);
+	return FALSE;
+}
 
 
 static void press_b_start(GtkWidget *widget, gpointer data)
@@ -536,6 +548,12 @@ static void press_b_start(GtkWidget *widget, gpointer data)
 	error_count  = 0;
 	tatal_count  = 0;
 	press_loop(widget, data);
+}
+static gboolean press_b_start_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_b_start(widget, data);
+	return FALSE;
 }
 
 
@@ -869,6 +887,16 @@ char	path[SMALL_STR];
 	}
 	gtk_widget_set_sensitive(widget, TRUE);
 }
+static gboolean press_mount_hub4_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	gboolean state;
+	state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+	gtk_toggle_button_set_active(
+		GTK_TOGGLE_BUTTON(widget), state ? FALSE : TRUE); /* toggled */
+	press_mount_hub4(widget, data);
+	return FALSE;
+}
 
 //
 //	menu for USB(HUB-4:ExWiFi)
@@ -905,16 +933,16 @@ int usbmem_exwifi_main(GtkWidget *table, GtkWidget *bsub)
 	h2=gtk_hbox_new(FALSE, 20);
 	a2=gtk_alignment_new(0.5, 0.2, 0.5, 0.15);
 	b_start=gtk_button_new_with_label("Test Loop Start");
-	g_signal_connect(b_start, "clicked", G_CALLBACK(press_loop), 0);
+	g_signal_connect(b_start, "button-release-event", G_CALLBACK(press_loop_func), 0);
 	gtk_container_add(GTK_CONTAINER(h2), b_start);
 	gtk_widget_set_sensitive(b_start, FALSE);
 	b_stop=gtk_button_new_with_label("Test Loop Stop");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(press_stop), 0);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(press_stop_func), 0);
 	gtk_widget_set_sensitive(b_stop, FALSE);
 	gtk_container_add(GTK_CONTAINER(h2), b_stop);
 	b_mount=gtk_toggle_button_new_with_label(MOUNT_BUTTON_MOUNT);
 	gtk_container_add(GTK_CONTAINER(h2), b_mount);
-	g_signal_connect(b_mount, "clicked", G_CALLBACK(press_mount_hub4), 0);
+	g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_hub4_func), 0);
 	gtk_widget_set_sensitive(b_mount, FALSE);
 	
 	gtk_container_add(GTK_CONTAINER(a2), h2);
@@ -932,7 +960,7 @@ int usbmem_exwifi_main(GtkWidget *table, GtkWidget *bsub)
 	
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click);
+	bb=sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29
@@ -1015,11 +1043,11 @@ static int usbmem_sdmem_main(GtkWidget *table, GtkWidget *bsub)
 	h2=gtk_hbox_new(FALSE, 20);
 	a2=gtk_alignment_new(0.5, 0.2, 0.5, 0.15);
 	b_start=gtk_button_new_with_label("Test Loop Start");
-	g_signal_connect(b_start, "clicked", G_CALLBACK(press_loop), 0);
+	g_signal_connect(b_start, "button-release-event", G_CALLBACK(press_loop_func), 0);
 	gtk_container_add(GTK_CONTAINER(h2), b_start);
 	gtk_widget_set_sensitive(b_start, FALSE);
 	b_stop=gtk_button_new_with_label("Test Loop Stop");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(press_stop), 0);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(press_stop_func), 0);
 	gtk_widget_set_sensitive(b_stop, FALSE);
 	gtk_container_add(GTK_CONTAINER(h2), b_stop);
 	b_mount=NULL;
@@ -1038,7 +1066,7 @@ static int usbmem_sdmem_main(GtkWidget *table, GtkWidget *bsub)
 	
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click);
+	bb=sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29
@@ -1136,6 +1164,16 @@ static void press_mount_usbmem(GtkWidget *widget, gpointer data)
 	}
 	gtk_widget_set_sensitive(widget, TRUE);
 }
+static gboolean press_mount_usbmem_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	gboolean state;
+	state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+	gtk_toggle_button_set_active(
+		GTK_TOGGLE_BUTTON(widget), state ? FALSE : TRUE); /* toggled */
+	press_mount_usbmem(widget, data);
+	return FALSE;
+}
 
 //
 //	menu for USB(HUB-2:Memory)
@@ -1171,16 +1209,16 @@ static int usbmem_usbmem_main(GtkWidget *table, GtkWidget *bsub)
 	h2 = gtk_hbox_new(FALSE, 20);
 	a2 = gtk_alignment_new(0.5, 0.2, 0.5, 0.15);
 	b_start = gtk_button_new_with_label("Test Loop Start");
-	g_signal_connect(b_start, "clicked", G_CALLBACK(press_loop), 0);
+	g_signal_connect(b_start, "button-release-event", G_CALLBACK(press_loop_func), 0);
 	gtk_container_add(GTK_CONTAINER(h2), b_start);
 	gtk_widget_set_sensitive(b_start, FALSE);
 	b_stop = gtk_button_new_with_label("Test Loop Stop");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(press_stop), 0);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(press_stop_func), 0);
 	gtk_widget_set_sensitive(b_stop, FALSE);
 	gtk_container_add(GTK_CONTAINER(h2), b_stop);
 	b_mount = gtk_toggle_button_new_with_label(MOUNT_BUTTON_MOUNT);
 	gtk_container_add(GTK_CONTAINER(h2), b_mount);
-	g_signal_connect(b_mount, "clicked", G_CALLBACK(press_mount_usbmem), 0);
+	g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_usbmem_func), 0);
 	gtk_widget_set_sensitive(b_mount, FALSE);
 
 	gtk_container_add(GTK_CONTAINER(a2), h2);
@@ -1198,7 +1236,7 @@ static int usbmem_usbmem_main(GtkWidget *table, GtkWidget *bsub)
 
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	b_quit = gtk_button_new_from_stock("gtk-quit");
-	bb = sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click);
+	bb = sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 
 	sc_table_attach2(GTK_TABLE(table), v0);
@@ -1485,6 +1523,16 @@ char	path[SMALL_STR];
 
 	press_mount_cradle_ing=0;				/*	20110929VACS	*/
 }
+static gboolean press_mount_cradle_func(
+		GtkWidget *widget, GdkEvent *event, gpointer is_30sec)
+{
+	gboolean state;
+	state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+	gtk_toggle_button_set_active(
+		GTK_TOGGLE_BUTTON(widget), state ? FALSE : TRUE); /* toggled */
+	press_mount_cradle(widget, is_30sec);
+	return FALSE;
+}
 
 //
 //	menu for USB(HUB-1:Cradle)
@@ -1527,18 +1575,18 @@ int usbmem_cradle_main(GtkWidget *table, GtkWidget *bsub)
 	a2=gtk_alignment_new(0.5, 0.2, 0.5, 0.15);
 	b_start=gtk_button_new_with_label("Test Loop Start");
 
-	g_signal_connect(b_start, "clicked", G_CALLBACK(press_b_start), 0);
+	g_signal_connect(b_start, "button-release-event", G_CALLBACK(press_b_start_func), 0);
 	
 	gtk_container_add(GTK_CONTAINER(h2), b_start);
 	gtk_widget_set_sensitive(b_start, FALSE);
 	b_stop=gtk_button_new_with_label("Test Loop Stop");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(press_stop), 0);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(press_stop_func), 0);
 	gtk_widget_set_sensitive(b_stop, FALSE);
 	gtk_container_add(GTK_CONTAINER(h2), b_stop);
 	
 	b_mount=gtk_toggle_button_new_with_label(MOUNT_BUTTON_MOUNT);
 	gtk_container_add(GTK_CONTAINER(h2), b_mount);
-	g_signal_connect(b_mount, "clicked", G_CALLBACK(press_mount_cradle), (gpointer)0);
+	g_signal_connect(b_mount, "button-release-event", G_CALLBACK(press_mount_cradle_func), (gpointer)0);
 	gtk_widget_set_sensitive(b_mount, TRUE);	/*	20110905VACS	*/
 
 	gtk_container_add(GTK_CONTAINER(a2), h2);
@@ -1555,7 +1603,7 @@ int usbmem_cradle_main(GtkWidget *table, GtkWidget *bsub)
 	
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click);
+	bb=sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29

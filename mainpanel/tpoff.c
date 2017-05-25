@@ -58,6 +58,12 @@ static void press_execute(GtkWidget *widget, gpointer data)
 	}
 	exit(100);
 }
+static gboolean press_execute_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_execute(widget, data);
+	return FALSE;
+}
 
 int tpoff_main(GtkWidget *table, GtkWidget *bsub)
 {
@@ -81,14 +87,14 @@ int tpoff_main(GtkWidget *table, GtkWidget *bsub)
 
 	a1=gtk_alignment_new(0.5, 0.5, 0.3, 0.2);
 	b0=gtk_button_new_with_label("Execute");
-	g_signal_connect(b0, "clicked", G_CALLBACK(press_execute), (gpointer)0);
+	g_signal_connect(b0, "button-release-event", G_CALLBACK(press_execute_func), (gpointer)0);
 	gtk_container_add(GTK_CONTAINER(a1), b0);
 	
 	v0=gtk_vbox_new(FALSE, 10);
 	gtk_container_add(GTK_CONTAINER(v0), a0);
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	
-	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click);
+	bb=sc_bbox2(&button_no, bsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29

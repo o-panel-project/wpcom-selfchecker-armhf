@@ -163,6 +163,12 @@ static void press_stop(GtkWidget *widget, gpointer data)
 	gtk_widget_set_sensitive(b_loop, TRUE);
 	gtk_widget_set_sensitive(b_quit, TRUE);
 }
+static gboolean press_stop_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_stop(widget, data);
+	return FALSE;
+}
 
 int sdrt_check_timeup()
 {
@@ -353,6 +359,12 @@ static void press_single(GtkWidget *widget, gpointer data)
 	script_count=0;
 	start_common(1);
 }
+static gboolean press_single_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_single(widget, data);
+	return FALSE;
+}
 
 static void press_loop(GtkWidget *widget, gpointer data)
 {
@@ -368,6 +380,12 @@ static void press_loop(GtkWidget *widget, gpointer data)
 	
 	g_timeout_add(16*100000, time_log, 0);
 	debug_printf(5, "[SDRAM:START]Start Timer(loop)\n");
+}
+static gboolean press_loop_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	press_loop(widget, data);
+	return FALSE;
 }
 
 //
@@ -398,11 +416,11 @@ int sdrt_main(GtkWidget *table, GtkWidget *bsub)
 	v2=gtk_vbox_new(FALSE, 10);
 	a2=gtk_alignment_new(0.5, 0.5, 0.5, 0.3);
 	b_start=gtk_button_new_with_label("SD-RAM\nStart");
-	g_signal_connect(b_start, "clicked", G_CALLBACK(press_single), (gpointer)2);
+	g_signal_connect(b_start, "button-release-event", G_CALLBACK(press_single_func), (gpointer)2);
 	b_stop=gtk_button_new_with_label("SD-RAM\nStop");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(press_stop), (gpointer)3);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(press_stop_func), (gpointer)3);
 	b_loop=gtk_button_new_with_label("SD-RAM\nLoop");
-	g_signal_connect(b_loop, "clicked", G_CALLBACK(press_loop), (gpointer)4);
+	g_signal_connect(b_loop, "button-release-event", G_CALLBACK(press_loop_func), (gpointer)4);
 	
 	gtk_container_add(GTK_CONTAINER(v2), b_start);
 	gtk_container_add(GTK_CONTAINER(v2), b_stop);
@@ -413,7 +431,7 @@ int sdrt_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(v0), a1);
 	gtk_container_add(GTK_CONTAINER(v0), a2);
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click);
+	bb=sc_bbox2(NULL, bsub, b_quit, sc_bbox1_click_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 	sc_table_attach2(GTK_TABLE(table), v0);

@@ -16,14 +16,18 @@
 #include <gtk/gtk.h>
 #include <alsa/asoundlib.h>
 #include "common.h"
+#include "wpcio.h"
 
 
 static int button_no=0;
 static int vol, vol1, vol2, play_mode=0;
 static GtkWidget *cb, *b_stop, *b_quit, *hs;
 static snd_mixer_elem_t *elem;
+static snd_mixer_elem_t *elem_l;
+static snd_mixer_elem_t *elem_r;
 static snd_mixer_t *handle;
 int audio_pid=0, audio_is_loop=0, movie_is_loop=0;
+static int machine_type = WPC_BOARD_TYPE_J3;
 
 
 //
@@ -67,10 +71,26 @@ static int alsa_setup_j4(int start_up)
 	return 0;
 }
 
+static int alsa_setup_opanel(int start_up)
+{
+	if ((elem = get_elem(handle, "DAC PA")) == NULL) {
+		return 8;
+	}
+
+	if ((elem_l = get_elem(handle, "DAC FL Gain")) == NULL) {
+		return 8;
+	}
+	if ((elem_r = get_elem(handle, "DAC FR Gain")) == NULL) {
+		return 8;
+	}
+
+	return 0;
+}
+
 static int alsa_setup(int start_up)
 {
 	int r;
-	int l_v, r_v;
+	long int l_v, r_v;
 	
 	if((r=snd_mixer_open(&handle, 0)) < 0) {
 		printf("Mixer open error: %s", snd_strerror(r));
@@ -92,8 +112,10 @@ static int alsa_setup(int start_up)
 		return 4;
 	}
 
-	if (sc_IsJ4()) {
+	if (machine_type == WPC_BOARD_TYPE_J4) {
 		r = alsa_setup_j4(start_up);
+	} else if (machine_type == WPC_BOARD_TYPE_O) {
+		r = alsa_setup_opanel(start_up);
 	} else {
 		r = alsa_setup_j3(start_up);
 	}
@@ -102,10 +124,17 @@ static int alsa_setup(int start_up)
 	   return r;
 	}
 	if(start_up) {
-		snd_mixer_selem_get_playback_volume(
+		if (machine_type == WPC_BOARD_TYPE_O) {
+			snd_mixer_selem_get_playback_volume(
+				elem_l, SND_MIXER_SCHN_FRONT_LEFT, &l_v);
+			snd_mixer_selem_get_playback_volume(
+				elem_r, SND_MIXER_SCHN_FRONT_RIGHT, &r_v);
+		} else {
+			snd_mixer_selem_get_playback_volume(
 				elem, SND_MIXER_SCHN_FRONT_LEFT, &l_v);
-		snd_mixer_selem_get_playback_volume(
+			snd_mixer_selem_get_playback_volume(
 				elem, SND_MIXER_SCHN_FRONT_RIGHT, &r_v);
+		}
 		vol = l_v > r_v ? l_v : r_v;
 	}
 
@@ -189,11 +218,22 @@ long	pvol0, pvol1;
 
 	int x, y;
 
+	if (machine_type == WPC_BOARD_TYPE_O) {
+		if ((r = snd_mixer_selem_get_playback_volume(
+						elem_l, SND_MIXER_SCHN_FRONT_LEFT, &pvol0)) < 0) {
+			printf("Mixer get left vol error: %s", snd_strerror(r));
+		}
+		if ((r = snd_mixer_selem_get_playback_volume(
+						elem_r, SND_MIXER_SCHN_FRONT_RIGHT, &pvol1)) < 0) {
+			printf("Mixer get right vol error: %s", snd_strerror(r));
+		}
+	} else {
 	if((r=snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &pvol0))<0){
 		printf("Mixer get0 error: %s", snd_strerror(r));
 	}
 	if((r=snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_RIGHT, &pvol1))<0){
 		printf("Mixer get1 error: %s", snd_strerror(r));
+	}
 	}
 	debug_printf(3, "from (%d, %d) -> ", pvol0, pvol1);
 	fflush(0);
@@ -208,11 +248,22 @@ long	pvol0, pvol1;
 
 	debug_printf(3, "set to %d, %d (elem:0x%x) -> ", v0, v1, elem);
 	fflush(0);
+	if (machine_type == WPC_BOARD_TYPE_O) {
+		if ((r0 = snd_mixer_selem_set_playback_volume(
+						elem_l, SND_MIXER_SCHN_FRONT_LEFT, v0)) < 0) {
+			printf("Mixer set left vol error: %s", snd_strerror(r0));
+		}
+		if((r1 = snd_mixer_selem_set_playback_volume(
+						elem_r, SND_MIXER_SCHN_FRONT_RIGHT, v1)) < 0) {
+			printf("Mixer set right vol error: %s", snd_strerror(r1));
+		}
+	} else {
 	if((r0=snd_mixer_selem_set_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, v0))<0){
 		printf("Mixer set0 error: %s", snd_strerror(r0));
 	}
 	if((r1=snd_mixer_selem_set_playback_volume(elem, SND_MIXER_SCHN_FRONT_RIGHT, v1))<0){
 		printf("Mixer set1 error: %s", snd_strerror(r1));
+	}
 	}
 	debug_printf(3, "(%d, %d)\n", r0, r1);
 }
@@ -303,10 +354,26 @@ static void loop_got(GtkWidget *widget, gpointer is_loop)
 {
 	*(int *)is_loop=(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))==TRUE);
 }
+static gboolean loop_got_func(
+		GtkWidget *widget, GdkEvent *event, gpointer is_loop)
+{
+	gboolean state;
+	state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+	gtk_toggle_button_set_active(
+			GTK_TOGGLE_BUTTON(widget), state ? FALSE : TRUE);	/* toggled */
+	loop_got(widget, is_loop);
+	return FALSE;
+}
 
 static void button_press(GtkWidget *widget, gpointer data)
 {
 	button_no=(int)data;
+}
+static gboolean button_press_func(
+		GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	button_press(widget, data);
+	return FALSE;
 }
 
 GtkWidget *put_vol(GtkWidget *c, int *check, int *is_loop)
@@ -317,7 +384,9 @@ GtkWidget *put_vol(GtkWidget *c, int *check, int *is_loop)
 
 	/*	20110917VACS	*/
 	int volume_max = AUDIO_VOLUME_MAX;
-	if (sc_IsJ4())
+	if (machine_type == WPC_BOARD_TYPE_O)
+		volume_max = AUDIO_VOLUME_MAX_O;
+	else if (machine_type == WPC_BOARD_TYPE_J4)
 		volume_max = AUDIO_VOLUME2_MAX;
 	hs=gtk_hscale_new_with_range(0, volume_max, 1);
 
@@ -325,7 +394,8 @@ GtkWidget *put_vol(GtkWidget *c, int *check, int *is_loop)
 	g_signal_connect(hs, "value-changed", G_CALLBACK(vol_got), (gpointer)0);
 	
 	cb=gtk_check_button_new_with_label("Loop Play");
-	g_signal_connect(cb, "toggled", G_CALLBACK(loop_got), (gpointer)is_loop);
+	//g_signal_connect(cb, "toggled", G_CALLBACK(loop_got), (gpointer)is_loop);
+	g_signal_connect(cb, "button-release-event", G_CALLBACK(loop_got_func), (gpointer)is_loop);
 	
 	h0=gtk_hbox_new(FALSE, 10);
 	
@@ -395,6 +465,7 @@ int audio_main(GtkWidget *p, GtkWidget *bsub)
 	GtkWidget *b0, *b1, *b2, *b3, *b4, *b5;
 	GtkTreeStore *store;
 	
+	machine_type = sc_get_board_type();
 	play_mode=0;
 	if(alsa_setup(1)){
 		printf("Could not initialize alsa. Aborted Audio Test.\n");
@@ -404,17 +475,17 @@ int audio_main(GtkWidget *p, GtkWidget *bsub)
 	v0=gtk_vbox_new(FALSE, 10);
 	
 	b0=gtk_button_new_with_label("Play A STEREO");
-	g_signal_connect(b0, "clicked", G_CALLBACK(button_press), (gpointer)10);
+	g_signal_connect(b0, "button-release-event", G_CALLBACK(button_press_func), (gpointer)10);
 	b1=gtk_button_new_with_label("Play A - L");
-	g_signal_connect(b1, "clicked", G_CALLBACK(button_press), (gpointer)11);
+	g_signal_connect(b1, "button-release-event", G_CALLBACK(button_press_func), (gpointer)11);
 	b2=gtk_button_new_with_label("Play A - R");
-	g_signal_connect(b2, "clicked", G_CALLBACK(button_press), (gpointer)12);
+	g_signal_connect(b2, "button-release-event", G_CALLBACK(button_press_func), (gpointer)12);
 	b3=gtk_button_new_with_label("Play B STEREO");
-	g_signal_connect(b3, "clicked", G_CALLBACK(button_press), (gpointer)13);
+	g_signal_connect(b3, "button-release-event", G_CALLBACK(button_press_func), (gpointer)13);
 	b4=gtk_button_new_with_label("Play B - L");
-	g_signal_connect(b4, "clicked", G_CALLBACK(button_press), (gpointer)14);
+	g_signal_connect(b4, "button-release-event", G_CALLBACK(button_press_func), (gpointer)14);
 	b5=gtk_button_new_with_label("Play B - R");
-	g_signal_connect(b5, "clicked", G_CALLBACK(button_press), (gpointer)15);
+	g_signal_connect(b5, "button-release-event", G_CALLBACK(button_press_func), (gpointer)15);
 	a1=gtk_alignment_new(0.5, 0.5, 0.5, 0.5);
 	v1=gtk_vbox_new(FALSE, 10);
 	
@@ -431,12 +502,12 @@ int audio_main(GtkWidget *p, GtkWidget *bsub)
 	
 	a0=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
 	b_stop=gtk_button_new_with_label("Stop");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(button_press), (gpointer)2);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(button_press_func), (gpointer)2);
 	gtk_container_add(GTK_CONTAINER(a0), b_stop);
 	gtk_container_add(GTK_CONTAINER(v0), a0);
 	
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click_noquit);
+	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click_noquit_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29
@@ -563,6 +634,7 @@ int movie_main(GtkWidget *table, GtkWidget *bsub)
 	GtkWidget *v0, *a0, *a1, *bb, *hs, *lb;
 	GtkWidget *b0;
 
+	machine_type = sc_get_board_type();
 	play_mode=0;
 	if(alsa_setup(1)){
 		printf("Could not intiailize alsa. Aborted Audio Test.\n");
@@ -575,7 +647,7 @@ int movie_main(GtkWidget *table, GtkWidget *bsub)
 	gtk_container_add(GTK_CONTAINER(v0), lb);
 	
 	b0=gtk_button_new_with_label("Play Movie");
-	g_signal_connect(b0, "clicked", G_CALLBACK(button_press), (gpointer)10);
+	g_signal_connect(b0, "button-release-event", G_CALLBACK(button_press_func), (gpointer)10);
 	a1=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
 	gtk_container_add(GTK_CONTAINER(a1), b0);
 	gtk_container_add(GTK_CONTAINER(v0), a1);
@@ -585,12 +657,12 @@ int movie_main(GtkWidget *table, GtkWidget *bsub)
 	
 	a0=gtk_alignment_new(0.5, 0.5, 0.5, 0.2);
 	b_stop=gtk_button_new_with_label("Stop");
-	g_signal_connect(b_stop, "clicked", G_CALLBACK(button_press), (gpointer)2);
+	g_signal_connect(b_stop, "button-release-event", G_CALLBACK(button_press_func), (gpointer)2);
 	gtk_container_add(GTK_CONTAINER(a0), b_stop);
 	gtk_container_add(GTK_CONTAINER(v0), a0);
 	
 	b_quit=gtk_button_new_from_stock("gtk-quit");
-	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click_noquit);
+	bb=sc_bbox2(&button_no, bsub, b_quit, sc_bbox1_click_noquit_func);
 	gtk_box_pack_start(GTK_BOX(v0), bb, FALSE, FALSE, 0);
 	
 #if 1  // vacs,2012/2/29
