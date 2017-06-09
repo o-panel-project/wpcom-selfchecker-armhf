@@ -697,6 +697,7 @@ int	file_analysis( int mode, int ch )
 	int  max = 0;
 	FILE *fp;
 	int  current = 0;
+	int  avg_base = 0;
 	
 	int rssibuf = 0;
 	
@@ -743,7 +744,7 @@ int	file_analysis( int mode, int ch )
 		if (tmp3 != NULL) {
 			strcpy( ssid, tmp3 );
 			strcpy( association, "1" );
-			printf( " > (1) detect SSID:\n" );
+			printf( " > (1) detect SSID:[%s]\n", ssid );
 		} else {
 			return -2;
 		}
@@ -753,10 +754,15 @@ int	file_analysis( int mode, int ch )
 		if (i == -1) {
 			return -3;
 		}
-		tmp3 = strtok( parseToken[i+4], ")" );
+		if (g_board_type == WPC_BOARD_TYPE_O)
+			// Current Channel=5
+			tmp3 = strchr( parseToken[i+1], '=') + 1;
+		else
+			// Current Frequency=2.432 GHz (Channel 5)
+			tmp3 = strtok( parseToken[i+4], ")" );
 		if (tmp3 != NULL) {
 			strcpy( channel, tmp3 );
-			printf( " > (2) detect Channel:\n" );
+			printf( " > (2) detect Channel:[%s]\n", channel );
 		} else {
 			return -3;
 		}
@@ -767,7 +773,7 @@ int	file_analysis( int mode, int ch )
 			return -4;
 		}
 		strcpy( bssid, parseToken[i+1] );
-		printf( " > (3) detect BSSID:\n" );
+		printf( " > (3) detect BSSID:[%s]\n", bssid );
 		
 		// WEPSTATUS
 		i = search_token( "key:", 0, 0 );
@@ -778,27 +784,30 @@ int	file_analysis( int mode, int ch )
 		else {
 			strcpy( wep, "1" );
 		}
-		printf( " > (4) detect WEPSTATUS:\n" );
+		printf( " > (4) detect WEPSTATUS:[%s]\n", wep );
 		
 		// RSSI
 		rssibuf = 0;
 		i = 0;
 		for( j=0;j<5;j++ ) {
 			i = search_token( "Signal", i+1, 0 );
+			//printf("Signal parseToken[i+1]=[%s]\n", parseToken[i+1]);
 			tmp3 = strpbrk( parseToken[i+1], "=:" );
 			if (tmp3 != NULL) {
 				rssibuf += atoi(tmp3+1);
+				avg_base++;
 			} else {
-				return -5;
+			//	return -5;
 			}
 		}
-		rssi = rssibuf / 5;
-		printf( " > (5) detect RSSI:\n" );
+		if (avg_base == 0) return -5;
+		rssi = rssibuf / avg_base;
+		printf( " > (5) detect RSSI:[%d]\n", rssi );
 		
 		// MAC Address
 		i = search_token( "HWaddr", 0, 0 );
 		strcpy( macadrs, parseToken[i+1] );
-		printf( " > (6) detect HWaddr\n" );
+		printf( " > (6) detect HWaddr:[%s]\n", macadrs );
 		
 		printf ( " --------------------------------\n" );
 		printf ( " > SSID=%s\n", ssid );

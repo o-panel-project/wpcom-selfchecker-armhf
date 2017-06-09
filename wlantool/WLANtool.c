@@ -656,6 +656,7 @@ performance_mode:
 		system(command);
 		}
 	}
+	printf("Wlantool quit\n");
 	
 	return OK;
 }
@@ -942,6 +943,7 @@ void UpdateUI(int f, char *data)
 				ShadeForm(w, draw, xy, judgement[5], &color_green, C_WHITE);
 			} else {
 				ShadeForm(w, draw, xy, judgement[6], &color_black, C_RED);
+				if (g_board_type != WPC_BOARD_TYPE_O)
 				isDataOK = NG;
 			}
 		} else {
