@@ -656,8 +656,16 @@ performance_mode:
 		system(command);
 		}
 	}
-	printf("Wlantool quit\n");
-	
+
+	/* Window resources clean up */
+	g_object_unref(layout);
+	g_object_unref(context);
+	XftDrawDestroy(draw);
+	XFreeGC(dpy, gc);
+	XDestroyWindow(dpy, w);
+	XCloseDisplay(dpy);
+	printf("Wlantool quit done\n");
+
 	return OK;
 }
 
@@ -1820,8 +1828,12 @@ void ExecIfip()
 				system(command);
 			}
 		} else {
-			printf("exec:%s\n", command);
-			system(command);
+			int try = 0;
+			do {
+				printf("exec:%s\n", command);
+				system(command);
+				try++;
+			} while (!IsGetIP() && try < 4);
 		}
 	}
 }
