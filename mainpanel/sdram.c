@@ -105,7 +105,7 @@ static int sdrt_test_start()
 	
 	case 0:
 		setpgid(getpid(),getpid());
-		execl("/bin/sh", "sh", SDRAM_SHELL_PATH "/sdram_test.sh", NULL);
+		execl("/bin/bash", "bash", SDRAM_SHELL_PATH "/sdram_test.sh", NULL);
 		_exit(127);
 		break;
 	}
