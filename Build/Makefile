@@ -59,6 +59,7 @@ clean:
 	make -C ../tp-grid clean
 	make -C ../cpprogress clean
 	make -C ../log-battery clean
+	make -C ../wlantool clean
 	@rm -rf bin
 #	@rm -f $(TARGET) demoapp-arm runsc appstart newsc_demoapp.sh newsc_wlantool.sh
 
