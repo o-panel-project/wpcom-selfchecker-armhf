@@ -732,10 +732,10 @@ play_border(void)
 
 	XSetForeground(lcdCheckDisplay, lcdCheckgc, lcdCheckColor(lcdCheckDisplay, "white"));
 
-	XDrawLine(lcdCheckDisplay,lcdCheckWindow,lcdCheckgc,0,0,WINDOW_SIZE_X-1,0);
-	XDrawLine(lcdCheckDisplay,lcdCheckWindow,lcdCheckgc,WINDOW_SIZE_X-1,0,WINDOW_SIZE_X-1,WINDOW_SIZE_Y-1);
-	XDrawLine(lcdCheckDisplay,lcdCheckWindow,lcdCheckgc,WINDOW_SIZE_X-1,WINDOW_SIZE_Y-1,0,WINDOW_SIZE_Y-1);
-	XDrawLine(lcdCheckDisplay,lcdCheckWindow,lcdCheckgc,0,WINDOW_SIZE_Y-1,0,0);
+	XDrawLine(lcdCheckDisplay,lcdCheckWindow,lcdCheckgc,5,5,WINDOW_SIZE_X-5,5);
+	XDrawLine(lcdCheckDisplay,lcdCheckWindow,lcdCheckgc,WINDOW_SIZE_X-5,5,WINDOW_SIZE_X-5,WINDOW_SIZE_Y-5);
+	XDrawLine(lcdCheckDisplay,lcdCheckWindow,lcdCheckgc,WINDOW_SIZE_X-5,WINDOW_SIZE_Y-5,5,WINDOW_SIZE_Y-5);
+	XDrawLine(lcdCheckDisplay,lcdCheckWindow,lcdCheckgc,5,WINDOW_SIZE_Y-5,5,5);
 
 	XFlush(lcdCheckDisplay);
 	LEAVE();
