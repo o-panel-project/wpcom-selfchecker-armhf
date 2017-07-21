@@ -239,16 +239,28 @@ static gboolean bl_toggle2_func(
 static void
 bl_toggle_o(GtkWidget *widget, gpointer data)
 {
+	int err;
 	if (bl_toggle_charge) {
 		printf("Do lcd disable\n");
-		//must do reset DSI signal 
-		system("cat /sys/devices/b0220000.dsi/test_dsi");
-		usleep(100);
 		lcd_enable(1);
+		usleep(200000);
+		system("echo 0xB022000C=0x0000030c > /sys/kernel/debug/owl/reg");
+		system("echo 0xB0220080=0xd000fc94 > /sys/kernel/debug/owl/reg");
+		usleep(50000);
+		err = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_LOW, 23);
+		if (err < 0) 
+			printf("LCD BL on/off, error pin= 23\n");
+	
+		usleep(500000);
 	} else {
 		printf("Do lcd enable\n");
+		err = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_HIGH, 23);
+		if (err < 0) 
+			printf("LCD BL on/off, error pin= 23\n");
+		//usleep(20000);
+		system("cat /sys/devices/b0220000.dsi/test_dsi");
+		usleep(200000);
 		lcd_enable(0);
-		usleep(100);
 		//err = ioctl(fd_wpcio, WPC_SET_GPIO_OUTPUT_LOW, 23);
 		//if (err < 0) {
 		//	printf("LCD BL on/off, error pin= 23\n");
