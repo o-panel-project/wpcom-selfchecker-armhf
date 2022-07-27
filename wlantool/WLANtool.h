@@ -9,12 +9,14 @@
 /*                2013.09.17 (v3.1) -  for j                              */
 /*                2013.10.01 (v3.2) -  Validate Channel No. fix           */
 /*                2016.01.08 (v3.3) -  for j3.5                           */
+/*                2017.05.23 (v3.4) -  for o                              */
+/*                2022.07.25 (v4.0) -  for wpa2-psk                       */
 /*  --------------------------------------------------------------------  */
 
 
 // バージョン
-#define VER_MAJOR 3
-#define VER_MINOR 4
+#define VER_MAJOR 4
+#define VER_MINOR 0
 
 
 // defined values
@@ -147,7 +149,7 @@ char *page1_jpn[65] = {
 		"無線 LAN 環境測定モード",  // 0
 		"接続先",        // 1
 		"接続状況",      // 2
-		"WEP",           // 3
+		"セキュリティ",  // 3
 		"チャンネル",    // 4
 		"電界強度",      // 5
 		"スループット",  // 6
@@ -215,7 +217,7 @@ char *mesg_jpn[11] = {
 	};
 
 char *page1_eng[65] = {
-		"WLAN Environmental measurement mode", "destination", "status", "WEP", "channel",
+		"WLAN Environmental measurement mode", "destination", "status", "security", "channel",
 		"field intensity", "throughput", "erorr rate", "other channel field intensity", "start",
 		"stop", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",  "11", "12", "13",
 		"[channel]", "MAC address", "->", "AP MAC", "WLAN MAC", "scan start", "scan stop", "Quit",

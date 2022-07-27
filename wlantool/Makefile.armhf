@@ -1,7 +1,7 @@
 include ../Build.armhf/rules.mk
 
 PROGRAM  = wlantool.armhf
-SRCS     = ReadWLAN.c WLANtool.c version.c common.c md5.c
+SRCS     = ReadWLAN.c WLANtool.c version.c common.c md5.c tctlprof.c
 OBJS     = ${SRCS:%.c=%.o}
 
 VPATH = ./:../common
@@ -9,7 +9,7 @@ VPATH = ./:../common
 PING_DIR = netkit-base
 PING     = ping.armhf
 
-CFLAGS += -Wall -O2
+CFLAGS += -Wall -O2 -D_C99_SOURCE
 CFLAGS += -I. -I../common -I$(SYSROOT)/usr/include
 CFLAGS += $(shell $(PKGCONFIG) --cflags pangoxft)
 

@@ -46,6 +46,7 @@ struct _wifi_config {
 	char label[SMALL_STR];
 	char essid[SMALL_STR];
 	char wepkey[SMALL_STR];
+	char pskkey[SMALL_STR];
 	char ip_config[SMALL_STR];
 	in_addr_t ping_target;
 	in_addr_t static_ip;
@@ -79,6 +80,9 @@ static void wifi_config_setup()
 		comn_GetProfileString(sect, "wepkey",
 				"worldpicom001", key, sizeof(key), NULL);
 		strcpy(wifi_config[count].wepkey, key);
+		comn_GetProfileString(sect, "pskkey",
+				"not psk", key, sizeof(key), NULL);
+		strcpy(wifi_config[count].pskkey, key);
 		comn_GetProfileString(sect, "ip_config",
 				"dhcp", key, sizeof(key), NULL);
 		strcpy(wifi_config[count].ip_config, key);
@@ -129,8 +133,12 @@ static void wifi_config_setup()
 				__func__, i+1, wifi_config[i].label);
 		debug_printf(3, "%s() (%d) essid      [%s]\n",
 				__func__, i+1, wifi_config[i].essid);
-		debug_printf(3, "%s() (%d) wepkey     [%s]\n",
+		if (strcmp(wifi_config[i].pskkey, "not psk") == 0)
+			debug_printf(3, "%s() (%d) wepkey     [%s]\n",
 				__func__, i+1, wifi_config[i].wepkey);
+		else
+			debug_printf(3, "%s() (%d) pskkey     [%s]\n",
+				__func__, i+1, wifi_config[i].pskkey);
 		debug_printf(3, "%s() (%d) ip config  [%s]\n",
 				__func__, i+1, wifi_config[i].ip_config);
 		debug_printf(3, "%s() (%d) ping       [%08x]\n",
@@ -612,7 +620,12 @@ static void wifi_set_config()
 	fp = fopen("/tmp/wifi-set-config", "w");
 	if (!fp) return;
 	fprintf(fp, "ESSID=%s\n", wifi_config[use_wifi_config].essid);
-	fprintf(fp, "KEY=%s\n", wifi_config[use_wifi_config].wepkey);
+	if (strcmp(wifi_config[use_wifi_config].pskkey, "not psk") == 0)
+		/* wep */
+		fprintf(fp, "KEY=%s\n", wifi_config[use_wifi_config].wepkey);
+	else
+		/* wpa2 */
+		fprintf(fp, "KEY=%s\n", wifi_config[use_wifi_config].pskkey);
 	if (wifi_config[use_wifi_config].ping_target != INADDR_NONE) {
 		ip.s_addr = wifi_config[use_wifi_config].ping_target;
 		fprintf(fp, "PING=%s\n", inet_ntoa(ip));
@@ -642,6 +655,23 @@ void press_configure(GtkWidget *widget, gpointer data)
 	unlink("/tmp/sc-error.log");
 	wifi_set_config();
 	sprintf(tmps, "%s/script/wifi-set-", base_path);
+
+	if (strcmp(wifi_config[use_wifi_config].pskkey, "not psk") != 0) {
+	/* for psk */
+		if (strcmp(wifi_config[use_wifi_config].ip_config, "dhcp") == 0)
+			strcat(tmps, "psk-dhcp");
+		else if (strcmp(wifi_config[use_wifi_config].ip_config, "misdhcp") == 0)
+			strcat(tmps, "psk-dhcp misdhcp");
+		else if (strcmp(wifi_config[use_wifi_config].ip_config, "static") == 0)
+			strcat(tmps, "psk-static");
+		else {
+			g_print("%s() ip_config for psk failed\n", __func__);
+			sprintf(tmps,
+				"echo \"%s() ip_config for psk failed\n\""
+				" > /tmp/sc-error.log" , __func__);
+		}
+	} else
+	/* for wep */
 	if (strcmp(wifi_config[use_wifi_config].ip_config, "dhcp") == 0)
 		strcat(tmps, "infra-dhcp");
 	else if (strcmp(wifi_config[use_wifi_config].ip_config, "misdhcp") == 0)

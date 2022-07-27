@@ -7,8 +7,8 @@ CROSSTOOLS = arm-none-linux-gnueabi-
 CROSSDEVDIR = /opt/arm-dev/sysroots/armv7a-none-linux-gnueabi
 
 TARGET = demoapp-arm
-SRCS =
-CPPSRCS = mainpanel.cpp ovganimwin.cpp
+SRCS = tctl.c
+CPPSRCS = mainpanel.cpp oglanimwin.cpp
 
 SRCDIR = ./
 
@@ -38,25 +38,15 @@ CFLAGS += -I.
 CFLAGS += -I${CROSSDEVDIR}/usr/include
 LDFLAGS += -L${CROSSDEVDIR}/usr/lib
 
-#include ../../buildroot/makerules/rules.com
-
-#USE_TCTLAPI = yes
-#USE_TCTLXAPI = yes
-#include ../../buildroot/makerules/rules.api
-#USE_PRISM = yes
-#BUILD_LIB = static
-#include ../../buildroot/makerules/rules.prism
-
 CFLAGS += -I../include
 CFLAGS += -I$(CROSSDEVDIR)/usr/include/freetype2
 LDFLAGS += -L../lib
 LIBS += -lprism
-LIBS += -lpthread -lfreetype -lz
+LIBS += -lstdc++ -lpthread -lfreetype -lz
 LIBS += -lX11 -lXext -lXi -lxcb -lXdmcp -lXau
-#LIBS += -lEGL -lOpenVG -lIMGegl -lpvr2d -lsrv_um
 LIBS += -lEGL -lGLES_CM -lIMGegl -lpvr2d -lsrv_um -lusc
 DEPLIBS += ../lib/libprism.a
-LDFLAGS += ${LIBS} -lstdc++
+LDFLAGS += ${LIBS}
 
 CFLAGS += ${OPTCADD}
 

@@ -5,7 +5,7 @@ include ../Build/rules.mk
 endif
 
 PROGRAM  = wlantool
-SRCS     = ReadWLAN.c WLANtool.c version.c common.c md5.c
+SRCS     = ReadWLAN.c WLANtool.c version.c common.c md5.c tctlprof.c
 OBJS     = ${SRCS:%.c=%.o}
 
 VPATH = ./:../common

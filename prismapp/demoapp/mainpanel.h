@@ -5,7 +5,7 @@
 #ifndef __MAINPANEL_H__
 #define __MAINPANEL_H__
 
-#include "ovganimwin.h"
+#include "oglanimwin.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ class MainPanel : public Pm_Panel
 		};
 
     protected:
-        ovgAnimWin *mpPhotoFrame;
+        oglAnimWin *mpPhotoFrame;
         Pm_Prompt *mpGesture;
         Pm_Prompt *mpSpeed;
 

@@ -7,8 +7,8 @@ CROSSTOOLS = arm-linux-gnueabihf-
 CROSSDEVDIR = /opt/arm-dev/armhf
 
 TARGET = demoapp-arm
-SRCS =
-CPPSRCS = mainpanel.cpp ovganimwin.cpp
+SRCS = tctl.c
+CPPSRCS = mainpanel.cpp oglanimwin.cpp
 
 SRCDIR = ./
 
@@ -24,6 +24,7 @@ CFLAGS += -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mhard-float
 CFLAGS += -mfloat-abi=hard -ftree-vectorize -mvectorize-with-neon-quad
 CFLAGS += -mthumb-interwork
 endif
+CFLAGS += -D__O_PANEL__
 
 ifeq ($(BUILD_DEBUG),yes)
 CFLAGS += -g -D_DEBUG
@@ -39,25 +40,15 @@ CFLAGS += -I${CROSSDEVDIR}/usr/include
 LDFLAGS += -L${CROSSDEVDIR}/usr/lib
 LDFLAGS += --sysroot=${CROSSDEVDIR}
 
-#include ../../buildroot/makerules/rules.com
-
-#USE_TCTLAPI = yes
-#USE_TCTLXAPI = yes
-#include ../../buildroot/makerules/rules.api
-#USE_PRISM = yes
-#BUILD_LIB = static
-#include ../../buildroot/makerules/rules.prism
-
 CFLAGS += -I../include
 CFLAGS += -I$(CROSSDEVDIR)/usr/include/freetype2
 LDFLAGS += -L../lib.armhf
 LIBS += -lprism
-LIBS += -lpthread -lfreetype -lz
-LIBS += -lX11 -lXext -lXi -lxcb -lXdmcp -lXau
-#LIBS += -lEGL -lOpenVG -lIMGegl -lpvr2d -lsrv_um
-LIBS += -lEGL -lGLES_CM -lIMGegl -lpvr2d -lsrv_um -lusc
+LIBS += -lstdc++ -lpthread -lfreetype -lm
+LIBS += -lX11 -lXext -lXi
+LIBS += -lEGL -lGLES_CM
 DEPLIBS += ../lib.armhf/libprism.a
-LDFLAGS += ${LIBS} -lstdc++ -lm
+LDFLAGS += ${LIBS}
 
 CFLAGS += ${OPTCADD}
 

@@ -149,7 +149,7 @@ MainPanel::MainPanel() :
 	printf("Animation window %dx%d+%d+%d.\n",
 			win_width, win_height, win_x, win_y);
     ChildSize.Set(win_x, win_y, win_x + win_width - 1, win_y + win_height - 1);
-    mpPhotoFrame = new ovgAnimWin(ChildSize, PM_BORDER_NONE);
+    mpPhotoFrame = new oglAnimWin(ChildSize, PM_BORDER_NONE);
     mpPhotoFrame->RemoveStatus(PM_SF_MOVEABLE|PM_SF_SIZEABLE);
     mpPhotoFrame->SetColor(PM_CI_NORMAL, CID_BLACK);
     mpPhotoFrame->SetWallpaper(menuPhoto[0]);

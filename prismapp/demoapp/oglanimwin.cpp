@@ -3,19 +3,19 @@
 
 
 #include "prism_includes.h"
-#include "ovganimwin.h"
+#include "oglanimwin.h"
 
-pm_event_table_entry ovgAnimWinEvents[] = {
-    {PM_EVENT_SHOW, PM_EVENT_HANDLER(&ovgAnimWin::OnEventShow)},
-    {PM_EVENT_HIDE, PM_EVENT_HANDLER(&ovgAnimWin::OnEventHide)},
-    {PM_EVENT_GAINED_FOCUS, PM_EVENT_HANDLER(&ovgAnimWin::OnEventFocusIn)},
-    {PM_EVENT_LOST_FOCUS, PM_EVENT_HANDLER(&ovgAnimWin::OnEventFocusOut)},
-    {PM_EVENT_PEN_DRAG,   PM_EVENT_HANDLER(&ovgAnimWin::OnEventPan)},
-    {PM_EVENT_PENDOWN,    PM_EVENT_HANDLER(&ovgAnimWin::OnEventPenDown)},
-    {PM_EVENT_PENUP,      PM_EVENT_HANDLER(&ovgAnimWin::OnEventPenUp)},
-    {PM_EVENT_ZOOM_IN,    PM_EVENT_HANDLER(&ovgAnimWin::OnEventZoomIn)},
-    {PM_EVENT_ZOOM_OUT,   PM_EVENT_HANDLER(&ovgAnimWin::OnEventZoomOut)},
-    {PM_EVENT_MULTITOUCH, PM_EVENT_HANDLER(&ovgAnimWin::OnEventMultitouch)},
+pm_event_table_entry oglAnimWinEvents[] = {
+    {PM_EVENT_SHOW, PM_EVENT_HANDLER(&oglAnimWin::OnEventShow)},
+    {PM_EVENT_HIDE, PM_EVENT_HANDLER(&oglAnimWin::OnEventHide)},
+    {PM_EVENT_GAINED_FOCUS, PM_EVENT_HANDLER(&oglAnimWin::OnEventFocusIn)},
+    {PM_EVENT_LOST_FOCUS, PM_EVENT_HANDLER(&oglAnimWin::OnEventFocusOut)},
+    {PM_EVENT_PEN_DRAG,   PM_EVENT_HANDLER(&oglAnimWin::OnEventPan)},
+    {PM_EVENT_PENDOWN,    PM_EVENT_HANDLER(&oglAnimWin::OnEventPenDown)},
+    {PM_EVENT_PENUP,      PM_EVENT_HANDLER(&oglAnimWin::OnEventPenUp)},
+    {PM_EVENT_ZOOM_IN,    PM_EVENT_HANDLER(&oglAnimWin::OnEventZoomIn)},
+    {PM_EVENT_ZOOM_OUT,   PM_EVENT_HANDLER(&oglAnimWin::OnEventZoomOut)},
+    {PM_EVENT_MULTITOUCH, PM_EVENT_HANDLER(&oglAnimWin::OnEventMultitouch)},
     {0, NULL}   /* array terminator */
 };
 
@@ -25,7 +25,7 @@ pm_event_table_entry ovgAnimWinEvents[] = {
 //  Create top level object and add all children
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-ovgAnimWin::ovgAnimWin(const Pm_Region &Size, uint32_t Style) : 
+oglAnimWin::oglAnimWin(const Pm_Region &Size, uint32_t Style) : 
     Pm_Panel(Size, Style)
 	, mSingleTouch(FALSE)
 	, mZoomStep(0)
@@ -45,11 +45,11 @@ ovgAnimWin::ovgAnimWin(const Pm_Region &Size, uint32_t Style) :
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::Notify(const pm_event_t &Event)
+pm_int_t oglAnimWin::Notify(const pm_event_t &Event)
 {
-//	printf("ovgAnimWin::Notify() event = %d\n", Event.Type);
+//	printf("oglAnimWin::Notify() event = %d\n", Event.Type);
 
-    pm_event_table_entry *pEventList = ovgAnimWinEvents;
+    pm_event_table_entry *pEventList = oglAnimWinEvents;
     while(pEventList->EventType)
     {
         if (pEventList->EventType == Event.Type)
@@ -68,7 +68,7 @@ pm_int_t ovgAnimWin::Notify(const pm_event_t &Event)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ovgAnimWin::FlickPicture(pm_bitmap_t *pNext, int xShift, int yShift)
+void oglAnimWin::FlickPicture(pm_bitmap_t *pNext, int xShift, int yShift)
 {
 	mpEngine->oxx_flick_run(mContext, pNext, xShift, yShift);
 	ZoomReset();
@@ -76,13 +76,13 @@ void ovgAnimWin::FlickPicture(pm_bitmap_t *pNext, int xShift, int yShift)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ovgAnimWin::AddItem(int show)
+void oglAnimWin::AddItem(int show)
 {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ovgAnimWin::FlickType(int iType)
+void oglAnimWin::FlickType(int iType)
 {
 	if (iType == 1)
 		mpEngine->oxx_AnimWin_flickType(mContext, PM_ANIMWIN_FLICK_FLIP);
@@ -94,18 +94,18 @@ void ovgAnimWin::FlickType(int iType)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ovgAnimWin::AddStatusCurrent()
+void oglAnimWin::AddStatusCurrent()
 {
 	mpEngine->oxx_AnimWin_AddStatus(mContext, PM_SF_CURRENT);
 }
-void ovgAnimWin::RemoveStatusCurrent()
+void oglAnimWin::RemoveStatusCurrent()
 {
 	mpEngine->oxx_AnimWin_RemoveStatus(mContext, PM_SF_CURRENT);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ovgAnimWin::CheckPanLimits()
+void oglAnimWin::CheckPanLimits()
 {
 	pm_int_t imgWidth = mZoomImage.Width();
 	pm_int_t imgHeight = mZoomImage.Height();
@@ -142,7 +142,7 @@ void ovgAnimWin::CheckPanLimits()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ovgAnimWin::CheckZoomLimits()
+void oglAnimWin::CheckZoomLimits()
 {
 	pm_int_t imgWidth = mZoomImage.Width();
 	pm_int_t imgHeight = mZoomImage.Height();
@@ -201,7 +201,7 @@ void ovgAnimWin::CheckZoomLimits()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ovgAnimWin::CalcZoomParam(const pm_event_t &Event)
+void oglAnimWin::CalcZoomParam(const pm_event_t &Event)
 {
 	pm_int_t newWidth, newHeight;
 	float ratio_w, ratio_h, ratio;
@@ -262,7 +262,7 @@ void ovgAnimWin::CalcZoomParam(const pm_event_t &Event)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event Handler //////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventShow(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventShow(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
 	mpEngine->oxx_AnimWin_AddStatus(mContext, PM_SF_VISIBLE);
@@ -270,7 +270,7 @@ pm_int_t ovgAnimWin::OnEventShow(const pm_event_t &Event)
     return Pm_Panel::OnEventShow(Event);
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventHide(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventHide(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
 	if (!mParentAlive) return 0;
@@ -279,21 +279,21 @@ pm_int_t ovgAnimWin::OnEventHide(const pm_event_t &Event)
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventFocusIn(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventFocusIn(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
 	mpEngine->oxx_AnimWin_AddStatus(mContext, PM_SF_CURRENT);
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventFocusOut(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventFocusOut(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
 	mpEngine->oxx_AnimWin_RemoveStatus(mContext, PM_SF_CURRENT);
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventPenDown(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventPenDown(const pm_event_t &Event)
 {
 	printf("%s() ---\n", __FUNCTION__);
 
@@ -304,7 +304,7 @@ pm_int_t ovgAnimWin::OnEventPenDown(const pm_event_t &Event)
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventPenUp(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventPenUp(const pm_event_t &Event)
 {
 	printf("%s() - time %d-%d=%d, %d,%f\n",
 			__FUNCTION__, Event.Param, mPenUpTime, Event.Param - mPenUpTime,
@@ -329,7 +329,7 @@ pm_int_t ovgAnimWin::OnEventPenUp(const pm_event_t &Event)
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventMultitouch(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventMultitouch(const pm_event_t &Event)
 {
 	pm_int_t x, y;
 
@@ -348,7 +348,7 @@ pm_int_t ovgAnimWin::OnEventMultitouch(const pm_event_t &Event)
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventPan(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventPan(const pm_event_t &Event)
 {
 	pm_int_t DeltaX, DeltaY;
 
@@ -379,7 +379,7 @@ pm_int_t ovgAnimWin::OnEventPan(const pm_event_t &Event)
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventZoomIn(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventZoomIn(const pm_event_t &Event)
 {
 	if (!mZoomEnable) return 0;
 
@@ -403,7 +403,7 @@ pm_int_t ovgAnimWin::OnEventZoomIn(const pm_event_t &Event)
 	return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////
-pm_int_t ovgAnimWin::OnEventZoomOut(const pm_event_t &Event)
+pm_int_t oglAnimWin::OnEventZoomOut(const pm_event_t &Event)
 {
 	if (!mZoomEnable) return 0;
 
@@ -428,15 +428,15 @@ pm_int_t ovgAnimWin::OnEventZoomOut(const pm_event_t &Event)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void ovgAnimWin::show()
+void oglAnimWin::show()
 {
-	printf("ovgAnimWin_%s() ---\n", __FUNCTION__);
+	printf("oglAnimWin_%s() ---\n", __FUNCTION__);
 	mpEngine->oxx_AnimWin_AddStatus(mContext, PM_SF_VISIBLE);
 	mpEngine->oxx_AnimWin_show(mContext);
 }
-void ovgAnimWin::hide()
+void oglAnimWin::hide()
 {
-	printf("ovgAnimWin_%s() ---\n", __FUNCTION__);
+	printf("oglAnimWin_%s() ---\n", __FUNCTION__);
 	mpEngine->oxx_AnimWin_hide(mContext);
 	mpEngine->oxx_AnimWin_RemoveStatus(mContext, PM_SF_VISIBLE);
 }

@@ -33,6 +33,9 @@ Rect nw_status_coor = {.x=620, .y=165, .w=10, .h=10};  // ネットワークデ�
 void DrawStatusIndicator(Display *d, Window w, GC gc, Rect *rect, char *bgColor);
 
 int g_board_type = WPC_BOARD_TYPE_J;
+#if defined(__S_PANEL__)
+int g_force_spanel = 0;
+#endif
 int g_noifup = 0;
 int lcd_width = DEFAULT_WINDOW_WIDTH;
 int lcd_height = DEFAULT_WINDOW_HEIGHT;
@@ -67,10 +70,6 @@ int main(int ac, char *av[])
 	signal(SIGTERM, (void *)int_handler);
 	
 	g_board_type = sc_get_board_type();
-	if (g_board_type == WPC_BOARD_TYPE_O)
-	printf("wlantool execute on o-PANEL\n");
-	else
-	printf("wlantool execute on j%d-PANEL\n", g_board_type);
 
 	/* default settings */
 	page1 = page1_jpn;
@@ -78,8 +77,9 @@ int main(int ac, char *av[])
 	judgement = judgement_jpn;
 	mesg = mesg_jpn;
 	strcpy(fontname, "DFPHSGothic-W7 12");
+
 	/* opt parse */
-	while ((opt = getopt(ac, av, "ef:n")) != -1) {
+	while ((opt = getopt(ac, av, "ef:ns")) != -1) {
 		switch (opt) {
 		case 'e':
 			opt_eng = 1;
@@ -90,16 +90,38 @@ int main(int ac, char *av[])
 		case 'n':
 			g_noifup = 1;
 			break;
+#if defined(__S_PANEL__)
+		case 's':
+			g_force_spanel = 1;
+			break;
+#endif
 		default:
 			break;
 		}
 	}
+
+#if defined(__S_PANEL__)
+	if (g_force_spanel)
+		g_board_type = WPC_BOARD_TYPE_S;
+#endif
+	if (g_board_type == WPC_BOARD_TYPE_O)
+	printf("wlantool execute on o-PANEL\n");
+#if defined(__S_PANEL__)
+	else if (g_board_type == WPC_BOARD_TYPE_S)
+	printf("wlantool execute on s-PANEL\n");
+#endif
+	else
+	printf("wlantool execute on j%d-PANEL\n", g_board_type);
+
 	if (opt_eng) {
 		page1 = page1_eng;
 		page2 = page2_eng;
 		judgement = judgement_eng;
 		mesg = mesg_eng;
 	}
+
+	// read lctl.ini
+	read_lctl_ini();
 
 	// 設定ファイル読み込み（先頭５つ）
 	if (ReadParamFile() != OK) {
@@ -688,7 +710,11 @@ void EnvtPage()
 	XDrawRectangle(dpy, w, gc, 5 ,5, 1012, 590);
 	
 	//draw Border for Window Title
+#if defined(__S_PANEL__)
+	sprintf(str, "%s (v%d.%d) s-PANEL", page1[0], VER_MAJOR, VER_MINOR);
+#else
 	sprintf(str, "%s (v%d.%d)", page1[0], VER_MAJOR, VER_MINOR);
+#endif
 	DrawPangoXftRenderLayout(draw, &color_black, layout,   15, 15, str);  // 無線 LAN 環境測定モード
 	
 	XDrawLine(dpy, w, gc, 5, 40, 1016, 40);
@@ -708,11 +734,11 @@ void EnvtPage()
 	//Draw Boxes
 	
 	XDrawRectangle(dpy, w, gc, 140,  55, 250, 25);  // 接続先
-	XDrawRectangle(dpy, w, gc, 500,  55, 210, 25);  // WEP
+	XDrawRectangle(dpy, w, gc, 510,  55, 210, 25);  // WEP
 	XDrawRectangle(dpy, w, gc, 140,  85, 250, 25);  // AP MAC
-	XDrawRectangle(dpy, w, gc, 500,  85, 210, 25);  // 接続状況
+	XDrawRectangle(dpy, w, gc, 510,  85, 210, 25);  // 接続状況
 	XDrawRectangle(dpy, w, gc, 140, 115, 250, 25);  // WLAN MAC
-	XDrawRectangle(dpy, w, gc, 500, 115, 210, 25);  // チャンネル
+	XDrawRectangle(dpy, w, gc, 510, 115, 210, 25);  // チャンネル
 	
 	// 電界強度
 	XDrawRectangle(dpy, w, gc, 180, 165, 210, 25);
@@ -915,7 +941,7 @@ void UpdateUI(int f, char *data)
 	switch(f) {
 	case 0:  // 接続先
 		xy[0] = 141; xy[1] = 56; xy[2] = 249; xy[3] = 24;
-		xy[4] = 150; xy[5] = 60;
+		xy[4] = 202; xy[5] = 60;
 		if (res == OK) {
 			ShadeForm(w, draw, xy, data, &color_green, C_WHITE);
 		} else {
@@ -929,7 +955,7 @@ void UpdateUI(int f, char *data)
 		break;
 		
 	case 1:  // 接続状況
-		xy[0] = 501; xy[1] = 86; xy[2] = 209; xy[3] = 24;
+		xy[0] = 511; xy[1] = 86; xy[2] = 209; xy[3] = 24;
 		xy[4] = 584; xy[5] = 90;
 		if (res == OK) {
 			if (!strcmp(data,"1")) {
@@ -944,9 +970,10 @@ void UpdateUI(int f, char *data)
 		break;
 		
 	case 2:  // WEP
-		xy[0] = 501; xy[1] = 56; xy[2] = 209; xy[3] = 24;
-		xy[4] = 584; xy[5] = 60;
+		xy[0] = 511; xy[1] = 56; xy[2] = 209; xy[3] = 24;
+		xy[4] = 520; xy[5] = 60;
 		if (res == OK) {
+#if 0
 			if (!strcmp(data,"1")) {
 				ShadeForm(w, draw, xy, judgement[5], &color_green, C_WHITE);
 			} else {
@@ -954,6 +981,12 @@ void UpdateUI(int f, char *data)
 				if (g_board_type != WPC_BOARD_TYPE_O)
 				isDataOK = NG;
 			}
+#else
+			if (data[0] == '1')
+				ShadeForm(w, draw, xy, &data[1], &color_green, C_WHITE);
+			else
+				ShadeForm(w, draw, xy, &data[1], &color_black, C_RED);
+#endif
 		} else {
 			ShadeForm(w, draw, xy, "", &color_red, C_RED);
 		}
@@ -963,7 +996,7 @@ void UpdateUI(int f, char *data)
 		if (ConfirmButton != ON) {
 			strcat(data," ch");
 		}
-		xy[0] = 501; xy[1]= 116; xy[2] = 209; xy[3] = 24;
+		xy[0] = 511; xy[1]= 116; xy[2] = 209; xy[3] = 24;
 		xy[4] = 584; xy[5]= 120;
 		if (res == OK) {
 			ShadeForm(w, draw, xy, data, &color_green, C_WHITE);
@@ -1048,6 +1081,7 @@ void UpdateUI(int f, char *data)
 			strcat(data," Kbps");
 		}
 		tbuf = atoi(data);
+#if defined(__S_PANEL__)
 		if (tbuf > 10000) {
 			tbuf = 10000;  // A1123
 		}
@@ -1077,6 +1111,43 @@ void UpdateUI(int f, char *data)
 			C_fill = &color_red;
 			C_fill2 = C_RED;
 		}
+#else
+		/* s-PANEL */
+		if (res == OK) {
+			if (tbuf >=0 && tbuf < 5001) {
+				C_txt  = &color_black;
+				C_bg   = C_RED;
+				C_fill = &color_red;
+				C_fill2 = C_RED;
+				isDataOK = NG;
+			} else if (tbuf >= 5001 && tbuf < 8001) {
+				C_txt  = &color_black;
+				C_bg   = C_YELLOW;
+				C_fill = &color_yellow;
+				C_fill2 = C_YELLOW;
+			} else {
+				C_txt  = &color_green;
+				C_bg  = C_WHITE;
+				C_fill = &color_green;
+				C_fill2 = C_GREEN;
+			if (tbuf > 500000)
+				tbuf = 500000;
+			if (tbuf > 100000)
+				tbuf /= (500000-100000)/10000;
+			else if (tbuf > 50000)
+				tbuf /= (100000-50000)/10000;
+			else if (tbuf > 10000)
+				tbuf /= (50000-10000)/10000;
+			}
+		} else {
+			tbuf = 0;
+			C_txt  = &color_black;
+			C_bg   = C_RED;
+			C_fill = &color_red;
+			C_fill2 = C_RED;
+			isDataOK = NG;
+		}
+#endif	/* __S_PANEL__ */
 		xy[0] = 181; xy[1] = 196; xy[2] = 209; xy[3] = 24;
 		xy[4] = 265; xy[5] = 200;
 		ShadeForm(w, draw, xy, data, C_txt, C_bg); 
@@ -1332,12 +1403,18 @@ int ValidateData(int idNo)
       return NG;
    }
    
-   if(idNo == 1 || idNo == 2){	// assoc, wep
+   if(idNo == 1){	// assoc
       if (atoi(info[idNo]) == 1 || atoi(info[idNo]) == 0 ) return OK;
       isDataOK = NG;
       return NG;
    }
-   
+
+   if(idNo == 2){	// wep
+      if (info[idNo][0] == '1' || info[idNo][0] == '0' ) return OK;
+      isDataOK = NG;
+      return NG;
+   }
+
    if(idNo == 3){   //Channel
 	   chn = atoi(info[idNo]);
       if ( chn >0 && chn < 14) return OK;	/* 2.4GHz */

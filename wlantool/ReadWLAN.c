@@ -22,6 +22,7 @@
 #include <errno.h>
 #include "wpcio.h"
 #include "common.h"
+#include "tctlprof.h"
 
 #if 1
 #define PING_COUNT 1000
@@ -39,14 +40,18 @@ extern int g_board_type;
 
 static	char	ssid[64]		= "@NoAP@";
 static	char	association[32]	= "0";
-static	char	wep[32]			= "0";
+static	char	wep[64]			= "0";
+static	char	auth_crypto[64]	= "-/-/-";
 static	char	channel[32]		= "@NoCh@";
 static	char	bssid[32]		= "XX:XX:XX:XX:XX:XX";
 static	char	macadrs[32]		= "XX:XX:XX:XX:XX:XX";
 static	int 	rssi			= -100;
-static	int	throughput		= 0;
+static	int		throughput		= 0;
 static	float	error_rate		= 100.00;
-static	int	other_rssi[MAX_CH_NUM]	= {0,};
+static	int		other_rssi[MAX_CH_NUM]	= {0,};
+static	int		g_DontUseMisGateway = 0;
+static	char	MISIP_LCTLINI[32] = {0};
+static	char	MISIP_GATEWAY[32] = {0};
 
 static	int	processing_flag = 0;
 static	pid_t	down_pid;
@@ -156,15 +161,17 @@ int	get_basic_info()
 {
 	int		ret = 0;
 	int		i = 0;
+	int		retry_count = 0;
 	char	cmdstr[256];
-	
+
+error_retry:
 	printf( "[get_basic_info] start\n" );
 	
 	// j-panel : iwlist wlanX channel
 	sprintf(cmdstr, "%s > %s", IWLIST_CH, TEMPFILE);
 	printf(" > execute command=%s\n", cmdstr);
 	ret = system(cmdstr);
-	strcat(cmdstr, TEMPFILE);
+	//strcat(cmdstr, TEMPFILE);
 	if (ret != 0) {
 		goto error_path;
 	}
@@ -176,22 +183,37 @@ int	get_basic_info()
 		if (ret != 0) {
 			goto error_path;
 		}
+		sleep(1);
 	}
 	
 	// j-panel : ifconfig
 	sprintf(cmdstr, "%s >> %s", IFCONFIG, TEMPFILE);
 	printf(" > execute command=%s\n", cmdstr);
 	ret = system(cmdstr);
-	strcat(cmdstr, TEMPFILE);
+	//strcat(cmdstr, TEMPFILE);
 	if (ret != 0) {
 		goto error_path;
 	}
-	
+
+	// authentication / crypto
+	if (WL_WEPSTAT[0] != '\0') {
+		sprintf(cmdstr, "%s >> %s", WL_WEPSTAT, TEMPFILE);
+		printf(" > execute command=%s\n", cmdstr);
+		ret = system(cmdstr);
+		if (ret != 0)
+			goto error_path;
+	}
+
 	// analysis a temporary file
 	ret = file_analysis(FOR_BASIC,0);
 	
-	//	if (ret != 0) goto error_path;
-	switch( ret ) {
+	if (ret != 0) {
+		if (retry_count < 12) {	// MAX 60 seconds
+			retry_count++;
+			printf("[get_basic_info] retry count=%d\n", retry_count);
+			goto error_retry;
+		}
+		switch( ret ) {
 		case -1 : goto error_path;
 		case -2 : goto error_ssid;
 		case -3 : goto error_channel;
@@ -199,6 +221,7 @@ int	get_basic_info()
 		case -5 : goto error_wepstatus;
 		case -6 : goto error_rssi;
 		case -7 : goto error_macadrs;
+		}
 	}
 
 	// finish point without error
@@ -263,7 +286,7 @@ int	get_throughput_info()
 
 	// getting average
 	throughput = total / LOOP; 
-	if ( throughput > 100000 ) throughput = 100000;
+	if ( throughput > 1000000 ) throughput = 1000000;
 	printf( "[get_throughput_info] total throughput=%d[Kbps]\n", throughput );
 
 	return 0;
@@ -669,7 +692,11 @@ int	get_scan ( int ch )
 		return 0;
 	}
 	// getting maximum rssi
+#if !defined(__S_PANEL__)
 	ret = file_analysis(FOR_RSSI, ch);
+#else
+	ret = file_analysis(FOR_RSSI_S, ch);
+#endif
 	if ( ret == -1 ) {
 		printf( "[do_scan] file analysis error!\n" );
 		return -120;
@@ -701,7 +728,7 @@ int	file_analysis( int mode, int ch )
 	
 	int rssibuf = 0;
 	
-	if (mode != FOR_RSSI)
+	if (mode != FOR_RSSI && mode != FOR_RSSI_S)
 	memset(parseToken, 0x00, sizeof(parseToken));
 	
 	switch (mode) {
@@ -757,6 +784,12 @@ int	file_analysis( int mode, int ch )
 		if (g_board_type == WPC_BOARD_TYPE_O)
 			// Current Channel=5
 			tmp3 = strchr( parseToken[i+1], '=') + 1;
+#if defined(__S_PANEL__)
+		else if (g_board_type == WPC_BOARD_TYPE_S) {
+			// Current Frequency:5.18 GHz (Channel 36)
+			tmp3 = strtok(parseToken[i+4], ")");
+		}
+#endif
 		else
 			// Current Frequency=2.432 GHz (Channel 5)
 			tmp3 = strtok( parseToken[i+4], ")" );
@@ -775,6 +808,7 @@ int	file_analysis( int mode, int ch )
 		strcpy( bssid, parseToken[i+1] );
 		printf( " > (3) detect BSSID:[%s]\n", bssid );
 		
+#if 0
 		// WEPSTATUS
 		i = search_token( "key:", 0, 0 );
 		tmp3 = strchr( parseToken[i], ':' );
@@ -785,7 +819,25 @@ int	file_analysis( int mode, int ch )
 			strcpy( wep, "1" );
 		}
 		printf( " > (4) detect WEPSTATUS:[%s]\n", wep );
-		
+#endif
+		// Auth/Crypto
+		i = search_token("key_mgmt=", 0, 0);
+		if (i == -1) {
+			strcat(wep, auth_crypto);
+		} else {
+			tmp3 = strchr(parseToken[i], '=');
+			strcpy(auth_crypto, tmp3+1); strcat(auth_crypto, "/");
+			i = search_token("pairwise_cipher=", 0, 0);
+			tmp3 = strchr(parseToken[i], '=');
+			strcat(auth_crypto, tmp3+1); strcat(auth_crypto, "/");
+			i = search_token("group_cipher=", 0, 0);
+			tmp3 = strchr(parseToken[i], '=');
+			strcat(auth_crypto, tmp3+1);
+			strcpy(wep, "1");
+			strcat(wep, auth_crypto);
+			printf( " > (4) detect WEPSTATUS:[%s]\n", wep );
+		}
+
 		// RSSI
 		rssibuf = 0;
 		i = 0;
@@ -1007,7 +1059,11 @@ int	file_analysis( int mode, int ch )
 			tmp3 = strtok( parseToken[i+1], ")" );
 			ret = atoi(tmp3);
 			if (ch == ret) {
-				if (g_board_type == WPC_BOARD_TYPE_J) {
+				if ((g_board_type == WPC_BOARD_TYPE_J)
+#if defined(__S_PANEL__)
+					|| (g_board_type == WPC_BOARD_TYPE_S)
+#endif
+				) {
 					strtok( parseToken[i+4], "=" );
 					tmp3 = strtok( NULL, "=" );
 				} else if ((g_board_type == WPC_BOARD_TYPE_J3) ||
@@ -1047,6 +1103,35 @@ int	file_analysis( int mode, int ch )
 		
 		return max;
 	
+	case FOR_RSSI_S:
+	{
+		int channel;
+		printf("[%s] analysis for rssi of ch%d\n", __func__, ch);
+		max = -100;
+		i = search_token( "------", 0, 0 );
+		if (i == -1) {
+			printf("[%s] ch%d cannot detect RSSI!\n", __func__, ch);
+			return max;
+		}
+		i += 1;
+		for (j = i; j < parse_line; j+=4) {
+			//printf("[%s] %s %s %s %s\n", __func__,
+			//		parseToken[j], parseToken[j+1],
+			//		parseToken[j+2],parseToken[j+3]);
+			channel = atoi(parseToken[j+3]);
+			if (channel == ch) {
+				tmp3 = strtok(parseToken[j+1], ",");
+				current = atoi(tmp3);
+				if (current > max) {
+					max = current;
+					printf(" > update maximum, ch%d use RSSI=%d\n", ch, max);
+				}
+			}
+		}
+
+		return max;
+	}
+
 	default :  // default case
 			break;
 	}
@@ -1562,7 +1647,7 @@ int	diff_time(int start, int end)
 // -- interrupt handler --
 void *int_handler( int signo )
 {
-	int		ret = 0;
+	int		ret = 1;
 
 	printf( "[Interrupt] SIGNO=%d\n", signo );
 	ret = kill( down_pid, SIGKILL );
@@ -1570,7 +1655,7 @@ void *int_handler( int signo )
 	ret = kill( ftp_pid, SIGKILL );
 	ret = kill( scan_pid, SIGKILL );
 
-	exit(1);
+	exit(ret);
 }
 
 
@@ -1618,6 +1703,82 @@ void removeLF(char *string)
 		if(string[len-1] == '\n') string[len-1] = '\0';
 }}
 
+
+static in_addr_t get_mis_gateway_ipaddr()
+{
+	FILE	*pFile;
+	char	LineBuff[256];
+	char	*pStrDefGw;
+	T_ROUTE_INFO	tRouteInfo;
+
+
+	/* read route file */
+	if((pFile = fopen(DIR_PROC_ROUTE , "r"))) {
+		for (;;) {
+			memset(LineBuff, 0, sizeof(LineBuff));
+			if (fgets(LineBuff, sizeof(LineBuff), pFile) == 0) {
+				break;
+			}
+
+			// route情報取得
+			memset(&tRouteInfo, 0, sizeof(tRouteInfo));
+			if (sscanf(LineBuff, "%s%x%x%hu%d%d%hd%x%x%x%hu",
+								(char*)&tRouteInfo.cIface,
+								&tRouteInfo.cDst.s_addr,
+								&tRouteInfo.cGateway.s_addr,
+								&tRouteInfo.iFlag,
+								&tRouteInfo.iRecCnt,
+								&tRouteInfo.iUse,
+								&tRouteInfo.iMetric,
+								&tRouteInfo.cMask.s_addr,
+								&tRouteInfo.iMTU,
+								&tRouteInfo.iWindow,
+								&tRouteInfo.iIRTT) == 0) {
+				break;
+			}
+			printf("RouteInfo:Iface[%s]\n", tRouteInfo.cIface);
+			printf("RouteInfo:Dst[0x%08X(%s)]\n", tRouteInfo.cDst.s_addr, inet_ntoa(tRouteInfo.cDst));
+			printf("RouteInfo:Gateway[0x%08X(%s)]\n", tRouteInfo.cGateway.s_addr, inet_ntoa(tRouteInfo.cGateway));
+			printf("RouteInfo:Flag[0x%04X]\n", tRouteInfo.iFlag);
+			printf("RouteInfo:RecCnt[%d]\n", tRouteInfo.iRecCnt);
+			printf("RouteInfo:Use[%d]\n", tRouteInfo.iUse);
+			printf("RouteInfo:Metric[%d]\n", tRouteInfo.iMetric);
+			printf("RouteInfo:Mask[0x%08X]\n", tRouteInfo.cMask.s_addr);
+			printf("RouteInfo:MTU[%d]\n", tRouteInfo.iMTU);
+			printf("RouteInfo:Window[%d]\n", tRouteInfo.iWindow);
+			printf("RouteInfo:IRTT[%d]\n", tRouteInfo.iIRTT);
+
+			/* check option */
+			if ((strstr(tRouteInfo.cIface, NWIF_DEFAULT_IFNAME) != NULL) &&
+				!tRouteInfo.cDst.s_addr &&
+				(tRouteInfo.iFlag == (RTF_UP|RTF_GATEWAY))) {
+				pStrDefGw = inet_ntoa(tRouteInfo.cGateway);
+				fclose(pFile);
+				if (pStrDefGw) {
+					printf("mis default gateway ipaddr fined[%s]\n", pStrDefGw);
+					return inet_addr(pStrDefGw);
+				} else {
+					return 0;
+				}
+			}
+		}
+	}
+	fclose(pFile);
+
+	return 0;
+}
+
+void read_lctl_ini()
+{
+	/* get & set MIS IP address from lctl.ini */
+	if (comn_ProfileSetup(LCTLINI_FILE)) {
+		comn_GetProfileString("main", "misip", NWIF_MIS_DEF_IPADDR, MISIP_LCTLINI, sizeof(MISIP_LCTLINI),"");
+		g_DontUseMisGateway = comn_GetProfileInt("main", "DontUseMisGateway", 0, "");
+		comn_ProfileTerm();
+	} else {
+		strcpy(MISIP_LCTLINI, NWIF_MIS_DEF_IPADDR);
+	}
+}
 
 int ReadConfig()
 {
@@ -1678,6 +1839,13 @@ int ReadConfig()
 	removeLF( IFUP );
 	removeLF( EXIT_BTN );
 
+	// MISIPはsokuteicfgを使用せず、lctl.iniを参照する。
+	if (MISIP_GATEWAY[0]) {
+		strcpy(HOSTPC, MISIP_GATEWAY);
+	} else {
+		strcpy(HOSTPC, MISIP_LCTLINI);
+	}
+
 	printf( "Read configuration file.\n" );
 	printf( " > HOSTPC     =%s\n"  , HOSTPC );
 	printf( " > TESTFILE1  =%s\n"  , TESTFILE1 );
@@ -1737,9 +1905,10 @@ int IsGetIP()
 	FILE *fp;
 	char buf[256];
 	char command[256];
-	int num;
 	char *p;
 	char str[256];
+	char *pStrDefGw;
+	struct in_addr defgwip;
 	
 	ReadOneConfig(15, command);  // ifconfigコマンド取得
 	sprintf(str, "LANG=C %s", command);
@@ -1750,7 +1919,7 @@ int IsGetIP()
 	}
 	
 	memset(buf, 0, sizeof(buf));
-	num = fread(buf, sizeof(buf[0]), sizeof(buf), fp);
+	fread(buf, sizeof(buf[0]), sizeof(buf), fp);
 	
 	p = strstr(buf, "inet addr:");
 	if (p == NULL) {
@@ -1765,7 +1934,18 @@ int IsGetIP()
 	}
 	
 	pclose(fp);
-	
+
+	// 端末IP取得後にMISrouting情報のIPアドレスが存在するか確認＆更新する。
+	if (!g_DontUseMisGateway) {
+		if (!MISIP_GATEWAY[0]) {
+			defgwip.s_addr = get_mis_gateway_ipaddr();
+			if (defgwip.s_addr) {
+				pStrDefGw = inet_ntoa(defgwip);
+				strcpy(MISIP_GATEWAY, pStrDefGw);
+			}
+		}
+	}
+
 	return 1;
 }
 

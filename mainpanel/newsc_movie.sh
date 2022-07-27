@@ -9,6 +9,7 @@
 ### -loop : loop play (optional)                    ###
 ### 2015/10/15 WPC                                  ###
 ### 2016/01/07 WPC                                  ###
+### 2022/07/20 WPC video out to XV                  ###
 ###                                                 ###
 #######################################################
 
@@ -39,10 +40,10 @@ export DISPLAY=:0
 if [ ${LOOPPLAY} -eq 1 ]; then
   while :
   do
-  mplayer -ao alsa -vo x11 -geometry ${POSX}:${POSY} ${MOVIEFILE}
+  mplayer -ao alsa -vo xv -geometry ${POSX}:${POSY} ${MOVIEFILE}
   done
 else
-  mplayer -ao alsa -vo x11 -geometry ${POSX}:${POSY} ${MOVIEFILE}
+  mplayer -ao alsa -vo xv -geometry ${POSX}:${POSY} ${MOVIEFILE}
 fi
 
 exit 1

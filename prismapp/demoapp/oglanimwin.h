@@ -3,8 +3,8 @@
 
 
 
-#ifndef __OVGANIMWIN_H__
-#define __OVGANIMWIN_H__
+#ifndef __OGLANIMWIN_H__
+#define __OGLANIMWIN_H__
 
 #define SCALE_MAX_LIMIT 2.5     // ratio
 #define SCALE_MIN_LIMIT 1.0	    // ratio
@@ -16,11 +16,11 @@
 #define DOUBLE_CLICK_THRESHOLD 200
 
 ///////////////////////////////////////////////////////////////////////////////
-class ovgAnimWin : public Pm_Panel
+class oglAnimWin : public Pm_Panel
 {
     public:
 
-        ovgAnimWin(const Pm_Region &Size, uint32_t Style);
+        oglAnimWin(const Pm_Region &Size, uint32_t Style);
         virtual pm_int_t Notify(const pm_event_t &Event);
 		void show();
 		void hide();
@@ -94,4 +94,4 @@ class ovgAnimWin : public Pm_Panel
 	private:
 		pm_bool_t  mParentAlive;
 };
-#endif // __OVGANIMWIN_H__
+#endif // __OGLANIMWIN_H__

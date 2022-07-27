@@ -25,6 +25,10 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
+#include <net/if.h>
+#include <net/route.h>
+#include <arpa/inet.h>
+
 
 // -- defined value --
 #define FOR_BASIC      0
@@ -32,8 +36,13 @@
 #define FOR_ERROR_RATE 2
 #define FOR_RSSI       3
 #define FOR_RSSI_PRE   4
+#define FOR_RSSI_S     5	/* s-PANEL */
 
 #define CONFIG_FILE "./sokuteicfg"
+#define LCTLINI_FILE "/opt/config/lctl.ini"
+#define DIR_PROC_ROUTE "/proc/net/route"
+#define NWIF_MIS_DEF_IPADDR "192.168.173.2"
+#define NWIF_DEFAULT_IFNAME "wlan0"
 
 #define   ON         1
 #define   OFF        0
@@ -42,6 +51,21 @@
 #define   NO_ERROR   0
 
 #define MAX_CH_NUM 32
+
+/* route info */
+typedef struct {
+    char cIface[IF_NAMESIZE];
+    struct in_addr	cDst;
+    struct in_addr	cGateway;
+    unsigned short	iFlag;
+    int				iRecCnt;
+    int				iUse;
+    short			iMetric;
+    struct in_addr	cMask;
+    unsigned int	iMTU;
+    unsigned int	iWindow;
+    unsigned short	iIRTT;
+} T_ROUTE_INFO;
 
 // -------------------------------------
 // 	Function prototype
@@ -66,6 +90,7 @@ int  diff_time(int start, int end);
 void *int_handler();
 int  dummy_func(int mode);
 void removeLF(char *string);
+void read_lctl_ini();
 int  ReadConfig();
 int  ReadOneConfig(int n, char *str);
 int  IsGetIP();
