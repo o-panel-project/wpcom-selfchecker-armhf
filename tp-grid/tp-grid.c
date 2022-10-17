@@ -12,6 +12,8 @@
 #include <gtk/gtk.h>
 #include "common.h"
 
+char *base_path = "/mnt1";
+
 static gboolean delete_event( GtkWidget *widget, GdkEvent  *event, gpointer   data )
 {
     gtk_main_quit();
@@ -40,34 +42,45 @@ static int nx_arg=0, ny_arg=0;
 // click interval for exit in usec
 static long long ival=280000;
 
-static void check_time()
+/* 20221014 wpc */
+static char click_on_command[SMALL_STR];
+static char click_off_command[SMALL_STR];
+
+static gboolean check_time()
 {
 	unsigned long long t;
 	struct timeval tv1;
 	
 	gettimeofday(&tv1,NULL);
 	t=(tv1.tv_sec-tv0.tv_sec)*1000000+tv1.tv_usec-tv0.tv_usec;
-	if(t<ival) exit(0);
+	if(t<ival) //exit(0);
+		return TRUE;
 	tv0=tv1;
+	return FALSE;
 }
 
-static void click_func(GtkWidget *widget, gpointer data)
+static gboolean click_func(GtkWidget *widget, gpointer data)
 {
 	int n;
 	
-	check_time();
+	if (check_time()) {
+		return TRUE;
+	}
 	
 	n=(unsigned int)data;
 	flags[n]++;
 	
 	gtk_image_set_from_pixbuf(GTK_IMAGE(button_image[n]), (flags[n]&1) ? pix_orange : pix_green);
+	flags[n]&1 ? system(click_on_command) : system(click_off_command);
+	return FALSE;
 }
 
 static gboolean button_release_func(
 		GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
 	g_print("Touch (x, y)=(%.1f, %.1f)\n", event->x_root, event->y_root);
-	click_func(widget, data);
+	if (click_func(widget, data))
+		gtk_main_quit();
 	return FALSE;
 }
 
@@ -83,10 +96,7 @@ int main(int argc, char *argv[])
 {
 	int c, i, j, gargc=0, n;
 	GtkWidget *window, *button, *tbl;
-	char *base_path;
-	
-	base_path="/mnt1";
-	
+
 	while(1){
 		c=getopt(argc, argv, "x:y:t:b:");
 		if(c==-1) break;
@@ -140,7 +150,10 @@ int main(int argc, char *argv[])
 	g_object_ref(pix_orange);
 	pix_green = gdk_pixbuf_new_from_inline(-1, p16green_inline, FALSE, NULL);
 	g_object_ref(pix_green);
-    
+
+	sprintf(click_on_command, "aplay -q %s/data/click_on.wav", base_path);
+	sprintf(click_off_command, "aplay -q %s/data/click_off.wav", base_path);
+
 	for(j=0;j<ny;j++){
 		for(i=0;i<nx;i++){
 			n=nx*j+i;

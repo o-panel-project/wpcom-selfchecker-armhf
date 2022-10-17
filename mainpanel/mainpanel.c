@@ -34,6 +34,7 @@ static int ignore_count=0;
 extern char usbmem_first_device;	/* RH */
 extern int i2c_main_auto_menu;	/* RH */
 int g_board_type = WPC_BOARD_TYPE_J;
+int have_ocrb_font = 0;	/* RH */
 
 int demo_main(GtkWidget *table, GtkWidget *bsub);
 int version_main(GtkWidget *table, GtkWidget *bsub);
@@ -89,6 +90,47 @@ struct side_menu_list_st {
 	{ 1, 1, "Soft Reset", "Soft Reset", "21", reset_main },
 	{ 0, 0, NULL, NULL, NULL, NULL },
 };
+
+//
+// Top screen MAC address font.
+//
+#include <fontconfig/fontconfig.h>
+int custom_font_check(const char *font_family)
+{
+	FcPattern   *pat;
+	FcObjectSet *os = 0;
+	FcFontSet   *fs;
+	const FcChar8   *format = (const FcChar8 *)"%{=fclist}\n";
+	int i;
+
+	pat = FcNameParse((FcChar8 *)font_family);
+	if (!pat) {
+		fprintf(stderr, "Unable to parse the pattern\n");
+		return 0;
+	}
+	os = FcObjectSetBuild(FC_FAMILY, FC_FILE, (char *)0);
+	fs = FcFontList(0, pat, os);
+	FcPatternDestroy(pat);
+	FcObjectSetDestroy(os);
+	if (!fs) {
+		fprintf(stderr, "Font set not found\n");
+		return 0;
+	}
+	//fprintf(stdout, "%s font set num %d\n", font_family, fs->nfont);
+
+	for (i = 0; i < fs->nfont; i++) {
+		FcChar8 *s;
+
+		s = FcPatternFormat(fs->fonts[i], format);
+		if (s) {
+			//fprintf(stdout, "%s", s);
+			FcStrFree (s);
+		}
+	}
+
+	FcFontSetDestroy(fs);
+	return 1;
+}
 
 //
 //	Main top : showing version
@@ -452,20 +494,33 @@ static void fetch_tpver_egalax(char *fwver)
 
 void fetch_egver(char *);
 
+const static char *ft5x06_ctrl_dev = "/dev/ft5x06";
+enum {
+	FT5X06_IOCTL_GET_VERSION = 0xA4,
+	FT5X06_IOCTL_GET_VENDOR_ID,
+};
+#define	FIOCTL_GET_VERSION  	_IO('F', FT5X06_IOCTL_GET_VERSION)
+#define	FIOCTL_GET_VENDOR_ID	_IO('F', FT5X06_IOCTL_GET_VENDOR_ID)
+
 static void fetch_tpver_ft5x06(char *fwver)
 {
-	FILE *fp;
+	int fd;
+	int ret[2] = {0, 0};
 
-	fwver[0] = '\0';
-
-	if ((fp = fopen(SYSFS_FT5X06_TS INFO_FIRMVERSION_NAME, "r")) != NULL) {
-		if (fscanf(fp, "%s\n", fwver) != EOF) {
-			fclose(fp);
-			fprintf(stdout, "Get from sysfs, fwver=%s\n", fwver);
-			return;
+	fd = open(ft5x06_ctrl_dev, O_RDWR);
+	if (fd >= 0) {
+		ret[0] = ioctl(fd, FIOCTL_GET_VENDOR_ID);
+		if (ret[0] < 0) {
+			ret[0] = 0;
 		}
-		fclose(fp);
+		ret[1] = ioctl(fd, FIOCTL_GET_VERSION);
+		if (ret[1] < 0) {
+			ret[1] = 0;
+		}
 	}
+	close(fd);
+
+	sprintf(fwver, "%d(0x%02x) Vendor:0x%02x", ret[1], ret[1], ret[0]);
 }
 
 //	20121002VACS
@@ -568,6 +623,36 @@ fin:
 	close(fd);
 }
 
+/*
+ * o/o2 wifi driver name (RH)
+ */
+static void fetch_wifidriver(char *wver)
+{
+	FILE *fp;
+	char buf[SMALL_STR];
+	char *ret;
+
+	wver[0] = '\0';
+	if (g_board_type != WPC_BOARD_TYPE_O)
+		return;
+
+	char *cmdline = "lsmod | egrep ^bcmdhd";
+	if ((fp=popen(cmdline, "r")) == NULL)
+		return;
+
+	while(fgets(buf, sizeof(buf), fp) != NULL) {
+		ret = strchr(buf, 0x20);
+		if (ret != NULL) {
+			*ret = '\0';
+			printf("wifi driver [%s]\n", buf);
+			break;
+		}
+	}
+
+	pclose(fp);
+
+	sprintf(wver, "WiFi driver [%s]", buf);
+}
 
 //
 //	a menu of version
@@ -579,6 +664,7 @@ char	tmps[MID_STR], kver[SMALL_STR],  kver21[SMALL_STR], kver22[SMALL_STR], kver
 char	tpver[SMALL_STR], egver[SMALL_STR];
 GtkWidget	*v0, *bb, *a1, *lb;
 struct	utsname	u;
+char wver[SMALL_STR];
 
 	if(uname(&u)<0){
 		strcpy(kver, "Unknown (failed uname())");
@@ -594,6 +680,7 @@ struct	utsname	u;
 	/*	20121002VACS	*/
 	fetch_tpver(tpver);
 //	fetch_egver(egver);
+	fetch_wifidriver(wver);	/* RH */
 
 	v0=gtk_vbox_new(FALSE, 10);
 	a1=gtk_alignment_new(0.5, 0.5, 0.5, 0.5);
@@ -604,8 +691,8 @@ struct	utsname	u;
 	sprintf(tmps, "%s\n"
 				  "usb package %s\n\n\n"
 				  "%s\n%s\n%s\n\n"
-				  "root filesystem %s\n%s\n",
-			sc_version_str, kver4, kver21, kver, kver22, kver3, tpver);
+				  "root filesystem %s\n%s\n%s\n",
+			sc_version_str, kver4, kver21, kver, kver22, kver3, tpver, wver);
 
 	gtk_label_set_markup(GTK_LABEL(lb), tmps);
 	gtk_container_add(GTK_CONTAINER(a1), lb);
@@ -794,6 +881,68 @@ static int Base_path_device(char *path)
 	return major(stc.st_dev);
 }
 
+static gboolean err_msg_expose(GtkWidget *widget, int width, int height)
+{
+	cairo_t *cr;
+
+	cr = gdk_cairo_create(widget->window);
+	/* background */
+	cairo_set_source_rgb(cr, 1, 1, 1);	// white
+	cairo_rectangle(cr, 0, 0, width, height);
+	cairo_fill(cr);
+	/* text */
+	cairo_select_font_face(cr, "TakaoGothic",
+			CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_font_size(cr, 24);
+	cairo_set_source_rgb(cr, 1, 0, 0);	// red
+	cairo_move_to(cr, 10, 100);
+	cairo_show_text(cr, "QR code failed.");
+	cairo_destroy(cr);
+
+	return TRUE;
+}
+
+#define QR_IMG	"/tmp/macaddress.png"
+static gboolean qr_draw_expose_event(
+	GtkWidget *widget, GdkEventExpose *event, gpointer data)
+{
+	static cairo_surface_t *bg;
+	cairo_status_t status;
+	cairo_t *cr;
+	int ww, wh;
+	double iw, ih, wscale, hscale;
+
+	gdk_drawable_get_size(widget->window, &ww, &wh);
+
+	bg = cairo_image_surface_create_from_png(QR_IMG);
+	status = cairo_surface_status(bg);
+	if (status != CAIRO_STATUS_SUCCESS) {
+		g_warning("%s() %s. %s.",
+				__FUNCTION__, QR_IMG, cairo_status_to_string(status));
+		return err_msg_expose(widget, ww, wh);
+	}
+
+	iw = (double)cairo_image_surface_get_width(bg);
+	ih = (double)cairo_image_surface_get_height(bg);
+
+	wscale = (double)ww/iw;
+	hscale = (double)wh/ih;
+	printf("Show QR image w:%.0f->%d(%.2f), h:%.0f->%d(%.2f)\n",
+			iw, ww, wscale, ih, wh, hscale);
+
+	cr = gdk_cairo_create(widget->window);
+
+	cairo_scale(cr, wscale, hscale);
+	cairo_set_source_surface(cr, bg, 0, 0);
+	cairo_paint(cr);
+	cairo_surface_destroy(bg);
+	cairo_destroy(cr);
+
+	return TRUE;
+}
+
+extern int qrencode2png(char *outfile, unsigned char *intext);
+
 //
 //	the starting point
 //
@@ -805,12 +954,15 @@ int main(int argc, char *argv[])
 	GtkWidget *table;
 	GtkWidget *vx, *lb_top, *fr, *batsub;
 	int i;
-	char macstr[SMALL_STR];
 	unsigned char macaddr[SMALL_STR];
-	
+	char *pango_markup_fmt;
+	char *pango_markup;
+	GtkWidget *qr_align, *qr_draw_area, *dummy_align;
+
 	char *menupath=NULL;//, tmps[SMALL_STR];
 	pthread_t th_bsub;
 	GdkScreen *gscr;
+	gchar *macaddress_s;
 	
 	g_board_type = sc_get_board_type();
 	bl_toggle_charge = 1;
@@ -910,30 +1062,56 @@ int main(int argc, char *argv[])
 	pthread_create(&th_bsub, NULL, battery_sub_update, 0);
 	
 	check_wlan(); /* wifisub.c *//* moved from wifi.c*/
+	have_ocrb_font = custom_font_check("OCRB");	/* RH */
 
-	macstr[0] = '\0';
-	if (get_mac_addr(macaddr) == 0)
-		sprintf(macstr, "MAC Address : <span font_desc=\"monospace bold\""
-				" size=\"x-large\""
-				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
+	if (get_mac_addr(macaddr) == 0) {
+		if (have_ocrb_font)
+			pango_markup_fmt = "MAC Address : <span font_family=\"OCRB\""
+				" size=\"40000\" style=\"normal\" weight=\"bold\""
+				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>";
+		else
+			pango_markup_fmt = "MAC Address : <span font_family=\"TakaoGothic\""
+				" size=\"xx-large\" style=\"normal\" weight=\"bold\""
+				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>";
+		pango_markup = g_markup_printf_escaped(
+				pango_markup_fmt,
 				macaddr[0], macaddr[1], macaddr[2],
 				macaddr[3], macaddr[4], macaddr[5]);
+		macaddress_s = g_strdup_printf("%02X:%02X:%02X:%02X:%02X:%02X",
+				macaddr[0], macaddr[1], macaddr[2],
+				macaddr[3], macaddr[4], macaddr[5]);
+		qrencode2png(QR_IMG, (unsigned char *)macaddress_s);
+	} else {
+		pango_markup = g_markup_printf_escaped("MAC address : not found");
+	}
 
 	while(1){
 		gtk_label_set_text(GTK_LABEL(lb_top), SC_TITLE_2);
 		lb=gtk_label_new(sc_version_str);
-		a=gtk_alignment_new(0.5, 0.9, 0.0, 0.0);
+		a=gtk_alignment_new(0.5, 1.0, 0.0, 0.0);
 		lb_mac = gtk_label_new("");
-		gtk_label_set_markup(GTK_LABEL(lb_mac), macstr);
-		al_mac = gtk_alignment_new(0.5, 0.2, 0.0, 0.0);
+		gtk_label_set_markup(GTK_LABEL(lb_mac), pango_markup);
+		al_mac = gtk_alignment_new(0.5, 1.0, 0.0, 0.0);
+
+		/* RH *//* QR image */
+		qr_align = gtk_alignment_new(0.8, 0.0, 0.0, 0.0);
+		dummy_align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+		qr_draw_area = gtk_drawing_area_new();
+		gtk_container_add(GTK_CONTAINER(qr_align), qr_draw_area);
+		g_signal_connect(G_OBJECT(qr_draw_area), "expose-event",
+				G_CALLBACK(qr_draw_expose_event), NULL);
+		gtk_widget_set_size_request(qr_draw_area, 200, 200);
+
 		bb=sc_bbox2(&st_exit, batsub, gtk_button_new_from_stock("gtk-quit"), sc_bbox1_click_func);
 		v1=gtk_vbox_new(FALSE, 10);
-		
+
 		gtk_widget_set_sensitive(tr, TRUE);
 		gtk_container_add(GTK_CONTAINER(a), lb);
 		gtk_container_add(GTK_CONTAINER(al_mac), lb_mac);
+		gtk_container_add(GTK_CONTAINER(v1), dummy_align);
 		gtk_container_add(GTK_CONTAINER(v1), a);
 		gtk_container_add(GTK_CONTAINER(v1), al_mac);
+		gtk_container_add(GTK_CONTAINER(v1), qr_align);	/* RH */
 		gtk_box_pack_start(GTK_BOX(v1), bb, FALSE, FALSE, 0);
 		sc_table_attach2(GTK_TABLE(table), v1);
 		if (!menu_by_arg)

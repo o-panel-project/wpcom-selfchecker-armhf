@@ -30,6 +30,7 @@ static int use_wifi_config = 0;
 static int pid_ping=0, pid_iw=0;
 GtkWidget *v_main, *b_ping_start, *b_ping_stop, *lb_lq, *lb_ip, *lb_mac;
 GtkWidget *lb_rssi;
+extern int have_ocrb_font;	/* RH */
 
 struct log_check_info
 {
@@ -266,20 +267,31 @@ int get_mac_addr(unsigned char *mac_addr)
 //
 static void display_ip_addr()
 {
-	char ipstr[SMALL_STR], macstr[SMALL_STR];
+	char ipstr[SMALL_STR];
 	unsigned long ipaddr;
 	unsigned char macaddr[SMALL_STR];
 	struct in_addr ia;
+	char *pango_markup_fmt;
+	char *pango_markup;
 
 	ipstr[0] = '\0';
-	macstr[0] = '\0';
 
-	if (get_mac_addr(macaddr) == 0)
-		sprintf(macstr, "MAC Address : <span font_desc=\"monospace bold\""
-				" size=\"x-large\""
-				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>",
-			macaddr[0], macaddr[1], macaddr[2],
-			macaddr[3], macaddr[4], macaddr[5]);
+	if (get_mac_addr(macaddr) == 0) {
+		if (have_ocrb_font)	/* RH */
+			pango_markup_fmt = "MAC Address : <span font_family=\"OCRB\""
+				" size=\"x-large\" style=\"normal\" weight=\"bold\""
+				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>";
+		else
+			pango_markup_fmt = "MAC Address : <span font_family=\"TakaoGothic\""
+				" size=\"x-large\" style=\"normal\" weight=\"bold\""
+				" foreground=\"red\">%02X-%02X-%02X-%02X-%02X-%02X</span>";
+		pango_markup = g_markup_printf_escaped(
+				pango_markup_fmt,
+				macaddr[0], macaddr[1], macaddr[2],
+				macaddr[3], macaddr[4], macaddr[5]);
+	} else {
+		pango_markup = g_markup_printf_escaped("MAC address : not found");
+	}
 
 	ipaddr = get_ip_addr();
 	if (ipaddr != 0) {
@@ -287,8 +299,9 @@ static void display_ip_addr()
 		sprintf(ipstr, "ip addr : %s", inet_ntoa(ia));
 	}
 
-	gtk_label_set_markup(GTK_LABEL(lb_mac), macstr);
+	gtk_label_set_markup(GTK_LABEL(lb_mac), pango_markup);
 	gtk_label_set_text(GTK_LABEL(lb_ip), ipstr);
+	g_free(pango_markup);
 }
 
 gboolean iwconfig_checker_step(gpointer point)

@@ -54,9 +54,13 @@ demoapp:
 	@cp -p ../prismapp/newsc_demoapp.sh bin/
 
 wlantool:
-	make -C ../wlantool -f $(MAKEFILE)
-	@cp -p ../wlantool/wlantool.$(ARCH) bin/wlantool
+	make -C ../wlantool/build.$(ARCH)
+	@cp -p ../wlantool/build.$(ARCH)/wlantool bin/wlantool
 	@cp -p ../wlantool/newsc_wlantool.sh bin/
+
+libqrencode:
+	make -C ../libqrencode/build.$(ARCH)
+	@cp -p ../libqrencode/build.$(ARCH)/libqrencode.a ../libs.$(ARCH)/
 
 clean:
 	make -C ../lcd clean -f $(MAKEFILE)

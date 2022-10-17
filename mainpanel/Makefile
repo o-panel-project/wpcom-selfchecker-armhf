@@ -4,7 +4,7 @@ PROGRAM	= mainpanel
 SRCS	= mainpanel.c sdram.c common.c common-gtk.c audio_mov.c wifi.c md5.c \
 		  lcd-pwm.c battery.c strategy.c led.c dipsw.c tpoff.c i2c-cradle.c \
 		  felica.c usbmem.c updown.c date.c rcs956scan.c tctlprof.c \
-		  dmesg.c reset.c wifisub.c \
+		  dmesg.c reset.c wifisub.c qrencode.c \
 		  indicator-on.c indicator-off.c \
 		  indicator-on-small.c indicator-off-small.c sc_i2c.c sc_battery.c
 OBJS	= ${SRCS:%.c=%.o}
@@ -15,7 +15,8 @@ CFLAGS += -Wall -O2
 CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include
 CFLAGS += -I../felica-sdk/common/include \
 		  -I../felica-sdk/arch/linux/include \
-		  -I../nfc-extension/common/include
+		  -I../nfc-extension/common/include \
+		  -I../libqrencode/include
 CFLAGS += $(shell $(PKGCONFIG) --cflags gtk+-2.0)
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
@@ -34,6 +35,11 @@ LDFLAGS += $(FELICA_SDK_LIB)
 NFCEXT_LIB0 = librcs956_typea librcs956_typeb
 NFCEXT_LIB  = $(NFCEXT_LIB0:%=../libs/%.a)
 LDFLAGS += $(NFCEXT_LIB)
+
+# for qrencode
+CFLAGS += -DHAVE_CONFIG_H -D_QRENCODE_API_
+LIBQRENCODE = ../libs/libqrencode.a
+LDFLAGS += $(LIBQRENCODE) -lpng
 
 all: depend.inc $(PROGRAM)
 

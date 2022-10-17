@@ -11,6 +11,8 @@ log-battery/log-battery
 mainpanel/mainpanel
 tp-grid/tp-grid
 wlantool/wlantool*
+wlantool/netkit-base
+wlantool/*/wlantool
 
 ntpdate/ntp-4.2.6p5/
 
