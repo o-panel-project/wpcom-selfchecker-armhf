@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <gtk/gtk.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -112,6 +113,30 @@ static const gchar *get_title_label(char *menu)
 		}
 	}
 	return NULL;
+}
+
+/* RH */
+/* for external process */
+void fork_fork_execv(char *path, char *argv[])
+{
+	int i;
+	switch (fork()) {
+	case 0:
+		switch (fork()) {
+		case 0:
+			execv(path, argv);
+			_exit(0);
+		default:
+			break;
+		}
+		_exit(0);
+	default:
+		break;
+	}
+	wait(NULL);
+	g_free(path);
+	for (i = 0; argv[i]; i++)
+		g_free(argv[i]);
 }
 
 //
@@ -766,18 +791,24 @@ int notsupport_main(GtkWidget *p, GtkWidget *bsub)
 //
 int demo_main(GtkWidget *table, GtkWidget *bsub)
 {
-	char tmps[SMALL_STR];
 	int scr_w = get_sc_window_width();
 	int scr_h = get_sc_window_height();
 	int pos_x = 0;		/* for DEFAULT_WINDOW_WIDTH */
 	int pos_y = 200;	/* for DEFAULT_WINDOW_HEIGHT */
 	pos_x += (scr_w - DEFAULT_WINDOW_WIDTH) / 2;
 	pos_y += (scr_h - DEFAULT_WINDOW_HEIGHT) / 2;
+	char *path;
+	char *argv[6];
 
 	/*	script start	*/
-	sprintf(tmps,"/mnt1/bin/newsc_demoapp.sh %d %d %d %d",
-			pos_x, pos_y, scr_w, scr_h);
-	system(tmps);
+	path = g_strdup_printf("%s/bin/newsc_demoapp.sh", base_path);
+	argv[0] = g_strdup_printf("newsc_demoapp.sh");
+	argv[1] = g_strdup_printf("%d", pos_x);
+	argv[2] = g_strdup_printf("%d", pos_y);
+	argv[3] = g_strdup_printf("%d", scr_w);
+	argv[4] = g_strdup_printf("%d", scr_h);
+	argv[5] = (char *)NULL;
+	fork_fork_execv(path, argv);
 
 	return 0;
 }
@@ -788,11 +819,14 @@ int demo_main(GtkWidget *table, GtkWidget *bsub)
 //
 int wlantool_main(GtkWidget *table, GtkWidget *bsub)
 {
-	char tmps[SMALL_STR];
+	char *path;
+	char *argv[2];
 
 	/*	script start	*/
-	strcpy(tmps,"/mnt1/bin/newsc_wlantool.sh");
-	system(tmps);
+	path = g_strdup_printf("%s/bin/newsc_wlantool.sh", base_path);
+	argv[0] = g_strdup_printf("newsc_wlantool.sh");
+	argv[1] = (char *)NULL;
+	fork_fork_execv(path, argv);
 
 	return 0;
 }
@@ -800,32 +834,48 @@ int wlantool_main(GtkWidget *table, GtkWidget *bsub)
 /* RH */
 int display_main(GtkWidget *table, GtkWidget *bsub)
 {
-	char tmps[SMALL_STR];
-	int flg;
+	char *path;
+	char *argv[8];
+	int argc = 0;
 
-	sprintf(tmps, "xlib_lcdcheck -j %s/jpg%dx%d",
-			base_path, get_sc_window_width(), get_sc_window_height());
-	if (interval)
-		append_sprintf(tmps, " -I %d", interval);
-	flg = 0;								/*	[LCD Display] test	*/
-	append_sprintf(tmps, " -a %d", flg);
-	system(tmps);
+	path = g_strdup_printf("%s/bin/xlib_lcdcheck", base_path);
+	argv[argc++] = g_strdup_printf("xlib_lcdcheck");
+	argv[argc++] = g_strdup_printf("-j");
+	argv[argc++] = g_strdup_printf("%s/jpg%dx%d",
+				base_path, get_sc_window_width(), get_sc_window_height());
+	if (interval) {
+		argv[argc++] = g_strdup_printf("-I");
+		argv[argc++] = g_strdup_printf("%d", interval);
+	}
+	argv[argc++] = g_strdup_printf("-a");
+	argv[argc++] = g_strdup_printf("0");	/* [LCD Display] test */
+	argv[argc] = (char *)NULL;
+	fork_fork_execv(path, argv);
+
 	return 0;
 }
 
 /* RH */
 int lcdinspect_main(GtkWidget *table, GtkWidget *bsub)
 {
-	char tmps[SMALL_STR];
-	int flg;
+	char *path;
+	char *argv[8];
+	int argc = 0;
 
-	sprintf(tmps, "xlib_lcdcheck -j %s/jpg%dx%d",
-			base_path, get_sc_window_width(), get_sc_window_height());
-	if (interval)
-		append_sprintf(tmps, " -I %d", interval);
-	flg=1;								/*	[LCD Inspect] test	*/
-	append_sprintf(tmps, " -a %d", flg);
-	system(tmps);
+	path = g_strdup_printf("%s/bin/xlib_lcdcheck", base_path);
+	argv[argc++] = g_strdup_printf("xlib_lcdcheck");
+	argv[argc++] = g_strdup_printf("-j");
+	argv[argc++] = g_strdup_printf("%s/jpg%dx%d",
+				base_path, get_sc_window_width(), get_sc_window_height());
+	if (interval) {
+		argv[argc++] = g_strdup_printf("-I");
+		argv[argc++] = g_strdup_printf("%d", interval);
+	}
+	argv[argc++] = g_strdup_printf("-a");
+	argv[argc++] = g_strdup_printf("1");	/* [LCD Inspect] test */
+	argv[argc] = (char *)NULL;
+	fork_fork_execv(path, argv);
+
 	return 0;
 }
 

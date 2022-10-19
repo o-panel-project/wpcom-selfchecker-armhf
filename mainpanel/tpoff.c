@@ -111,12 +111,14 @@ int tpoff_main(GtkWidget *table, GtkWidget *bsub)
 	return 0;
 }
 
-
 int tpfunc_main(GtkWidget *table, GtkWidget *i)
 {
 	GtkWidget *w, *lb;
-	char tmps[SMALL_STR];
 	int ival = (int)i;
+	char *path;
+	char *argv[6];
+	int argc = 0;
+	extern void fork_fork_execv(char *path, char *argv[]);
 	
 	w=gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_set_usize(w, get_sc_window_width(), get_sc_window_height());
@@ -127,12 +129,23 @@ int tpfunc_main(GtkWidget *table, GtkWidget *i)
 	gtk_container_add(GTK_CONTAINER(w), lb);
 	gtk_widget_show_all(w);
 	sc_gtk_update();
-	
-	sprintf(tmps, "/mnt1/bin/tp-grid -b %s", base_path);
-	if(0<ival)
-		append_sprintf(tmps, " -t %d", ival);
-	
-	system(tmps);
+
+	/* exec external process */
+	path = g_strdup_printf("%s/bin/tp-grid", base_path);
+	argv[argc++] = g_strdup_printf("tp-grid");
+	argv[argc++] = g_strdup_printf("-b");
+	argv[argc++] = g_strdup_printf(base_path);
+	if (ival > 0) {
+		argv[argc++] = g_strdup_printf("-t");
+		argv[argc++] = g_strdup_printf("%d", ival);
+	}
+	argv[argc] = (char *)NULL;
+	fork_fork_execv(path, argv);
+	{
+		struct timespec t = {5, 0};
+		nanosleep(&t, NULL);
+	}
+
 	gtk_widget_destroy(w);
 	return 0;
 }
