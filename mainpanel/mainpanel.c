@@ -91,6 +91,29 @@ struct side_menu_list_st {
 	{ 0, 0, NULL, NULL, NULL, NULL },
 };
 
+/* RH */
+/* get title_label from side_menu_list */
+static const gchar *get_title_label(char *menu)
+{
+	int i;
+	if (!menu) return NULL;
+	for (i = 0; side_menu_list[i].menu_label != NULL; i++) {
+		if (side_menu_list[i].tree_id == NULL)
+			continue;
+		if (!side_menu_list[i].enable)
+			continue;
+		if (side_menu_list[i].func == NULL)
+			continue;
+		if (strcmp(menu, side_menu_list[i].tree_id) == 0) {
+			if (side_menu_list[i].title_label)
+				return (const gchar *)side_menu_list[i].title_label;
+			else
+				break;
+		}
+	}
+	return NULL;
+}
+
 //
 // Top screen MAC address font.
 //
@@ -963,6 +986,7 @@ int main(int argc, char *argv[])
 	pthread_t th_bsub;
 	GdkScreen *gscr;
 	gchar *macaddress_s;
+	const gchar *title_label;
 	
 	g_board_type = sc_get_board_type();
 	bl_toggle_charge = 1;
@@ -1022,7 +1046,7 @@ int main(int argc, char *argv[])
 
 	//set_mouse_cursor();
 	
-	g_thread_init(NULL);
+	//g_thread_init(NULL);	// warning: g_thread_init is deprecated
 	gdk_threads_init();
 	gdk_threads_enter();
 	
@@ -1081,6 +1105,7 @@ int main(int argc, char *argv[])
 				macaddr[0], macaddr[1], macaddr[2],
 				macaddr[3], macaddr[4], macaddr[5]);
 		qrencode2png(QR_IMG, (unsigned char *)macaddress_s);
+		g_free(macaddress_s);
 	} else {
 		pango_markup = g_markup_printf_escaped("MAC address : not found");
 	}
@@ -1132,6 +1157,9 @@ int main(int argc, char *argv[])
 		sc_bbox2_remove(batsub);
 		gtk_widget_destroy(v1);
 		gtk_widget_set_sensitive(tr, FALSE);
+		title_label = get_title_label(menupath);
+		if (title_label)
+			gtk_label_set_text(GTK_LABEL(lb_top), title_label);
 		sc_gtk_update();
 		if(!menupath){
 			printf("ERROR : Could not get menupath.\n");
@@ -1147,9 +1175,6 @@ int main(int argc, char *argv[])
 				if (side_menu_list[i].func == NULL)
 					continue;
 				if (strcmp(menupath, side_menu_list[i].tree_id) == 0) {
-					if (side_menu_list[i].title_label)
-						gtk_label_set_text(GTK_LABEL(lb_top),
-								side_menu_list[i].title_label);
 					if (side_menu_list[i].func == tpfunc_main) {
 						side_menu_list[i].func(table, (GtkWidget*)ival);
 					} else
@@ -1157,8 +1182,10 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
+		printf("menupath=[%s]. end.\n", menupath);
 		}
 
+		if (menupath) free(menupath);
 		menupath=NULL;
 		testtime=0;
 		if(menu_by_arg) break;
