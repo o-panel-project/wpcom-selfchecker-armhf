@@ -1,4 +1,4 @@
-ARCH = armhf
+ARCH = armel
 include rules.mk
 
 export AR
@@ -18,7 +18,7 @@ mainpanel:
 	@cp -p ../mainpanel/build.${ARCH}/mainpanel bin/
 	@cp -p ../scripts/appstart bin/
 	@cp -p ../scripts/runsc bin/
-	@cp -p ../ntpdate/ntpdate.${ARCH} bin/ntpdate
+	@cp -p ../ntpdate/ntpdate bin/
 	@cp -p ../mainpanel/newsc_movie.sh bin/
 
 felicalib:
@@ -50,7 +50,7 @@ demoapp:
 
 wlantool:
 	make -C ../wlantool/build.${ARCH}
-	@cp -p ../wlantool/build.${ARCH}/wlantool bin/wlantool
+	@cp -p ../wlantool/build.${ARCH}/wlantool bin/
 	@cp -p ../wlantool/newsc_wlantool.sh bin/
 
 libqrencode:
@@ -69,8 +69,8 @@ clean:
 #	@rm -f $(TARGET) demoapp-arm runsc appstart newsc_demoapp.sh newsc_wlantool.sh
 
 felicaclean:
-	(cd ../felica-sdk/arch/linux/build && ./build.${ARCH}.sh clean)
-	(cd ../nfc-extension/arch/linux/build && ./build.${ARCH}.sh clean)
+	(cd ../felica-sdk/arch/linux/build && ./build.$(ARCH).sh clean)
+	(cd ../nfc-extension/arch/linux/build && ./build.$(ARCH).sh clean)
 
 svnclean :
 	make clean

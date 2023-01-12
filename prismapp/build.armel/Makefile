@@ -10,7 +10,7 @@ TARGET = demoapp-arm
 SRCS = tctl.c
 CPPSRCS = mainpanel.cpp oglanimwin.cpp
 
-SRCDIR = ./
+SRCDIR = ../demoapp
 
 CC = ${CROSSTOOLS}gcc
 LD = ${CROSSTOOLS}gcc
@@ -20,9 +20,11 @@ STRIP_OPT = --remove-section=.comment --remove-section=.note
 
 CFLAGS += -Wall
 ifeq ($(ARCH),armel)
-CFLAGS += -march=armv7-a -mtune=cortex-a8 -mfpu=neon -msoft-float
+CFLAGS += -march=armv7-a -mtune=cortex-a9 -mfpu=neon -msoft-float
 CFLAGS += -mfloat-abi=softfp -ftree-vectorize -mvectorize-with-neon-quad
 CFLAGS += -mthumb-interwork -mno-thumb
+else
+CFLAGS += -D__O_PANEL__
 endif
 
 ifeq ($(BUILD_DEBUG),yes)
@@ -34,18 +36,18 @@ endif
 OBJS = ${SRCS:%.c=%.o} ${CPPSRCS:%.cpp=%.o}
 
 VPATH = ${SRCDIR}
-CFLAGS += -I.
+CFLAGS += -I../demoapp -I../include
 CFLAGS += -I${CROSSDEVDIR}/usr/include
 LDFLAGS += -L${CROSSDEVDIR}/usr/lib
+LDFLAGS += --sysroot=${CROSSDEVDIR}
 
-CFLAGS += -I../include
 CFLAGS += -I$(CROSSDEVDIR)/usr/include/freetype2
-LDFLAGS += -L../lib
+LDFLAGS += -L../lib.${ARCH}
 LIBS += -lprism
-LIBS += -lstdc++ -lpthread -lfreetype -lz
-LIBS += -lX11 -lXext -lXi -lxcb -lXdmcp -lXau
-LIBS += -lEGL -lGLES_CM -lIMGegl -lpvr2d -lsrv_um -lusc
-DEPLIBS += ../lib/libprism.a
+LIBS += -lstdc++ -lpthread -lfreetype -lm
+LIBS += -lX11 -lXext -lXi
+LIBS += -lEGL -lGLES_CM
+DEPLIBS += ../lib.${ARCH}/libprism.a
 LDFLAGS += ${LIBS}
 
 CFLAGS += ${OPTCADD}

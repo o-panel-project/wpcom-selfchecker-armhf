@@ -1,5 +1,3 @@
-ARCH = armel
-
 CROSS_COMPILE = /opt/arm-dev/arm-2009q3/bin/arm-none-linux-gnueabi-
 SYSROOT = /opt/arm-dev/sysroots/armv7a-none-linux-gnueabi
 

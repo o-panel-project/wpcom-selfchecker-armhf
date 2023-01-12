@@ -1,14 +1,15 @@
-include ../Build.armhf/rules.mk
+include ../../Build.${ARCH}/rules.mk
+PKGCONFIG=../../scripts/pkg-config-${ARCH}.sh
 
 PROGRAM	= tp-grid
 SRCS	= tp-grid.c \
 		  16green.c 16orange.c
 OBJS	= ${SRCS:%.c=%.o}
 
-VPATH = ./ ../common/png
+VPATH = ../ ../../common/png
 
 CFLAGS += -Wall -O2
-CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include
+CFLAGS += -I.. -I../.. -I../../common -I$(SYSROOT)/usr/include
 CFLAGS += $(shell $(PKGCONFIG) --cflags gtk+-2.0)
 
 LDFLAGS += -L$(SYSROOT)/usr/lib

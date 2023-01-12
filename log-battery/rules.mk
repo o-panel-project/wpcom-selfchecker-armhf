@@ -1,13 +1,14 @@
-include ../Build.armhf/rules.mk
+include ../../Build.${ARCH}/rules.mk
+PKGCONFIG=../../scripts/pkg-config-${ARCH}.sh
 
-PROGRAM	= cpprogress
-SRCS	= cpprogress.c
+PROGRAM	= log-battery
+SRCS	= log-battery.c common.c md5.c sc_i2c.c sc_battery.c
 OBJS	= ${SRCS:%.c=%.o}
 
-VPATH = ./
+VPATH = ../ ../../common
 
 CFLAGS += -Wall -O2
-CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include
+CFLAGS += -I.. -I../.. -I../../common -I$(SYSROOT)/usr/include
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
 LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib

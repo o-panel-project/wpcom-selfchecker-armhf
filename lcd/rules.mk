@@ -1,20 +1,19 @@
-ifeq ($(BOARD_TYPE),j4)
-include ../Build/rules-j4.mk
-else
-include ../Build/rules.mk
-endif
+include ../../Build.${ARCH}/rules.mk
+PKGCONFIG=../../scripts/pkg-config-${ARCH}.sh
 
-PROGRAM	= cpprogress
-SRCS	= cpprogress.c
+PROGRAM	= xlib_lcdcheck
+SRCS	= lcd_jpg_search.c xlib_lcdcheck.c common.c md5.c
 OBJS	= ${SRCS:%.c=%.o}
 
-VPATH = ./
+VPATH = ../ ../../common
 
 CFLAGS += -Wall -O2
-CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include
+CFLAGS += -I.. -I../.. -I../../common -I$(SYSROOT)/usr/include
+CFLAGS += $(shell $(PKGCONFIG) --cflags x11 imlib2)
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
 LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib
+LDFLAGS += $(shell $(PKGCONFIG) --libs x11 imlib2) -lrt
 
 all: depend.inc $(PROGRAM)
 

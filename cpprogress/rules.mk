@@ -1,23 +1,17 @@
-ifeq ($(BOARD_TYPE),j4)
-include ../Build/rules-j4.mk
-else
-include ../Build/rules.mk
-endif
+include ../../Build.${ARCH}/rules.mk
+PKGCONFIG=../../scripts/pkg-config-${ARCH}.sh
 
-PROGRAM	= tp-grid
-SRCS	= tp-grid.c \
-		  16green.c 16orange.c
+PROGRAM	= cpprogress
+SRCS	= cpprogress.c
 OBJS	= ${SRCS:%.c=%.o}
 
-VPATH = ./ ../common/png
+VPATH = ../
 
 CFLAGS += -Wall -O2
-CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include
-CFLAGS += $(shell $(PKGCONFIG) --cflags gtk+-2.0)
+CFLAGS += -I.. -I../.. -I../../common -I$(SYSROOT)/usr/include
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
 LDFLAGS += -Wl,--rpath-link,$(SYSROOT)/usr/lib
-LDFLAGS += $(shell $(PKGCONFIG) --libs gtk+-2.0)
 
 all: depend.inc $(PROGRAM)
 

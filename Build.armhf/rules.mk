@@ -1,5 +1,3 @@
-ARCH = armhf
-
 CROSS_COMPILE = arm-linux-gnueabihf-
 SYSROOT = /opt/arm-dev/armhf
 

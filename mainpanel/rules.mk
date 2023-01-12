@@ -1,4 +1,5 @@
-include ../Build.armhf/rules.mk
+include ../../Build.${ARCH}/rules.mk
+PKGCONFIG=../../scripts/pkg-config-${ARCH}.sh
 
 PROGRAM	= mainpanel
 SRCS	= mainpanel.c sdram.c common.c common-gtk.c audio_mov.c wifi.c md5.c \
@@ -9,14 +10,14 @@ SRCS	= mainpanel.c sdram.c common.c common-gtk.c audio_mov.c wifi.c md5.c \
 		  indicator-on-small.c indicator-off-small.c sc_i2c.c sc_battery.c
 OBJS	= ${SRCS:%.c=%.o}
 
-VPATH = ./ ../common ../common/png
+VPATH = ../ ../../common ../../common/png
 
 CFLAGS += -Wall -O2
-CFLAGS += -I. -I.. -I../common -I$(SYSROOT)/usr/include
-CFLAGS += -I../felica-sdk/common/include \
-		  -I../felica-sdk/arch/linux/include \
-		  -I../nfc-extension/common/include \
-		  -I../libqrencode/include
+CFLAGS += -I.. -I../.. -I../../common -I$(SYSROOT)/usr/include
+CFLAGS += -I../../felica-sdk/common/include \
+		  -I../../felica-sdk/arch/linux/include \
+		  -I../../nfc-extension/common/include \
+		  -I../../libqrencode/include
 CFLAGS += $(shell $(PKGCONFIG) --cflags gtk+-2.0)
 
 LDFLAGS += -L$(SYSROOT)/usr/lib
@@ -29,22 +30,22 @@ FELICA_SDK_LIB0 = \
 	librcs956 \
 	libutl \
 	libfelica_cc_stub_rcs956
-FELICA_SDK_LIB  = $(FELICA_SDK_LIB0:%=../libs.armhf/%.a)
+FELICA_SDK_LIB  = $(FELICA_SDK_LIB0:%=../../libs.${ARCH}/%.a)
 LDFLAGS += $(FELICA_SDK_LIB)
 
 NFCEXT_LIB0 = librcs956_typea librcs956_typeb
-NFCEXT_LIB  = $(NFCEXT_LIB0:%=../libs.armhf/%.a)
+NFCEXT_LIB  = $(NFCEXT_LIB0:%=../../libs.${ARCH}/%.a)
 LDFLAGS += $(NFCEXT_LIB)
 
 # for qrencode
 CFLAGS += -DHAVE_CONFIG_H -D_QRENCODE_API_
-LIBQRENCODE = ../libs.armhf/libqrencode.a
+LIBQRENCODE = ../../libs.${ARCH}/libqrencode.a
 LDFLAGS += $(LIBQRENCODE) -lpng
 
 all: depend.inc $(PROGRAM)
 
 $(PROGRAM): $(OBJS) $(FELICA_SDK_LIB) $(NFCEXT_LIB)
-	$(CC) -c $(CFLAGS) -o version.o version.c
+	$(CC) -c $(CFLAGS) -o version.o ../version.c
 	$(CC) -o $@ $(OBJS) version.o $(LDFLAGS)
 	$(STRIP) $(STRIP_OPT) $@
 
@@ -52,7 +53,7 @@ $(PROGRAM): $(OBJS) $(FELICA_SDK_LIB) $(NFCEXT_LIB)
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 clean:
-	-rm -rf $(OBJS) $(PROGRAM) depend.inc
+	-rm -rf $(OBJS) version.o $(PROGRAM) depend.inc
 
 depend.inc: $(SRCS)
 	$(CC) -MM $(CFLAGS) $^ > depend.inc

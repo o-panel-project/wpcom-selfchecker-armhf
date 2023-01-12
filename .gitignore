@@ -1,16 +1,16 @@
 *.o
 depend.inc
 
-Build/bin
+Build.armel/bin
 Build.armhf/bin
 
-cpprogress/cpprogress
-prismapp/demoapp/demoapp-arm
-lcd/xlib_lcdcheck
-log-battery/log-battery
-mainpanel/mainpanel
-tp-grid/tp-grid
-wlantool/wlantool*
+cpprogress/*/cpprogress
+prismapp/*/demoapp-arm
+lcd/*/xlib_lcdcheck
+log-battery/*/log-battery
+mainpanel/*/mainpanel
+tp-grid/*/tp-grid
+wlantool/*/wlantool*
 wlantool/netkit-base
 wlantool/*/wlantool
 
