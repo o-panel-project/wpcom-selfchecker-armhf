@@ -1096,7 +1096,9 @@ int main(int argc, char *argv[])
 
 	//set_mouse_cursor();
 	
-	//g_thread_init(NULL);	// warning: g_thread_init is deprecated
+#ifndef __O_PANEL__
+	g_thread_init(NULL);	// warning: g_thread_init is deprecated on o.
+#endif
 	gdk_threads_init();
 	gdk_threads_enter();
 	

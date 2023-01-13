@@ -12,7 +12,7 @@
 
 #define SC_TITLE   "New SelfChecker (j3/j35/o)"
 #define SC_TITLE_2 "SelfChecker(j3/j35/o)"
-#define SC_VERSION "v3.7.2"
+#define SC_VERSION "v3.7.3"
 
 #define	WPC_BOARD_TYPE_J35	35
 #define	WPC_BOARD_TYPE_O	5
